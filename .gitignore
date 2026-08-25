@@ -1,0 +1,25 @@
+# Python
+**/.venv/
+**/__pycache__/
+**/*.pyc
+
+
+credentials/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Next.js
+apps/web/.next/
+apps/web/out/
+apps/web/node_modules/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
