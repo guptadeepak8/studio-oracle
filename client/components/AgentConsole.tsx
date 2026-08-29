@@ -21,7 +21,6 @@ export default function AgentConsole({
 }: AgentConsoleProps) {
   const chatEndRef = useRef<HTMLDivElement>(null);
 
-  // Marketing strategist inquiries
   const SUGGESTED_PROMPTS = [
     "Formulate marketing strategies based on positive casting feedback.",
     "What marketing campaigns can counter negative soundtrack critiques?",
@@ -31,7 +30,6 @@ export default function AgentConsole({
     "What changed after the trailer?",
   ];
 
-  // Scroll chat feed
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chatMessages]);
@@ -104,7 +102,7 @@ export default function AgentConsole({
         );
       }
       return (
-        <p key={index} className="text-sm text-zinc-200 leading-relaxed my-2">
+        <p key={index} className="text-sm text-zinc-205 leading-relaxed my-2">
           {para}
         </p>
       );
@@ -113,7 +111,6 @@ export default function AgentConsole({
 
   return (
     <div className="w-[35%] border-l border-zinc-800 flex flex-col h-full bg-[#0c0c0e]">
-      {/* Console Header */}
       <div className="p-4 border-b border-zinc-800 flex items-center justify-between bg-zinc-900/80">
         <div className="flex items-center gap-2">
           <div className="h-2.5 w-2.5 rounded-full bg-amber-500 animate-pulse" />
@@ -130,7 +127,6 @@ export default function AgentConsole({
         </button>
       </div>
 
-      {/* Suggestion Prompts */}
       <div className="p-4 bg-zinc-900/30 border-b border-zinc-800 space-y-2">
         <span className="text-xs text-zinc-500 uppercase tracking-widest font-bold block mb-1">
           Marketing Strategy Suggestions
@@ -148,7 +144,6 @@ export default function AgentConsole({
         </div>
       </div>
 
-      {/* Chat Feed */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-black/20">
         {chatMessages.map((msg) => (
           <div
@@ -189,7 +184,6 @@ export default function AgentConsole({
         <div ref={chatEndRef} />
       </div>
 
-      {/* Chat input form */}
       <div className="p-4 border-t border-zinc-800 bg-[#0e0e11] flex items-center gap-2">
         <input
           type="text"

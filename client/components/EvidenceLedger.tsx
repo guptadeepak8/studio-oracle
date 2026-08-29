@@ -18,7 +18,7 @@ export default function EvidenceLedger({
   setCommentSearch,
 }: EvidenceLedgerProps) {
   return (
-    <div className="bg-zinc-900/10 border border-zinc-850 rounded-xl p-5 space-y-4">
+    <div className="bg-zinc-900/10 border border-zinc-855 rounded-xl p-5 space-y-4">
       <div className="flex items-center justify-between border-b border-zinc-850 pb-3">
         <div className="flex items-center gap-2">
           <Database className="h-5 w-5 text-zinc-400" />

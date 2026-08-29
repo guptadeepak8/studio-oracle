@@ -29,12 +29,10 @@ export default function AudiencePulse({
         <h2 className="font-bold text-sm uppercase tracking-wider text-zinc-300">Audience Pulse</h2>
       </div>
 
-      {/* Pulse Dynamic summary statement */}
       <div className="bg-zinc-900/60 border border-zinc-800 rounded-lg p-3 text-sm leading-relaxed text-zinc-200">
         {pulseSummary}
       </div>
 
-      {/* Support Metrics */}
       <div className="grid grid-cols-4 gap-3 text-center">
         <div className="bg-zinc-900/20 border border-zinc-850 p-3 rounded-lg">
           <span className="text-xs text-zinc-500 uppercase tracking-widest block font-medium mb-1">
@@ -62,7 +60,6 @@ export default function AudiencePulse({
         </div>
       </div>
 
-      {/* Sentiment Progress Bar */}
       {comments.length > 0 && (
         <div className="py-2.5 border-t border-zinc-900/50 flex items-center justify-between gap-4 text-sm font-medium">
           <div className="flex-1 max-w-lg h-3 rounded-full overflow-hidden bg-zinc-800 flex">

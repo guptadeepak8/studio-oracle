@@ -41,14 +41,11 @@ export default function ConflictingSignals({ conflictingSignals }: ConflictingSi
         <div className="space-y-4 overflow-y-auto max-h-56 pr-1">
           {conflictingSignals.map((conf, idx) => (
             <div key={idx} className="border border-zinc-800 rounded-lg overflow-hidden bg-zinc-900/40 text-xs">
-              {/* Theme Indicator */}
-              <div className="p-2.5 border-b border-zinc-850 bg-zinc-900/60 font-bold tracking-wider text-[10px] text-amber-500">
+              <div className="p-2.5 border-b border-zinc-850 bg-zinc-900/60 font-bold tracking-wider text-[10px] text-amber-505">
                 CONFLICT DETECTED: {conf.theme}
               </div>
 
-              {/* Comparison Columns */}
               <div className="grid grid-cols-2 divide-x divide-zinc-855">
-                {/* Positive */}
                 <div className="p-3 space-y-1.5">
                   <div className="flex justify-between text-[9px] text-emerald-500 font-bold">
                     <span>POSITIVE SIGNAL</span>
@@ -57,7 +54,6 @@ export default function ConflictingSignals({ conflictingSignals }: ConflictingSi
                   <p className="text-zinc-300 italic leading-relaxed">"{conf.positive.text}"</p>
                 </div>
 
-                {/* Negative */}
                 <div className="p-3 space-y-1.5">
                   <div className="flex justify-between text-[9px] text-rose-500 font-bold">
                     <span>CRITICAL SIGNAL</span>

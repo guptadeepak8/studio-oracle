@@ -2,7 +2,6 @@ import Dashboard from "../components/Dashboard";
 import { API_ENDPOINTS } from "../utils/constants";
 import { Movie } from "../utils/types";
 
-// Force dynamic rendering on the server (ensures it queries fresh movie lists from ClickHouse on request)
 export const dynamic = "force-dynamic";
 
 async function getMovies(): Promise<Movie[]> {

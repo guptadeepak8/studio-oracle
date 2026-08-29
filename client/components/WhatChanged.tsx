@@ -33,18 +33,15 @@ export default function WhatChanged({ timelineData }: WhatChangedProps) {
         </p>
       ) : (
         <div className="grid grid-cols-4 gap-4 relative">
-          {/* Horizontal track line */}
           <div className="absolute top-[20px] left-8 right-8 h-0.5 bg-zinc-800 z-0" />
 
           {timelineData.map((t, idx) => (
             <div key={idx} className="z-10 space-y-2 text-center">
-              {/* Node marker */}
               <div className="flex justify-center">
                 <div className="h-9 w-9 rounded-full bg-zinc-850 border-2 border-zinc-700 flex items-center justify-center text-xs font-bold text-amber-500">
                   {idx + 1}
                 </div>
               </div>
-              {/* Data */}
               <div className="bg-zinc-900/60 border border-zinc-850 rounded-lg p-3 space-y-1.5 text-left">
                 <span className="text-xs font-bold text-zinc-400 block">{t.label}</span>
                 <span className="text-xs text-amber-500 font-semibold block truncate" title={t.dominantTopic}>

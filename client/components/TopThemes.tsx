@@ -38,8 +38,7 @@ export default function TopThemes({ themeStats }: TopThemesProps) {
                   <span className="font-semibold">{t.name}</span>
                   <span className="text-zinc-500 font-medium">{t.count} mentions</span>
                 </div>
-                {/* Bar */}
-                <div className="w-full bg-zinc-850 h-3 rounded-full overflow-hidden flex">
+                <div className="w-full bg-zinc-855 h-3 rounded-full overflow-hidden flex">
                   <div
                     className="bg-zinc-700 h-full border-r border-zinc-650"
                     style={{ width: `${widthPercent}%` }}

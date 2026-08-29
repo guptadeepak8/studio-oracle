@@ -1,24 +1,11 @@
 "use client";
 
 import React, { useState, useEffect, FormEvent } from "react";
-import {
-  Film,
-  Plus,
-  RefreshCw,
-  Loader2,
-  Database,
-  Layers,
-  Play,
-  Square,
-  Settings,
-  AlertTriangle,
-  PlayCircle,
-} from "lucide-react";
+import { Film, Plus, RefreshCw, Loader2, Database, Layers, Play, Square, Settings, AlertTriangle, PlayCircle } from "lucide-react";
 
 import { API_ENDPOINTS, SESSION_CONFIG } from "../utils/constants";
 import { Movie, Comment, ChatMessage, IngestResponse, ChatResponse } from "../utils/types";
 
-// Import modular sub-components
 import AgentConsole from "./AgentConsole";
 import AudiencePulse from "./AudiencePulse";
 import MarketingDirectives from "./MarketingDirectives";
@@ -35,17 +22,13 @@ interface DashboardProps {
 type CampaignStatus = "active" | "stopped" | "collecting";
 
 export default function Dashboard({ initialMovies }: DashboardProps) {
-  // Movie tracking state
   const [movies, setMovies] = useState<Movie[]>(initialMovies);
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(
     initialMovies.length > 0 ? initialMovies[0] : null
   );
   const [isLoadingMovies, setIsLoadingMovies] = useState(false);
-
-  // Campaign statuses map (persisted in local state)
   const [campaignStatuses, setCampaignStatuses] = useState<Record<string, CampaignStatus>>({});
 
-  // Ingestion form state
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newDesc, setNewDesc] = useState("");
@@ -57,12 +40,10 @@ export default function Dashboard({ initialMovies }: DashboardProps) {
   const [ingestLimit, setIngestLimit] = useState(3);
   const [isIngesting, setIsIngesting] = useState(false);
 
-  // Comments/Analytics state
   const [comments, setComments] = useState<Comment[]>([]);
   const [isLoadingComments, setIsLoadingComments] = useState(false);
   const [commentSearch, setCommentSearch] = useState("");
 
-  // Chat/Agent state
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
     {
       id: "welcome",
@@ -72,7 +53,6 @@ export default function Dashboard({ initialMovies }: DashboardProps) {
   ]);
   const [inputMessage, setInputMessage] = useState("");
 
-  // Initialize campaign statuses from localStorage if present
   useEffect(() => {
     const saved = localStorage.getItem("studio_oracle_campaign_statuses");
     if (saved) {
@@ -82,7 +62,6 @@ export default function Dashboard({ initialMovies }: DashboardProps) {
         console.error(e);
       }
     } else {
-      // Default all to active
       const initialStatuses: Record<string, CampaignStatus> = {};
       initialMovies.forEach((m) => {
         initialStatuses[m.content_id] = "active";
@@ -91,13 +70,11 @@ export default function Dashboard({ initialMovies }: DashboardProps) {
     }
   }, [initialMovies]);
 
-  // Save campaign statuses to localStorage
   const saveStatuses = (newStatuses: Record<string, CampaignStatus>) => {
     setCampaignStatuses(newStatuses);
     localStorage.setItem("studio_oracle_campaign_statuses", JSON.stringify(newStatuses));
   };
 
-  // Fetch comments when movie changes
   useEffect(() => {
     if (selectedMovie) {
       fetchComments(selectedMovie.content_id);
@@ -114,8 +91,6 @@ export default function Dashboard({ initialMovies }: DashboardProps) {
       if (res.ok) {
         const data = (await res.json()) as Movie[];
         setMovies(data);
-        
-        // Match selection
         if (selectNewId) {
           const matched = data.find((x) => x.content_id === selectNewId);
           if (matched) setSelectedMovie(matched);
@@ -145,7 +120,6 @@ export default function Dashboard({ initialMovies }: DashboardProps) {
     }
   };
 
-  // Register a new movie campaign
   const handleRegisterMovie = async (e: FormEvent) => {
     e.preventDefault();
     if (!newTitle.trim()) return;
@@ -179,30 +153,24 @@ export default function Dashboard({ initialMovies }: DashboardProps) {
           )
         );
         
-        // Reset inputs and close modal
         const tempTitle = newTitle;
         setNewTitle("");
         setNewDesc("");
         setNewReleaseDate("");
         setShowRegisterModal(false);
 
-        // Fetch new campaigns
         setIsLoadingMovies(true);
         const listRes = await fetch(API_ENDPOINTS.MOVIES);
         if (listRes.ok) {
           const data = (await listRes.json()) as Movie[];
           setMovies(data);
-          // Find the newly registered campaign ID
           const matched = data.find((x) => x.title.toLowerCase() === tempTitle.toLowerCase());
           if (matched) {
             setSelectedMovie(matched);
-            
-            // Put campaign into collecting state
             const updated = { ...campaignStatuses };
             updated[matched.content_id] = "collecting";
             saveStatuses(updated);
 
-            // Simulate data collection pipelines for 2.5 seconds
             setTimeout(() => {
               const finished = { ...updated };
               finished[matched.content_id] = "active";
@@ -228,7 +196,6 @@ export default function Dashboard({ initialMovies }: DashboardProps) {
     }
   };
 
-  // Trigger manual YouTube ingestion
   const handleTriggerIngest = async () => {
     if (!selectedMovie || !ingestQuery.trim()) return;
 
@@ -266,7 +233,6 @@ export default function Dashboard({ initialMovies }: DashboardProps) {
     }
   };
 
-  // Send SSE chat stream query to the agent
   const handleSendChat = async (messageText?: string) => {
     const textToSend = messageText || inputMessage;
     if (!textToSend.trim()) return;
@@ -325,7 +291,6 @@ export default function Dashboard({ initialMovies }: DashboardProps) {
     }
   };
 
-  // Start / Stop campaign handlers
   const handleToggleCampaignStatus = (contentId: string) => {
     const currentStatus = campaignStatuses[contentId] || "active";
     const nextStatus = currentStatus === "stopped" ? "active" : "stopped";
@@ -334,7 +299,6 @@ export default function Dashboard({ initialMovies }: DashboardProps) {
     saveStatuses(updated);
   };
 
-  // Client side sentiment statistics
   const getSentimentStats = (commentsList: Comment[]) => {
     let positive = 0;
     let negative = 0;
@@ -375,7 +339,6 @@ export default function Dashboard({ initialMovies }: DashboardProps) {
     };
   };
 
-  // Dynamic Theme/Topics statistics calculator
   const getThemeStats = (commentsList: Comment[]) => {
     const themes = [
       { name: "Casting", keywords: ["cast", "actor", "lead", "paul", "denzel", "role", "mescal"], count: 0, positive: 0, negative: 0 },
@@ -416,7 +379,6 @@ export default function Dashboard({ initialMovies }: DashboardProps) {
     return themes.sort((a, b) => b.count - a.count);
   };
 
-  // Dynamic timeline generator
   const getTimelineData = (commentsList: Comment[]) => {
     if (commentsList.length === 0) return [];
     const sorted = [...commentsList].sort((a, b) => a.published_at.localeCompare(b.published_at));
@@ -486,7 +448,6 @@ export default function Dashboard({ initialMovies }: DashboardProps) {
     return intervals;
   };
 
-  // Dynamic conflicting signals searcher
   const getConflictingSignals = (commentsList: Comment[]) => {
     const conflicts = [];
     const themes = [
@@ -549,7 +510,6 @@ export default function Dashboard({ initialMovies }: DashboardProps) {
     return conflicts;
   };
 
-  // Dynamic summary compiler
   const getPulseSummary = (commentsList: Comment[]) => {
     if (commentsList.length === 0) {
       return "No active launch telemetry found. Start a campaign and run Ingest Feedback to compile audience intelligence.";
@@ -589,10 +549,8 @@ export default function Dashboard({ initialMovies }: DashboardProps) {
   const selectedCampaignStatus = selectedMovie ? campaignStatuses[selectedMovie.content_id] || "active" : "active";
 
   return (
-    <div className="flex h-screen w-screen bg-zinc-950 text-zinc-100 overflow-hidden font-sans">
-      {/* COLUMN 1: CAMPAIGN MANAGER: LEFT SIDEBAR (20%) */}
+    <div className="flex h-screen w-screen bg-zinc-955 text-zinc-100 overflow-hidden font-sans">
       <div className="w-[20%] border-r border-zinc-800 flex flex-col h-full bg-[#0d0d0f] shrink-0 text-sm">
-        {/* Campaign Header */}
         <div className="p-4.5 border-b border-zinc-800 flex items-center justify-between bg-zinc-900/40">
           <span className="font-bold text-xs uppercase tracking-wider text-zinc-350">Campaigns</span>
           <button
@@ -604,7 +562,6 @@ export default function Dashboard({ initialMovies }: DashboardProps) {
           </button>
         </div>
 
-        {/* Campaign List */}
         <div className="flex-1 overflow-y-auto p-3 space-y-2">
           <span className="text-[10px] text-zinc-550 uppercase tracking-widest font-bold block mb-1">
             Tracked Campaigns
@@ -632,8 +589,6 @@ export default function Dashboard({ initialMovies }: DashboardProps) {
                     <span className="font-bold text-sm text-zinc-200 truncate pr-2 block max-w-[120px]" title={m.title}>
                       {m.title}
                     </span>
-                    
-                    {/* Status Badge */}
                     <div className="flex items-center gap-1.5">
                       <span className={`h-2 w-2 rounded-full ${
                         status === "active" 
@@ -647,9 +602,7 @@ export default function Dashboard({ initialMovies }: DashboardProps) {
                       </span>
                     </div>
                   </div>
-                  
-                  {/* Actions / Toggles */}
-                  <div className="flex items-center justify-between text-[10px] text-zinc-500 pt-1.5 border-t border-zinc-850/50">
+                  <div className="flex items-center justify-between text-[10px] text-zinc-505 pt-1.5 border-t border-zinc-850/50">
                     <span className="capitalize">{m.content_type}</span>
                     <button
                       onClick={(e) => {
@@ -675,7 +628,6 @@ export default function Dashboard({ initialMovies }: DashboardProps) {
           )}
         </div>
 
-        {/* Configuration / Ingest Settings */}
         {selectedMovie && selectedCampaignStatus === "active" && (
           <div className="p-4.5 border-t border-zinc-850 bg-black/30 space-y-3.5">
             <span className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold block flex items-center gap-1.5">
@@ -712,9 +664,7 @@ export default function Dashboard({ initialMovies }: DashboardProps) {
         )}
       </div>
 
-      {/* COLUMN 2: INTELLIGENCE DASHBOARD: CENTER COLUMN (45%) */}
       <div className="w-[45%] flex flex-col h-full overflow-hidden bg-zinc-950 border-r border-zinc-800">
-        {/* Top Control Bar */}
         <div className="p-4 border-b border-zinc-800 flex items-center justify-between bg-[#0e0e11] shrink-0">
           <div className="flex items-center gap-2.5">
             <Film className="h-5 w-5 text-amber-500" />
@@ -724,11 +674,9 @@ export default function Dashboard({ initialMovies }: DashboardProps) {
           </div>
         </div>
 
-        {/* Dashboard Content Panes */}
         <div className="flex-1 overflow-y-auto p-5 relative">
-          {/* OVERLAY 1: COLLECTING STATE */}
           {selectedCampaignStatus === "collecting" && (
-            <div className="absolute inset-0 bg-zinc-950/95 flex flex-col items-center justify-center text-center p-8 z-30 animate-fade-in">
+            <div className="absolute inset-0 bg-zinc-950/95 flex flex-col items-center justify-center text-center p-8 z-30">
               <Loader2 className="h-10 w-10 animate-spin text-amber-500 mb-4" />
               <h3 className="font-bold text-base text-zinc-100 uppercase tracking-widest mb-1.5">
                 Data Collection Active
@@ -739,9 +687,8 @@ export default function Dashboard({ initialMovies }: DashboardProps) {
             </div>
           )}
 
-          {/* OVERLAY 2: STOPPED STATE */}
           {selectedCampaignStatus === "stopped" && (
-            <div className="absolute inset-0 bg-zinc-950/95 flex flex-col items-center justify-center text-center p-8 z-30 animate-fade-in">
+            <div className="absolute inset-0 bg-zinc-950/95 flex flex-col items-center justify-center text-center p-8 z-30">
               <AlertTriangle className="h-10 w-10 text-rose-500 mb-4" />
               <h3 className="font-bold text-base text-zinc-100 uppercase tracking-widest mb-1.5">
                 Campaign Tracking Stopped
@@ -758,7 +705,6 @@ export default function Dashboard({ initialMovies }: DashboardProps) {
             </div>
           )}
 
-          {/* Actual Dashboard panels */}
           <div className="space-y-6">
             <AudiencePulse
               comments={comments}
@@ -786,7 +732,6 @@ export default function Dashboard({ initialMovies }: DashboardProps) {
         </div>
       </div>
 
-      {/* COLUMN 3: AGENT INVESTIGATION: RIGHT COLUMN (35%) */}
       <AgentConsole
         chatMessages={chatMessages}
         inputMessage={inputMessage}
@@ -795,7 +740,6 @@ export default function Dashboard({ initialMovies }: DashboardProps) {
         onRefreshMovies={fetchMovies}
       />
 
-      {/* Track Launch Modal Overlay */}
       {showRegisterModal && (
         <RegisterModal
           onClose={() => setShowRegisterModal(false)}

@@ -55,7 +55,7 @@ export default function RegisterModal({
           </div>
 
           <div className="space-y-1.5">
-            <label className="font-semibold text-zinc-350">Description</label>
+            <label className="font-semibold text-zinc-355">Description</label>
             <textarea
               required
               placeholder="e.g. Sequel to Gladiator following Lucius..."
@@ -67,7 +67,7 @@ export default function RegisterModal({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="font-semibold text-zinc-350">Campaign Type</label>
+              <label className="font-semibold text-zinc-355">Campaign Type</label>
               <select
                 value={newType}
                 onChange={(e) => setNewType(e.target.value)}
@@ -79,7 +79,7 @@ export default function RegisterModal({
               </select>
             </div>
             <div className="space-y-1.5">
-              <label className="font-semibold text-zinc-350">Release Date</label>
+              <label className="font-semibold text-zinc-355">Release Date</label>
               <input
                 type="date"
                 value={newReleaseDate}

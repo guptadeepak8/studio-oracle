@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Megaphone, Target, CheckCircle2 } from "lucide-react";
+import { Megaphone, Target } from "lucide-react";
 
 interface ThemeItem {
   name: string;
@@ -15,11 +15,9 @@ interface MarketingDirectivesProps {
 }
 
 export default function MarketingDirectives({ themeStats }: MarketingDirectivesProps) {
-  // Generate strategic directives based on the theme counts
   const generateDirectives = (stats: ThemeItem[]) => {
     const directives = [];
 
-    // Check if there is data
     if (stats.length === 0 || stats.every(s => s.count === 0)) {
       return [
         {
@@ -90,7 +88,6 @@ export default function MarketingDirectives({ themeStats }: MarketingDirectivesP
       }
     });
 
-    // Fallback if themes match but no custom logic exists
     if (directives.length === 0) {
       directives.push({
         title: "Broad Audience Engagement",
