@@ -5,6 +5,7 @@ export interface Movie {
   description: string;
   release_date: string | null;
   target_terms: string[];
+  status: "active" | "stopped" | "collecting";
 }
 
 export interface Comment {
@@ -36,4 +37,3 @@ export interface ChatResponse {
   status: string;
   response: string;
 }
-

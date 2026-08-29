@@ -13,7 +13,8 @@ from google.adk.sessions.sqlite_session_service import SqliteSessionService
 
 from agent import app as agent_app
 from ingestion.youtube import ingest_youtube_data
-from models import ChatRequest, IngestRequest
+from models import ChatRequest, IngestRequest, CampaignCreateRequest, CampaignStatusRequest
+from tools.movie import create_content_record
 import db
 
 app = FastAPI(title="StudioOracle API")
@@ -27,7 +28,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize the persistent SQLite session service and runner for the ADK agent
+# Initialize persistent session service
 session_service = SqliteSessionService(db_path="sessions.db")
 runner = Runner(
     app=agent_app,
@@ -42,7 +43,7 @@ def health():
 @app.get("/api/movies")
 def get_movies():
     """
-    Retrieve all movie/series content records from ClickHouse.
+    Retrieve all campaign content records from ClickHouse combined with SQLite status.
     """
     try:
         return db.fetch_movies()
@@ -52,18 +53,72 @@ def get_movies():
 @app.get("/api/comments/{content_id}")
 def get_comments(content_id: str):
     """
-    Retrieve audience feedback comments for a specific movie UUID from ClickHouse.
+    Retrieve comments for a specific campaign content UUID from ClickHouse.
     """
     try:
         return db.fetch_comments(content_id)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
+@app.post("/api/campaigns")
+def create_campaign(request: CampaignCreateRequest):
+    """
+    Directly register a new campaign content record in ClickHouse.
+    """
+    try:
+        content_id = create_content_record(
+            title=request.title,
+            content_type=request.content_type,
+            description=request.description,
+            release_date=request.release_date,
+            target_terms=request.target_terms
+        )
+        # Initialize SQLite tracking status as active
+        db.set_campaign_status(content_id, "active")
+        return {
+            "status": "success",
+            "content_id": content_id,
+            "title": request.title
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/campaigns/{content_id}/status")
+def update_campaign_status(content_id: str, request: CampaignStatusRequest):
+    """
+    Update a campaign's tracking status in SQLite.
+    """
+    if request.status not in ["active", "stopped", "collecting"]:
+        raise HTTPException(status_code=400, detail="Invalid status value")
+    try:
+        db.set_campaign_status(content_id, request.status)
+        return {
+            "status": "success",
+            "content_id": content_id,
+            "campaign_status": request.status
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.delete("/api/campaigns/{content_id}")
+def delete_campaign(content_id: str):
+    """
+    Safe cascading delete of a campaign and all its associated ClickHouse audience logs.
+    """
+    try:
+        db.delete_campaign_records(content_id)
+        return {
+            "status": "success",
+            "content_id": content_id,
+            "message": "Campaign and associated audience feedback deleted successfully"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.post("/api/chat")
 async def chat(request: ChatRequest):
     """
     Standard synchronous chat response from the StudioOracle ADK agent.
-    Deduplicates intermediate progress chunks and aggregates the final text response.
     """
     try:
         new_msg = types.Content(parts=[types.Part.from_text(text=request.message)], role="user")
@@ -76,18 +131,15 @@ async def chat(request: ChatRequest):
         response_text = ""
         accumulated_partials = ""
         async for event in events:
-            if event.content and event.content.parts:
-                for part in event.content.parts:
-                    if part.text:
-                        if event.partial:
-                            accumulated_partials += part.text
-                        else:
-                            # Final full response is stored in response_text
-                            response_text = part.text
+          if event.content and event.content.parts:
+              for part in event.content.parts:
+                  if part.text:
+                      if event.partial:
+                          accumulated_partials += part.text
+                      else:
+                          response_text = part.text
         
-        # Use final response if available; fallback to accumulated partial chunks
         final_response = response_text if response_text else accumulated_partials
-        
         return {
             "status": "success",
             "response": final_response
@@ -98,8 +150,7 @@ async def chat(request: ChatRequest):
 @app.post("/api/chat/stream")
 async def chat_stream(request: ChatRequest):
     """
-    Streaming chat endpoint using Server-Sent Events (SSE) to deliver agent tokens in real time.
-    Safely handles both progressive chunks and final aggregated full-text responses without duplication.
+    Streaming chat endpoint using Server-Sent Events (SSE).
     """
     async def event_generator():
         try:
@@ -114,18 +165,15 @@ async def chat_stream(request: ChatRequest):
                     for part in event.content.parts:
                         if part.text:
                             if event.partial:
-                                # Progressive stream chunk
                                 yield f"data: {part.text}\n\n"
                                 yielded_text += part.text
                             else:
-                                # Final complete response event
                                 full_text = part.text
                                 if yielded_text and full_text.startswith(yielded_text):
                                     remaining = full_text[len(yielded_text):]
                                     if remaining:
                                         yield f"data: {remaining}\n\n"
                                 elif not yielded_text:
-                                    # Fallback when progressive streaming was disabled/inactive
                                     yield f"data: {full_text}\n\n"
                                     yielded_text = full_text
         except Exception as e:

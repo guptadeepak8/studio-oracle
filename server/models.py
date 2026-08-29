@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from typing import Optional, List
 
 class ChatRequest(BaseModel):
     message: str
@@ -10,3 +11,12 @@ class IngestRequest(BaseModel):
     query: str
     limit: int = 3
 
+class CampaignCreateRequest(BaseModel):
+    title: str
+    content_type: str = "movie"
+    description: str
+    release_date: Optional[str] = None
+    target_terms: Optional[List[str]] = None
+
+class CampaignStatusRequest(BaseModel):
+    status: str

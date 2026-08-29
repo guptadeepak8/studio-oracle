@@ -7,10 +7,12 @@ export const API_ENDPOINTS = {
   CHAT: `${API_BASE_URL}/api/chat`,
   CHAT_STREAM: `${API_BASE_URL}/api/chat/stream`,
   INGEST: `${API_BASE_URL}/api/ingest`,
+  CAMPAIGNS: `${API_BASE_URL}/api/campaigns`,
+  CAMPAIGN_STATUS: (contentId: string) => `${API_BASE_URL}/api/campaigns/${contentId}/status`,
+  DELETE_CAMPAIGN: (contentId: string) => `${API_BASE_URL}/api/campaigns/${contentId}`,
 } as const;
 
 export const SESSION_CONFIG = {
   DEFAULT_SESSION_ID: "studio_oracle_web_session",
   DEFAULT_USER_ID: "studio_oracle_web_user",
 } as const;
-
