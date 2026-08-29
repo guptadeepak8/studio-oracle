@@ -36,4 +36,3 @@ export interface ChatResponse {
   status: string;
   response: string;
 }
-

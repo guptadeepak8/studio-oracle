@@ -13,4 +13,3 @@ export const SESSION_CONFIG = {
   DEFAULT_SESSION_ID: "studio_oracle_web_session",
   DEFAULT_USER_ID: "studio_oracle_web_user",
 } as const;
-
