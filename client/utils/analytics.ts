@@ -85,8 +85,8 @@ export function getSentimentStats(commentsList: Comment[]): SentimentStats {
 
 export function getThemeStats(commentsList: Comment[]): ThemeItem[] {
   const themes: ThemeItem[] = [
-    { name: "Casting", keywords: ["cast", "actor", "lead", "paul", "denzel", "role", "mescal"], count: 0, positive: 0, negative: 0 },
-    { name: "Visuals", keywords: ["visual", "cgi", "effects", "scenery", "cinematography", "arena", "colosseum", "look"], count: 0, positive: 0, negative: 0 },
+    { name: "Casting", keywords: ["cast", "actor", "lead", "role", "performance", "star", "talent"], count: 0, positive: 0, negative: 0 },
+    { name: "Visuals", keywords: ["visual", "cgi", "effects", "scenery", "cinematography", "look", "graphics", "shot"], count: 0, positive: 0, negative: 0 },
     { name: "Soundtrack", keywords: ["music", "song", "score", "soundtrack", "audio", "track", "orchestral"], count: 0, positive: 0, negative: 0 },
     { name: "Story", keywords: ["story", "plot", "writing", "script", "sequel", "original"], count: 0, positive: 0, negative: 0 },
     { name: "Expectations", keywords: ["expect", "hope", "wait", "hype", "goosebumps", "excited"], count: 0, positive: 0, negative: 0 },
@@ -195,8 +195,8 @@ export function getTimelineData(commentsList: Comment[]): TimelineNode[] {
 export function getConflictingSignals(commentsList: Comment[]): ConflictItem[] {
   const conflicts = [];
   const themes = [
-    { name: "CASTING", keywords: ["cast", "actor", "lead", "mescal", "denzel", "role"] },
-    { name: "VISUALS", keywords: ["visual", "cgi", "effects", "cinematography", "colosseum"] },
+    { name: "CASTING", keywords: ["cast", "actor", "lead", "role", "performance", "star", "talent"] },
+    { name: "VISUALS", keywords: ["visual", "cgi", "effects", "cinematography", "look", "graphics"] },
     { name: "SOUNDTRACK", keywords: ["music", "song", "score", "soundtrack"] },
   ];
 

@@ -5,6 +5,7 @@ class ChatRequest(BaseModel):
     message: str
     session_id: str = "default_session"
     user_id: str = "default_user"
+    content_id: Optional[str] = None
 
 class IngestRequest(BaseModel):
     content_id: str

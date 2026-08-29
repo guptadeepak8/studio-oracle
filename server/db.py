@@ -75,6 +75,28 @@ def fetch_movies() -> list[dict]:
         })
     return movies
 
+def fetch_movie_by_id(content_id: str) -> dict | None:
+    """
+    Retrieve a specific movie/campaign metadata by content_id from ClickHouse.
+    """
+    client = get_clickhouse_client()
+    query = (
+        f"SELECT content_id, content_type, title, description, release_date, target_terms "
+        f"FROM studio_oracle.content WHERE content_id = '{content_id}' LIMIT 1"
+    )
+    rows = client.query(query).result_rows
+    if not rows:
+        return None
+    r = rows[0]
+    return {
+        "content_id": str(r[0]),
+        "content_type": r[1],
+        "title": r[2],
+        "description": r[3],
+        "release_date": str(r[4]) if r[4] else None,
+        "target_terms": r[5]
+    }
+
 def fetch_comments(content_id: str) -> list[dict]:
     """
     Retrieve audience feedback comments for a specific movie UUID from ClickHouse.

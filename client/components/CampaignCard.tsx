@@ -200,3 +200,4 @@ export default function CampaignCard({ campaign, onRefresh }: CampaignCardProps)
     </div>
   );
 }
+

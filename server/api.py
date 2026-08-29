@@ -121,7 +121,17 @@ async def chat(request: ChatRequest):
     Standard synchronous chat response from the StudioOracle ADK agent.
     """
     try:
-        new_msg = types.Content(parts=[types.Part.from_text(text=request.message)], role="user")
+        message_text = request.message
+        if request.content_id:
+            movie = db.fetch_movie_by_id(request.content_id)
+            if movie:
+                message_text = (
+                    f"[SYSTEM INSTRUCTION: You are restricted to the campaign for '{movie['title']}' "
+                    f"(content_id: '{movie['content_id']}', type: '{movie['content_type']}'). "
+                    f"All database queries and analysis MUST filter strictly by content_id = '{movie['content_id']}'. "
+                    f"Do not mix context with other films.]\n\n{request.message}"
+                )
+        new_msg = types.Content(parts=[types.Part.from_text(text=message_text)], role="user")
         events = runner.run_async(
             user_id=request.user_id,
             session_id=request.session_id,
@@ -154,7 +164,17 @@ async def chat_stream(request: ChatRequest):
     """
     async def event_generator():
         try:
-            new_msg = types.Content(parts=[types.Part.from_text(text=request.message)], role="user")
+            message_text = request.message
+            if request.content_id:
+                movie = db.fetch_movie_by_id(request.content_id)
+                if movie:
+                    message_text = (
+                        f"[SYSTEM INSTRUCTION: You are restricted to the campaign for '{movie['title']}' "
+                        f"(content_id: '{movie['content_id']}', type: '{movie['content_type']}'). "
+                        f"All database queries and analysis MUST filter strictly by content_id = '{movie['content_id']}'. "
+                        f"Do not mix context with other films.]\n\n{request.message}"
+                    )
+            new_msg = types.Content(parts=[types.Part.from_text(text=message_text)], role="user")
             yielded_text = ""
             async for event in runner.run_async(
                 user_id=request.user_id,

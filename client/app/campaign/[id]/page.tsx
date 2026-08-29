@@ -177,6 +177,7 @@ export default function CampaignWorkspace() {
           message: textToSend,
           session_id: scopedSessionId,
           user_id: SESSION_CONFIG.DEFAULT_USER_ID,
+          content_id: campaign.content_id,
         }),
       });
 
@@ -329,7 +330,7 @@ export default function CampaignWorkspace() {
 
           {activeTab === "intelligence" && (
             <div className="space-y-6">
-              <MarketingDirectives themeStats={themeStats} />
+              <MarketingDirectives campaign={campaign} themeStats={themeStats} />
               <WhatChanged timelineData={timelineData} />
               <div className="grid grid-cols-2 gap-5">
                 <TopThemes themeStats={themeStats} />
