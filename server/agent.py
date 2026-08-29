@@ -1,8 +1,13 @@
 from google.adk.agents import LlmAgent
-from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset
+from google.adk.tools.mcp_tool.mcp_toolset import McpToolset
 from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
 from mcp import StdioServerParameters
 import os
+from dotenv import load_dotenv
+from tools import ingest_youtube_tool, create_content_tool
+
+# Load environment variables
+load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"))
 
 # Dynamically find the path to the mcp-clickhouse executable
 base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -19,9 +24,13 @@ root_agent=LlmAgent(
     instruction="""You are StudioOracle, an AI investment research analyst.
     You have access to a ClickHouse database via MCP tools — use it to store and
     retrieve evidence claims when relevant to the user's request.
+    You also have specific tools to register film/series content (movies) and to ingest audience feedback from YouTube comments.
+    Always register the content first if it does not exist in the database, and then run YouTube ingestion using its content ID.
     Do not invent facts.""",
     tools=[
-        MCPToolset(
+        create_content_tool,
+        ingest_youtube_tool,
+        McpToolset(
       connection_params=StdioConnectionParams(
         server_params = StdioServerParameters(
           command=mcp_path,
