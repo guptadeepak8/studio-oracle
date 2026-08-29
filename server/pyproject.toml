@@ -1,0 +1,14 @@
+[project]
+name = "studio-oracle-server"
+version = "0.1.0"
+description = "StudioOracle AI investment research agent backend server"
+dependencies = [
+    "fastapi>=0.110.0",
+    "uvicorn>=0.28.0",
+    "google-adk>=2.8.0",
+    "clickhouse-connect>=1.7.2",
+    "python-dotenv>=1.0.1",
+    "requests>=2.31.0",
+    "pydantic>=2.0.0"
+]
+
