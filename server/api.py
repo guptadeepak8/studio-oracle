@@ -1,7 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel
 import os
 from dotenv import load_dotenv
 
@@ -11,8 +10,11 @@ load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"))
 from google.adk import Runner
 from google.genai import types
 from google.adk.sessions.in_memory_session_service import InMemorySessionService
+
 from agent import root_agent
-from ingestion.youtube import get_clickhouse_client, ingest_youtube_data
+from ingestion.youtube import ingest_youtube_data
+from models import ChatRequest, IngestRequest
+import db
 
 app = FastAPI(title="StudioOracle API")
 
@@ -34,16 +36,6 @@ runner = Runner(
     auto_create_session=True,
 )
 
-class ChatRequest(BaseModel):
-    message: str
-    session_id: str = "default_session"
-    user_id: str = "default_user"
-
-class IngestRequest(BaseModel):
-    content_id: str
-    query: str
-    limit: int = 3
-
 @app.get("/health")
 def health():
     return {"status": "ok"}
@@ -51,26 +43,10 @@ def health():
 @app.get("/api/movies")
 def get_movies():
     """
-    Retrieve all movie/series content records from ClickHouse database.
+    Retrieve all movie/series content records from ClickHouse.
     """
     try:
-        client = get_clickhouse_client()
-        query = (
-            "SELECT content_id, content_type, title, description, release_date, target_terms "
-            "FROM studio_oracle.content ORDER BY created_at DESC"
-        )
-        rows = client.query(query).result_rows
-        movies = []
-        for r in rows:
-            movies.append({
-                "content_id": str(r[0]),
-                "content_type": r[1],
-                "title": r[2],
-                "description": r[3],
-                "release_date": str(r[4]) if r[4] else None,
-                "target_terms": r[5]
-            })
-        return movies
+        return db.fetch_movies()
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
@@ -80,25 +56,7 @@ def get_comments(content_id: str):
     Retrieve audience feedback comments for a specific movie UUID from ClickHouse.
     """
     try:
-        client = get_clickhouse_client()
-        query = (
-            f"SELECT comment_id, post_id, source, text, author, published_at, like_count "
-            f"FROM studio_oracle.audience_comments "
-            f"WHERE content_id = '{content_id}' ORDER BY published_at DESC"
-        )
-        rows = client.query(query).result_rows
-        comments = []
-        for r in rows:
-            comments.append({
-                "comment_id": r[0],
-                "post_id": r[1],
-                "source": r[2],
-                "text": r[3],
-                "author": r[4],
-                "published_at": str(r[5]),
-                "like_count": r[6]
-            })
-        return comments
+        return db.fetch_comments(content_id)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
@@ -161,4 +119,3 @@ def ingest(request: IngestRequest):
         return res
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
