@@ -1,4 +1,5 @@
 from google.adk.agents import LlmAgent
+from google.adk.apps import App
 from google.adk.tools.mcp_tool.mcp_toolset import McpToolset
 from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
 from mcp import StdioServerParameters
@@ -21,7 +22,7 @@ else:
 root_agent=LlmAgent(
      model='gemini-2.5-flash',
      name='database_agent',
-    instruction="""You are StudioOracle, an AI investment research analyst.
+     instruction="""You are StudioOracle, an AI investment research analyst.
     You have access to a ClickHouse database via MCP tools — use it to store and
     retrieve evidence claims when relevant to the user's request.
     You also have specific tools to register film/series content (movies) and to ingest audience feedback from YouTube comments.
@@ -31,7 +32,7 @@ root_agent=LlmAgent(
         create_content_tool,
         ingest_youtube_tool,
         McpToolset(
-      connection_params=StdioConnectionParams(
+       connection_params=StdioConnectionParams(
         server_params = StdioServerParameters(
           command=mcp_path,
           args=[],
@@ -48,6 +49,13 @@ root_agent=LlmAgent(
         ),
         timeout=60,
       ),
+      tool_list_cache_ttl_seconds=3600,
     )
     ]
 )
+
+app = App(
+    name="studio_oracle",
+    root_agent=root_agent,
+)
+

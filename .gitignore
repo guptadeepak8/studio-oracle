@@ -30,3 +30,8 @@ Thumbs.db
 
 # Antigravity Rules
 .agents/
+
+# Databases
+*.db
+sessions.db
+

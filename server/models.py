@@ -9,3 +9,4 @@ class IngestRequest(BaseModel):
     content_id: str
     query: str
     limit: int = 3
+

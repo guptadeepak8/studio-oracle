@@ -6,6 +6,7 @@ dependencies = [
     "fastapi>=0.110.0",
     "uvicorn>=0.28.0",
     "google-adk>=2.8.0",
+    "google-genai>=0.1.0",
     "clickhouse-connect>=1.7.2",
     "python-dotenv>=1.0.1",
     "requests>=2.31.0",

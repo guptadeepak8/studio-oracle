@@ -45,3 +45,4 @@ def fetch_comments(content_id: str) -> list[dict]:
             "like_count": r[6]
         })
     return comments
+
