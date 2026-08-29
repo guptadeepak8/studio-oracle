@@ -280,3 +280,4 @@ export function getPulseSummary(commentsList: Comment[]): string {
   }
   return pulseText;
 }
+
