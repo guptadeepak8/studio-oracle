@@ -25,6 +25,14 @@ def create_content_record(
         The generated content_id (UUID) as a string.
     """
     client = get_clickhouse_client()
+    
+    # Check if content with the same title already exists to prevent duplicate content records
+    escaped_title = title.replace("'", "''")
+    query = f"SELECT content_id FROM studio_oracle.content WHERE title = '{escaped_title}'"
+    existing = client.query(query).result_rows
+    if existing:
+        return str(existing[0][0])
+        
     content_id = uuid.uuid4()
     
     parsed_date = None

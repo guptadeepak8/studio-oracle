@@ -31,6 +31,15 @@ def ingest_youtube_data(content_id: str, query: str, limit: int = 3) -> dict:
     Saves to ClickHouse `audience_posts` and `audience_comments` tables.
     If YOUTUBE_API_KEY is not available, falls back to generating rich mock data.
     """
+    # Validate content_id UUID to prevent Python crash
+    try:
+        target_uuid = uuid.UUID(content_id) if isinstance(content_id, str) else content_id
+    except (ValueError, TypeError, AttributeError):
+        return {
+            "status": "error",
+            "message": f"Invalid content_id: '{content_id}'. Must be a valid UUID string."
+        }
+
     api_key = os.getenv("YOUTUBE_API_KEY")
     client = get_clickhouse_client()
     
@@ -64,7 +73,7 @@ def ingest_youtube_data(content_id: str, query: str, limit: int = 3) -> dict:
                     
                     posts_data.append((
                         video_id,
-                        uuid.UUID(content_id) if isinstance(content_id, str) else content_id,
+                        target_uuid,
                         "youtube",
                         snippet["title"],
                         snippet["channelTitle"],
@@ -93,7 +102,7 @@ def ingest_youtube_data(content_id: str, query: str, limit: int = 3) -> dict:
                             comments_data.append((
                                 c_item["id"],
                                 video_id,
-                                uuid.UUID(content_id) if isinstance(content_id, str) else content_id,
+                                target_uuid,
                                 "youtube",
                                 c_snippet["textDisplay"],
                                 c_snippet["authorDisplayName"],
@@ -146,7 +155,7 @@ def ingest_youtube_data(content_id: str, query: str, limit: int = 3) -> dict:
             vid_time = base_time + timedelta(days=idx, hours=random.randint(0, 12))
             posts_data.append((
                 vid_id,
-                uuid.UUID(content_id) if isinstance(content_id, str) else content_id,
+                target_uuid,
                 "youtube",
                 vid_title,
                 channel,
@@ -166,7 +175,7 @@ def ingest_youtube_data(content_id: str, query: str, limit: int = 3) -> dict:
                 comments_data.append((
                     f"c_{vid_id}_{c_idx}",
                     vid_id,
-                    uuid.UUID(content_id) if isinstance(content_id, str) else content_id,
+                    target_uuid,
                     "youtube",
                     text,
                     author,
@@ -175,28 +184,48 @@ def ingest_youtube_data(content_id: str, query: str, limit: int = 3) -> dict:
                     datetime.now()
                 ))
 
-    # Insert into ClickHouse
+    # Insert into ClickHouse (with deduplication)
     if posts_data:
-        print(f"Writing {len(posts_data)} posts to ClickHouse...")
-        client.insert(
-            "studio_oracle.audience_posts",
-            posts_data,
-            column_names=[
-                "post_id", "content_id", "source", "title", "author",
-                "post_type", "published_at", "url", "collected_at"
-            ]
-        )
+        try:
+            # Retrieve existing posts for this content item to prevent duplicates
+            existing_posts = {r[0] for r in client.query(f"SELECT post_id FROM studio_oracle.audience_posts WHERE content_id = '{target_uuid}'").result_rows}
+            posts_data = [p for p in posts_data if p[0] not in existing_posts]
+        except Exception as db_err:
+            print(f"Database error querying existing posts: {db_err}")
+            
+        if posts_data:
+            print(f"Writing {len(posts_data)} new posts to ClickHouse...")
+            client.insert(
+                "studio_oracle.audience_posts",
+                posts_data,
+                column_names=[
+                    "post_id", "content_id", "source", "title", "author",
+                    "post_type", "published_at", "url", "collected_at"
+                ]
+            )
+        else:
+            print("No new posts to write (all are duplicates).")
         
     if comments_data:
-        print(f"Writing {len(comments_data)} comments to ClickHouse...")
-        client.insert(
-            "studio_oracle.audience_comments",
-            comments_data,
-            column_names=[
-                "comment_id", "post_id", "content_id", "source", "text",
-                "author", "published_at", "like_count", "collected_at"
-            ]
-        )
+        try:
+            # Retrieve existing comments for this content item to prevent duplicates
+            existing_comments = {r[0] for r in client.query(f"SELECT comment_id FROM studio_oracle.audience_comments WHERE content_id = '{target_uuid}'").result_rows}
+            comments_data = [c for c in comments_data if c[0] not in existing_comments]
+        except Exception as db_err:
+            print(f"Database error querying existing comments: {db_err}")
+            
+        if comments_data:
+            print(f"Writing {len(comments_data)} new comments to ClickHouse...")
+            client.insert(
+                "studio_oracle.audience_comments",
+                comments_data,
+                column_names=[
+                    "comment_id", "post_id", "content_id", "source", "text",
+                    "author", "published_at", "like_count", "collected_at"
+                ]
+            )
+        else:
+            print("No new comments to write (all are duplicates).")
         
     return {
         "status": "success",
