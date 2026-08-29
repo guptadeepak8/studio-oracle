@@ -17,29 +17,29 @@ export default function TopThemes({ themeStats }: TopThemesProps) {
     <div className="bg-zinc-900/30 border border-zinc-800 rounded-xl p-5 space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <BarChart className="h-4.5 w-4.5 text-amber-500" />
-          <h2 className="font-bold text-xs uppercase tracking-wider text-zinc-300">Top Audience Themes</h2>
+          <BarChart className="h-5 w-5 text-amber-500" />
+          <h2 className="font-bold text-sm uppercase tracking-wider text-zinc-300">Top Audience Themes</h2>
         </div>
       </div>
 
       {themeStats.length === 0 || themeStats.every((t) => t.count === 0) ? (
-        <p className="text-xs text-zinc-500 text-center py-4 bg-zinc-900/10 border border-dashed border-zinc-850 rounded">
+        <p className="text-sm text-zinc-500 text-center py-5 bg-zinc-900/10 border border-dashed border-zinc-850 rounded">
           No themes registered. Ingest feedback to view topics.
         </p>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-3.5">
           {themeStats.map((t) => {
             const totalVal = Math.max(...themeStats.map((x) => x.count)) || 1;
             const widthPercent = Math.min(100, Math.round((t.count / totalVal) * 100));
 
             return (
-              <div key={t.name} className="space-y-1 text-xs">
+              <div key={t.name} className="space-y-1.5 text-sm">
                 <div className="flex justify-between text-zinc-400">
-                  <span className="font-medium">{t.name}</span>
-                  <span className="text-zinc-500">{t.count} mentions</span>
+                  <span className="font-semibold">{t.name}</span>
+                  <span className="text-zinc-500 font-medium">{t.count} mentions</span>
                 </div>
                 {/* Bar */}
-                <div className="w-full bg-zinc-850 h-2.5 rounded-full overflow-hidden flex">
+                <div className="w-full bg-zinc-850 h-3 rounded-full overflow-hidden flex">
                   <div
                     className="bg-zinc-700 h-full border-r border-zinc-650"
                     style={{ width: `${widthPercent}%` }}

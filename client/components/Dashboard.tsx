@@ -1,7 +1,19 @@
 "use client";
 
 import React, { useState, useEffect, FormEvent } from "react";
-import { Film, Plus, RefreshCw, Loader2, Database, Layers } from "lucide-react";
+import {
+  Film,
+  Plus,
+  RefreshCw,
+  Loader2,
+  Database,
+  Layers,
+  Play,
+  Square,
+  Settings,
+  AlertTriangle,
+  PlayCircle,
+} from "lucide-react";
 
 import { API_ENDPOINTS, SESSION_CONFIG } from "../utils/constants";
 import { Movie, Comment, ChatMessage, IngestResponse, ChatResponse } from "../utils/types";
@@ -9,6 +21,7 @@ import { Movie, Comment, ChatMessage, IngestResponse, ChatResponse } from "../ut
 // Import modular sub-components
 import AgentConsole from "./AgentConsole";
 import AudiencePulse from "./AudiencePulse";
+import MarketingDirectives from "./MarketingDirectives";
 import WhatChanged from "./WhatChanged";
 import TopThemes from "./TopThemes";
 import ConflictingSignals from "./ConflictingSignals";
@@ -19,6 +32,8 @@ interface DashboardProps {
   initialMovies: Movie[];
 }
 
+type CampaignStatus = "active" | "stopped" | "collecting";
+
 export default function Dashboard({ initialMovies }: DashboardProps) {
   // Movie tracking state
   const [movies, setMovies] = useState<Movie[]>(initialMovies);
@@ -26,6 +41,9 @@ export default function Dashboard({ initialMovies }: DashboardProps) {
     initialMovies.length > 0 ? initialMovies[0] : null
   );
   const [isLoadingMovies, setIsLoadingMovies] = useState(false);
+
+  // Campaign statuses map (persisted in local state)
+  const [campaignStatuses, setCampaignStatuses] = useState<Record<string, CampaignStatus>>({});
 
   // Ingestion form state
   const [showRegisterModal, setShowRegisterModal] = useState(false);
@@ -49,18 +67,35 @@ export default function Dashboard({ initialMovies }: DashboardProps) {
     {
       id: "welcome",
       sender: "agent",
-      text: "Hello! I am StudioOracle, your AI audience intelligence analyst. Register a movie or series campaign, ingest audience feedback, and ask me to investigate the evidence in ClickHouse.",
+      text: "Hello! I am StudioOracle, your AI audience intelligence and marketing strategist. Register a campaign, ingest audience feedback, and ask me to investigate ClickHouse or formulate marketing adjustments.",
     },
   ]);
   const [inputMessage, setInputMessage] = useState("");
 
-  // Synchronize state when server props change
+  // Initialize campaign statuses from localStorage if present
   useEffect(() => {
-    setMovies(initialMovies);
-    if (initialMovies.length > 0 && !selectedMovie) {
-      setSelectedMovie(initialMovies[0]);
+    const saved = localStorage.getItem("studio_oracle_campaign_statuses");
+    if (saved) {
+      try {
+        setCampaignStatuses(JSON.parse(saved));
+      } catch (e) {
+        console.error(e);
+      }
+    } else {
+      // Default all to active
+      const initialStatuses: Record<string, CampaignStatus> = {};
+      initialMovies.forEach((m) => {
+        initialStatuses[m.content_id] = "active";
+      });
+      setCampaignStatuses(initialStatuses);
     }
   }, [initialMovies]);
+
+  // Save campaign statuses to localStorage
+  const saveStatuses = (newStatuses: Record<string, CampaignStatus>) => {
+    setCampaignStatuses(newStatuses);
+    localStorage.setItem("studio_oracle_campaign_statuses", JSON.stringify(newStatuses));
+  };
 
   // Fetch comments when movie changes
   useEffect(() => {
@@ -72,14 +107,19 @@ export default function Dashboard({ initialMovies }: DashboardProps) {
     }
   }, [selectedMovie]);
 
-  const fetchMovies = async () => {
+  const fetchMovies = async (selectNewId?: string) => {
     setIsLoadingMovies(true);
     try {
       const res = await fetch(API_ENDPOINTS.MOVIES);
       if (res.ok) {
         const data = (await res.json()) as Movie[];
         setMovies(data);
-        if (data.length > 0 && !selectedMovie) {
+        
+        // Match selection
+        if (selectNewId) {
+          const matched = data.find((x) => x.content_id === selectNewId);
+          if (matched) setSelectedMovie(matched);
+        } else if (data.length > 0 && !selectedMovie) {
           setSelectedMovie(data[0]);
         }
       }
@@ -105,20 +145,20 @@ export default function Dashboard({ initialMovies }: DashboardProps) {
     }
   };
 
-  // Register a new movie via agent chat prompt
+  // Register a new movie campaign
   const handleRegisterMovie = async (e: FormEvent) => {
     e.preventDefault();
     if (!newTitle.trim()) return;
 
     setIsRegistering(true);
-    const userPrompt = `Register a new movie titled '${newTitle}' with description '${newDesc}'${
+    const userPrompt = `Register a new movie campaign titled '${newTitle}' with description '${newDesc}'${
       newReleaseDate ? ` and release date '${newReleaseDate}'` : ""
     }.`;
     const userMsgId = Math.random().toString();
     setChatMessages((prev) => [...prev, { id: userMsgId, sender: "user", text: userPrompt }]);
 
     const agentMsgId = Math.random().toString();
-    setChatMessages((prev) => [...prev, { id: agentMsgId, sender: "agent", text: "Registering campaign...", isStreaming: true }]);
+    setChatMessages((prev) => [...prev, { id: agentMsgId, sender: "agent", text: "Creating campaign parameters in database...", isStreaming: true }]);
 
     try {
       const response = await fetch(API_ENDPOINTS.CHAT, {
@@ -138,11 +178,38 @@ export default function Dashboard({ initialMovies }: DashboardProps) {
             msg.id === agentMsgId ? { ...msg, text: result.response, isStreaming: false } : msg
           )
         );
+        
+        // Reset inputs and close modal
+        const tempTitle = newTitle;
         setNewTitle("");
         setNewDesc("");
         setNewReleaseDate("");
         setShowRegisterModal(false);
-        await fetchMovies();
+
+        // Fetch new campaigns
+        setIsLoadingMovies(true);
+        const listRes = await fetch(API_ENDPOINTS.MOVIES);
+        if (listRes.ok) {
+          const data = (await listRes.json()) as Movie[];
+          setMovies(data);
+          // Find the newly registered campaign ID
+          const matched = data.find((x) => x.title.toLowerCase() === tempTitle.toLowerCase());
+          if (matched) {
+            setSelectedMovie(matched);
+            
+            // Put campaign into collecting state
+            const updated = { ...campaignStatuses };
+            updated[matched.content_id] = "collecting";
+            saveStatuses(updated);
+
+            // Simulate data collection pipelines for 2.5 seconds
+            setTimeout(() => {
+              const finished = { ...updated };
+              finished[matched.content_id] = "active";
+              saveStatuses(finished);
+            }, 2500);
+          }
+        }
       } else {
         throw new Error("API registration failed");
       }
@@ -157,6 +224,7 @@ export default function Dashboard({ initialMovies }: DashboardProps) {
       );
     } finally {
       setIsRegistering(false);
+      setIsLoadingMovies(false);
     }
   };
 
@@ -257,7 +325,16 @@ export default function Dashboard({ initialMovies }: DashboardProps) {
     }
   };
 
-  // Client side sentiment analyzer
+  // Start / Stop campaign handlers
+  const handleToggleCampaignStatus = (contentId: string) => {
+    const currentStatus = campaignStatuses[contentId] || "active";
+    const nextStatus = currentStatus === "stopped" ? "active" : "stopped";
+    const updated = { ...campaignStatuses };
+    updated[contentId] = nextStatus;
+    saveStatuses(updated);
+  };
+
+  // Client side sentiment statistics
   const getSentimentStats = (commentsList: Comment[]) => {
     let positive = 0;
     let negative = 0;
@@ -475,7 +552,7 @@ export default function Dashboard({ initialMovies }: DashboardProps) {
   // Dynamic summary compiler
   const getPulseSummary = (commentsList: Comment[]) => {
     if (commentsList.length === 0) {
-      return "No active launch telemetry found. Register a movie or trailer campaign above and run Ingest Feedback to fetch real audience evidence from ClickHouse.";
+      return "No active launch telemetry found. Start a campaign and run Ingest Feedback to compile audience intelligence.";
     }
     const stats = getSentimentStats(commentsList);
     const themes = getThemeStats(commentsList);
@@ -509,9 +586,207 @@ export default function Dashboard({ initialMovies }: DashboardProps) {
     c.text.toLowerCase().includes(commentSearch.toLowerCase())
   );
 
+  const selectedCampaignStatus = selectedMovie ? campaignStatuses[selectedMovie.content_id] || "active" : "active";
+
   return (
     <div className="flex h-screen w-screen bg-zinc-950 text-zinc-100 overflow-hidden font-sans">
-      {/* 1. AGENT INVESTIGATION: LEFT SIDEBAR */}
+      {/* COLUMN 1: CAMPAIGN MANAGER: LEFT SIDEBAR (20%) */}
+      <div className="w-[20%] border-r border-zinc-800 flex flex-col h-full bg-[#0d0d0f] shrink-0 text-sm">
+        {/* Campaign Header */}
+        <div className="p-4.5 border-b border-zinc-800 flex items-center justify-between bg-zinc-900/40">
+          <span className="font-bold text-xs uppercase tracking-wider text-zinc-350">Campaigns</span>
+          <button
+            onClick={() => setShowRegisterModal(true)}
+            className="flex items-center gap-1 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-xs px-2.5 py-1 rounded transition text-zinc-100 font-bold"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            Track
+          </button>
+        </div>
+
+        {/* Campaign List */}
+        <div className="flex-1 overflow-y-auto p-3 space-y-2">
+          <span className="text-[10px] text-zinc-550 uppercase tracking-widest font-bold block mb-1">
+            Tracked Campaigns
+          </span>
+          {isLoadingMovies ? (
+            <div className="flex items-center gap-2 text-xs text-zinc-550 py-2">
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              Syncing list...
+            </div>
+          ) : (
+            movies.map((m) => {
+              const status = campaignStatuses[m.content_id] || "active";
+              const isActive = selectedMovie?.content_id === m.content_id;
+              return (
+                <div
+                  key={m.content_id}
+                  onClick={() => setSelectedMovie(m)}
+                  className={`p-3 rounded-lg border transition cursor-pointer flex flex-col gap-1.5 ${
+                    isActive
+                      ? "bg-zinc-800/80 border-amber-500/50"
+                      : "bg-zinc-900/30 border-zinc-850 hover:border-zinc-700"
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-sm text-zinc-200 truncate pr-2 block max-w-[120px]" title={m.title}>
+                      {m.title}
+                    </span>
+                    
+                    {/* Status Badge */}
+                    <div className="flex items-center gap-1.5">
+                      <span className={`h-2 w-2 rounded-full ${
+                        status === "active" 
+                          ? "bg-emerald-500 animate-pulse" 
+                          : status === "collecting"
+                          ? "bg-amber-500 animate-spin border border-dashed border-amber-600"
+                          : "bg-rose-500"
+                      }`} />
+                      <span className="text-[9px] uppercase tracking-wider font-bold text-zinc-500">
+                        {status}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  {/* Actions / Toggles */}
+                  <div className="flex items-center justify-between text-[10px] text-zinc-500 pt-1.5 border-t border-zinc-850/50">
+                    <span className="capitalize">{m.content_type}</span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleToggleCampaignStatus(m.content_id);
+                      }}
+                      className="hover:text-zinc-300 font-semibold flex items-center gap-1"
+                    >
+                      {status === "stopped" ? (
+                        <>
+                          <Play className="h-2.5 w-2.5 text-emerald-500 fill-emerald-500" /> Resume
+                        </>
+                      ) : (
+                        <>
+                          <Square className="h-2.5 w-2.5 text-rose-500 fill-rose-500" /> Stop
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        {/* Configuration / Ingest Settings */}
+        {selectedMovie && selectedCampaignStatus === "active" && (
+          <div className="p-4.5 border-t border-zinc-850 bg-black/30 space-y-3.5">
+            <span className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold block flex items-center gap-1.5">
+              <Settings className="h-3.5 w-3.5" />
+              Ingestion Configs
+            </span>
+            <div className="space-y-2">
+              <input
+                type="text"
+                value={ingestQuery}
+                onChange={(e) => setIngestQuery(e.target.value)}
+                placeholder="YouTube Search Query..."
+                className="w-full bg-zinc-900 border border-zinc-800 rounded p-2 text-xs text-zinc-200 focus:outline-none focus:border-amber-500"
+              />
+              <div className="flex gap-2 items-center">
+                <span className="text-xs text-zinc-500 font-bold">Limit:</span>
+                <input
+                  type="number"
+                  value={ingestLimit}
+                  onChange={(e) => setIngestLimit(parseInt(e.target.value) || 1)}
+                  className="w-10 bg-zinc-900 border border-zinc-800 rounded p-1 text-xs text-zinc-200 text-center"
+                />
+                <button
+                  onClick={handleTriggerIngest}
+                  disabled={isIngesting}
+                  className="flex-1 bg-zinc-700 hover:bg-zinc-650 disabled:opacity-50 py-1.5 px-2 rounded text-xs font-bold text-white transition flex items-center justify-center gap-1 border border-zinc-600 shadow"
+                >
+                  {isIngesting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
+                  Ingest Feedback
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* COLUMN 2: INTELLIGENCE DASHBOARD: CENTER COLUMN (45%) */}
+      <div className="w-[45%] flex flex-col h-full overflow-hidden bg-zinc-950 border-r border-zinc-800">
+        {/* Top Control Bar */}
+        <div className="p-4 border-b border-zinc-800 flex items-center justify-between bg-[#0e0e11] shrink-0">
+          <div className="flex items-center gap-2.5">
+            <Film className="h-5 w-5 text-amber-500" />
+            <h1 className="font-bold text-sm tracking-wider uppercase text-zinc-100">
+              {selectedMovie ? `${selectedMovie.title} Campaign` : "Launch Intelligence Dashboard"}
+            </h1>
+          </div>
+        </div>
+
+        {/* Dashboard Content Panes */}
+        <div className="flex-1 overflow-y-auto p-5 relative">
+          {/* OVERLAY 1: COLLECTING STATE */}
+          {selectedCampaignStatus === "collecting" && (
+            <div className="absolute inset-0 bg-zinc-950/95 flex flex-col items-center justify-center text-center p-8 z-30 animate-fade-in">
+              <Loader2 className="h-10 w-10 animate-spin text-amber-500 mb-4" />
+              <h3 className="font-bold text-base text-zinc-100 uppercase tracking-widest mb-1.5">
+                Data Collection Active
+              </h3>
+              <p className="text-sm text-zinc-400 max-w-sm leading-relaxed">
+                Establishing communication with ClickHouse evidence pipeline. Summarizing YouTube audience comments and setting campaign markers...
+              </p>
+            </div>
+          )}
+
+          {/* OVERLAY 2: STOPPED STATE */}
+          {selectedCampaignStatus === "stopped" && (
+            <div className="absolute inset-0 bg-zinc-950/95 flex flex-col items-center justify-center text-center p-8 z-30 animate-fade-in">
+              <AlertTriangle className="h-10 w-10 text-rose-500 mb-4" />
+              <h3 className="font-bold text-base text-zinc-100 uppercase tracking-widest mb-1.5">
+                Campaign Tracking Stopped
+              </h3>
+              <p className="text-sm text-zinc-400 max-w-sm leading-relaxed mb-4">
+                This campaign was stopped. Ingestion is paused, and analytics computations are disabled.
+              </p>
+              <button
+                onClick={() => selectedMovie && handleToggleCampaignStatus(selectedMovie.content_id)}
+                className="bg-emerald-600 hover:bg-emerald-500 text-xs uppercase tracking-wider font-bold text-white px-4 py-2 rounded shadow flex items-center gap-1.5"
+              >
+                <PlayCircle className="h-4 w-4" /> Resume Tracking
+              </button>
+            </div>
+          )}
+
+          {/* Actual Dashboard panels */}
+          <div className="space-y-6">
+            <AudiencePulse
+              comments={comments}
+              sentiment={sentiment}
+              pulseSummary={pulseSummary}
+              dominantTopic={themeStats.length > 0 ? themeStats[0].name : "Unknown"}
+            />
+
+            <MarketingDirectives themeStats={themeStats} />
+
+            <WhatChanged timelineData={timelineData} />
+
+            <div className="grid grid-cols-2 gap-5">
+              <TopThemes themeStats={themeStats} />
+              <ConflictingSignals conflictingSignals={conflictingSignals} />
+            </div>
+
+            <EvidenceLedger
+              filteredComments={filteredComments}
+              isLoadingComments={isLoadingComments}
+              commentSearch={commentSearch}
+              setCommentSearch={setCommentSearch}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* COLUMN 3: AGENT INVESTIGATION: RIGHT COLUMN (35%) */}
       <AgentConsole
         chatMessages={chatMessages}
         inputMessage={inputMessage}
@@ -519,132 +794,6 @@ export default function Dashboard({ initialMovies }: DashboardProps) {
         onSendChat={handleSendChat}
         onRefreshMovies={fetchMovies}
       />
-
-      {/* RIGHT SIDE: Launch Dashboard */}
-      <div className="w-[60%] flex flex-col h-full overflow-hidden bg-zinc-950">
-        {/* Top Control Bar */}
-        <div className="p-4 border-b border-zinc-800 flex items-center justify-between bg-zinc-900/80 shrink-0">
-          <div className="flex items-center gap-3">
-            <Film className="h-4 w-4 text-amber-500" />
-            <h1 className="font-semibold text-xs tracking-wider uppercase text-zinc-100">
-              StudioOracle Launch Intelligence
-            </h1>
-          </div>
-          <button
-            onClick={() => setShowRegisterModal(true)}
-            className="flex items-center gap-1 bg-zinc-700 hover:bg-zinc-650 border border-zinc-600 text-[10px] uppercase font-bold tracking-wider px-3 py-1.5 rounded transition text-zinc-100"
-          >
-            <Plus className="h-3.5 w-3.5" />
-            Track Launch
-          </button>
-        </div>
-
-        {/* Selected Movie Controls & Meta Grid (Subordinate) */}
-        <div className="p-4 border-b border-zinc-800 grid grid-cols-3 gap-4 bg-zinc-900/20 shrink-0 text-xs">
-          {/* Active Launch dropdown */}
-          <div className="col-span-1 space-y-1">
-            <span className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold block">
-              Active launch
-            </span>
-            {isLoadingMovies ? (
-              <div className="flex items-center gap-2 text-xs text-zinc-400">
-                <Loader2 className="h-3 w-3 animate-spin text-amber-500" />
-                Loading...
-              </div>
-            ) : (
-              <select
-                value={selectedMovie?.content_id || ""}
-                onChange={(e) => {
-                  const m = movies.find((x) => x.content_id === e.target.value);
-                  if (m) setSelectedMovie(m);
-                }}
-                className="w-full bg-zinc-800 border border-zinc-700 rounded p-1.5 text-xs text-zinc-200 focus:outline-none"
-              >
-                {movies.map((m) => (
-                  <option key={m.content_id} value={m.content_id}>
-                    {m.title}
-                  </option>
-                ))}
-              </select>
-            )}
-            <p className="text-[10px] text-zinc-400 leading-tight">
-              {selectedMovie?.description}
-            </p>
-          </div>
-
-          {/* YouTube Ingestion trigger */}
-          {selectedMovie && (
-            <div className="col-span-1 border-l border-zinc-850 pl-4 space-y-1.5">
-              <span className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold block">
-                Ingestion Engine
-              </span>
-              <input
-                type="text"
-                value={ingestQuery}
-                onChange={(e) => setIngestQuery(e.target.value)}
-                placeholder="YouTube Search Query..."
-                className="w-full bg-zinc-800 border border-zinc-700 rounded p-1 text-[10px] text-zinc-200 focus:outline-none"
-              />
-              <div className="flex gap-1 items-center">
-                <span className="text-[9px] text-zinc-500 font-bold">LMT:</span>
-                <input
-                  type="number"
-                  value={ingestLimit}
-                  onChange={(e) => setIngestLimit(parseInt(e.target.value) || 1)}
-                  className="w-8 bg-zinc-800 border border-zinc-700 rounded text-[10px] text-zinc-200 text-center"
-                />
-                <button
-                  onClick={handleTriggerIngest}
-                  disabled={isIngesting}
-                  className="flex-1 bg-zinc-700 hover:bg-zinc-650 disabled:opacity-50 py-1 px-1.5 rounded text-[10px] font-bold text-white transition flex items-center justify-center gap-1 border border-zinc-600"
-                >
-                  {isIngesting ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
-                  Ingest
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Telemetry Architecture */}
-          <div className="col-span-1 border-l border-zinc-850 pl-4 space-y-1 text-[10px] text-zinc-500">
-            <span className="uppercase tracking-widest font-bold block">Telemetry Path</span>
-            <div className="space-y-0.5">
-              <p className="flex items-center gap-1 text-zinc-400">
-                <Database className="h-3 w-3 text-amber-500 shrink-0" />
-                ClickHouse Ingest: <span className="text-zinc-200 font-semibold">{comments.length} items</span>
-              </p>
-              <p className="flex items-center gap-1 text-zinc-400">
-                <Layers className="h-3 w-3 text-amber-500 shrink-0" />
-                ADK Agent Pipeline: <span className="text-zinc-200 font-semibold">Enabled</span>
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Modular Dashboard Sections */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          <AudiencePulse
-            comments={comments}
-            sentiment={sentiment}
-            pulseSummary={pulseSummary}
-            dominantTopic={themeStats.length > 0 ? themeStats[0].name : "Unknown"}
-          />
-
-          <WhatChanged timelineData={timelineData} />
-
-          <div className="grid grid-cols-2 gap-6">
-            <TopThemes themeStats={themeStats} />
-            <ConflictingSignals conflictingSignals={conflictingSignals} />
-          </div>
-
-          <EvidenceLedger
-            filteredComments={filteredComments}
-            isLoadingComments={isLoadingComments}
-            commentSearch={commentSearch}
-            setCommentSearch={setCommentSearch}
-          />
-        </div>
-      </div>
 
       {/* Track Launch Modal Overlay */}
       {showRegisterModal && (
