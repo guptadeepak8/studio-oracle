@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Plus, Loader2 } from "lucide-react";
 import { API_ENDPOINTS } from "../utils/constants";
 import { Movie } from "../utils/types";
@@ -11,6 +11,7 @@ import RegisterModal from "./RegisterModal";
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [campaigns, setCampaigns] = useState<Movie[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -111,26 +112,55 @@ export default function Sidebar() {
           <div className="space-y-1">
             {campaigns.map((c) => {
               const url = `/campaign/${c.content_id}`;
-              const isActive = pathname === url;
+              const isActive = pathname.startsWith(url);
+              const currentTab = searchParams.get("tab") || "overview";
+
               return (
-                <Link
-                  key={c.content_id}
-                  href={url}
-                  className={`flex items-center justify-between px-3 py-2 rounded-lg border transition text-sm ${
-                    isActive
-                      ? "bg-zinc-800/80 border-amber-500/40 text-amber-400 font-semibold"
-                      : "border-transparent text-zinc-400 hover:bg-zinc-900/50 hover:text-zinc-200"
-                  }`}
-                >
-                  <span className="truncate pr-2 block">{c.title}</span>
-                  <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${
-                    c.status === "active" 
-                      ? "bg-emerald-500 animate-pulse" 
-                      : c.status === "collecting"
-                      ? "bg-amber-500 animate-pulse"
-                      : "bg-rose-500"
-                  }`} />
-                </Link>
+                <div key={c.content_id} className="space-y-1">
+                  <Link
+                    href={`${url}?tab=overview`}
+                    className={`flex items-center justify-between px-3 py-2 rounded-lg border transition text-sm ${
+                      isActive
+                        ? "bg-zinc-800/80 border-amber-500/20 text-zinc-150 font-bold"
+                        : "border-transparent text-zinc-400 hover:bg-zinc-900/50 hover:text-zinc-200"
+                    }`}
+                  >
+                    <span className="truncate pr-2 block">{c.title}</span>
+                    <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${
+                      c.status === "active" 
+                        ? "bg-emerald-500 animate-pulse" 
+                        : c.status === "collecting"
+                        ? "bg-amber-500 animate-pulse"
+                        : "bg-rose-500"
+                    }`} />
+                  </Link>
+
+                  {isActive && (
+                    <div className="pl-4 pr-2 py-0.5 space-y-1 border-l border-zinc-850 ml-3.5 mt-0.5">
+                      {[
+                        { tabId: "overview", label: "Overview" },
+                        { tabId: "intelligence", label: "Intelligence" },
+                        { tabId: "evidence", label: "Evidence Ledger" },
+                        { tabId: "agent", label: "Agent Chat" }
+                      ].map((subItem) => {
+                        const isSubActive = currentTab === subItem.tabId;
+                        return (
+                          <Link
+                            key={subItem.tabId}
+                            href={`${url}?tab=${subItem.tabId}`}
+                            className={`flex items-center gap-2 px-2.5 py-1 rounded text-xs transition ${
+                              isSubActive
+                                ? "bg-amber-500/10 text-amber-400 font-bold border border-amber-500/15"
+                                : "text-zinc-500 hover:text-zinc-350 hover:bg-zinc-900/30"
+                            }`}
+                          >
+                            {subItem.label}
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               );
             })}
           </div>

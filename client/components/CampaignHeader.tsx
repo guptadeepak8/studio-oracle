@@ -74,23 +74,6 @@ export default function CampaignHeader({
           )}
         </div>
       </div>
-
-      {/* Tabs navigation */}
-      <div className="px-5 border-b border-zinc-800 bg-[#0e0e11]/50 flex gap-4 text-xs font-bold uppercase tracking-wider">
-        {(["overview", "intelligence", "evidence", "agent"] as const).map((tab) => (
-          <button
-            key={tab}
-            onClick={() => onTabChange(tab)}
-            className={`py-3.5 border-b-2 px-1 transition cursor-pointer ${
-              activeTab === tab
-                ? "border-amber-500 text-amber-400"
-                : "border-transparent text-zinc-500 hover:text-zinc-350"
-            }`}
-          >
-            {tab}
-          </button>
-        ))}
-      </div>
     </div>
   );
 }

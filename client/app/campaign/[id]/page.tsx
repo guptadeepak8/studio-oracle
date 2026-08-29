@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import React, { useState, useEffect, Suspense } from "react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Loader2, AlertTriangle, PlayCircle } from "lucide-react";
 
 import { API_ENDPOINTS, SESSION_CONFIG } from "../../../utils/constants";
@@ -26,14 +26,15 @@ import IngestConfig from "../../../components/IngestConfig";
 
 type ActiveTab = "overview" | "intelligence" | "evidence" | "agent";
 
-export default function CampaignWorkspace() {
+function CampaignWorkspaceInner() {
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
   const campaignId = params.id as string;
 
   const [campaign, setCampaign] = useState<Movie | null>(null);
   const [isLoadingCampaign, setIsLoadingCampaign] = useState(true);
-  const [activeTab, setActiveTab] = useState<ActiveTab>("overview");
+  const activeTab = (searchParams.get("tab") as ActiveTab) || "overview";
 
   const [ingestQuery, setIngestQuery] = useState("");
   const [ingestLimit, setIngestLimit] = useState(3);
@@ -276,7 +277,7 @@ export default function CampaignWorkspace() {
           onToggleStatus={handleToggleStatus}
           isToggling={isToggling}
           activeTab={activeTab}
-          onTabChange={setActiveTab}
+          onTabChange={(tab) => router.push(`/campaign/${campaignId}?tab=${tab}`)}
         />
 
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
@@ -362,5 +363,18 @@ export default function CampaignWorkspace() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function CampaignWorkspace() {
+  return (
+    <Suspense fallback={
+      <div className="flex-1 bg-zinc-950 flex flex-col items-center justify-center text-zinc-550 text-sm gap-2 h-screen">
+        <Loader2 className="h-6 w-6 animate-spin text-amber-500" />
+        Synchronizing workspace details...
+      </div>
+    }>
+      <CampaignWorkspaceInner />
+    </Suspense>
   );
 }
