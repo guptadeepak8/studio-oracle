@@ -110,7 +110,7 @@ export default function AgentConsole({
   };
 
   return (
-    <div className="w-[35%] border-l border-zinc-800 flex flex-col h-full bg-[#0c0c0e]">
+    <div className="w-full flex flex-col h-full bg-[#0c0c0e]">
       <div className="p-4 border-b border-zinc-800 flex items-center justify-between bg-zinc-900/80">
         <div className="flex items-center gap-2">
           <div className="h-2.5 w-2.5 rounded-full bg-amber-500 animate-pulse" />

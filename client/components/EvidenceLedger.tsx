@@ -18,7 +18,7 @@ export default function EvidenceLedger({
   setCommentSearch,
 }: EvidenceLedgerProps) {
   return (
-    <div className="bg-zinc-900/10 border border-zinc-855 rounded-xl p-5 space-y-4">
+    <div className="bg-zinc-900/10 border border-zinc-855 rounded-xl p-5 space-y-4 flex flex-col h-full overflow-hidden">
       <div className="flex items-center justify-between border-b border-zinc-850 pb-3">
         <div className="flex items-center gap-2">
           <Database className="h-5 w-5 text-zinc-400" />
@@ -38,7 +38,7 @@ export default function EvidenceLedger({
         </div>
       </div>
 
-      <div className="overflow-y-auto max-h-72 space-y-2.5 pr-1">
+      <div className="flex-1 overflow-y-auto space-y-2.5 pr-1">
         {isLoadingComments ? (
           <div className="flex items-center justify-center py-8 text-zinc-500 text-xs gap-2">
             <Loader2 className="h-5 w-5 animate-spin text-amber-500" />

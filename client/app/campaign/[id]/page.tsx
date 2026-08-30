@@ -271,7 +271,7 @@ function CampaignWorkspaceInner() {
         </div>
       )}
 
-      <div className={`flex-1 flex flex-col h-full overflow-hidden ${activeTab === "agent" ? "w-[65%]" : "w-full"}`}>
+      <div className="flex-1 flex flex-col h-full overflow-hidden w-full">
         <CampaignHeader
           campaign={campaign}
           onToggleStatus={handleToggleStatus}
@@ -280,87 +280,87 @@ function CampaignWorkspaceInner() {
           onTabChange={(tab) => router.push(`/campaign/${campaignId}?tab=${tab}`)}
         />
 
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          {activeTab === "overview" && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-3 gap-6">
-                <div className="col-span-1 bg-zinc-900/30 border border-zinc-800 rounded-xl p-5 space-y-4">
-                  <h3 className="font-bold text-xs uppercase tracking-widest text-zinc-400">Campaign Details</h3>
-                  <div className="space-y-3.5 text-sm font-sans">
-                    <div>
-                      <span className="text-zinc-550 block text-xs uppercase font-medium">Description</span>
-                      <p className="text-zinc-250 leading-relaxed">{campaign.description}</p>
-                    </div>
-                    <div>
-                      <span className="text-zinc-550 block text-xs uppercase font-medium">Release Date</span>
-                      <p className="text-zinc-200 font-semibold">{campaign.release_date || "To Be Announced"}</p>
-                    </div>
-                    <div>
-                      <span className="text-zinc-550 block text-xs uppercase font-medium">Target Search Terms</span>
-                      <div className="flex flex-wrap gap-1.5 pt-1">
-                        {campaign.target_terms.map((t, idx) => (
-                          <span key={idx} className="bg-zinc-800 border border-zinc-700 text-xs px-2 py-0.5 rounded text-zinc-300">
-                            {t}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="col-span-2 space-y-6">
-                  <IngestConfig
-                    ingestQuery={ingestQuery}
-                    setIngestQuery={setIngestQuery}
-                    ingestLimit={ingestLimit}
-                    setIngestLimit={setIngestLimit}
-                    isIngesting={isIngesting}
-                    onTriggerIngest={handleTriggerIngest}
-                  />
-
-                  <AudiencePulse
-                    comments={comments}
-                    sentiment={sentiment}
-                    pulseSummary={pulseSummary}
-                    dominantTopic={themeStats.length > 0 ? themeStats[0].name : "Unknown"}
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === "intelligence" && (
-            <div className="space-y-6">
-              <MarketingDirectives campaign={campaign} themeStats={themeStats} />
-              <WhatChanged timelineData={timelineData} />
-              <div className="grid grid-cols-2 gap-5">
-                <TopThemes themeStats={themeStats} />
-                <ConflictingSignals conflictingSignals={conflictingSignals} />
-              </div>
-            </div>
-          )}
-
-          {activeTab === "evidence" && (
+        {activeTab === "agent" ? (
+          <div className="flex-1 overflow-hidden">
+            <AgentConsole
+              chatMessages={chatMessages}
+              inputMessage={inputMessage}
+              setInputMessage={setInputMessage}
+              onSendChat={handleSendChat}
+              onRefreshMovies={fetchCampaignDetail}
+            />
+          </div>
+        ) : activeTab === "evidence" ? (
+          <div className="flex-1 overflow-hidden p-6">
             <EvidenceLedger
               filteredComments={filteredComments}
               isLoadingComments={isLoadingComments}
               commentSearch={commentSearch}
               setCommentSearch={setCommentSearch}
             />
-          )}
+          </div>
+        ) : (
+          <div className="flex-1 overflow-y-auto p-6 space-y-6">
+            {activeTab === "overview" && (
+              <div className="space-y-6">
+                <div className="grid grid-cols-3 gap-6">
+                  <div className="col-span-1 bg-zinc-900/30 border border-zinc-800 rounded-xl p-5 space-y-4">
+                    <h3 className="font-bold text-xs uppercase tracking-widest text-zinc-400">Campaign Details</h3>
+                    <div className="space-y-3.5 text-sm font-sans">
+                      <div>
+                        <span className="text-zinc-550 block text-xs uppercase font-medium">Description</span>
+                        <p className="text-zinc-250 leading-relaxed">{campaign.description}</p>
+                      </div>
+                      <div>
+                        <span className="text-zinc-550 block text-xs uppercase font-medium">Release Date</span>
+                        <p className="text-zinc-200 font-semibold">{campaign.release_date || "To Be Announced"}</p>
+                      </div>
+                      <div>
+                        <span className="text-zinc-550 block text-xs uppercase font-medium">Target Search Terms</span>
+                        <div className="flex flex-wrap gap-1.5 pt-1">
+                          {campaign.target_terms.map((t, idx) => (
+                            <span key={idx} className="bg-zinc-800 border border-zinc-700 text-xs px-2 py-0.5 rounded text-zinc-300">
+                              {t}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
 
-          {activeTab === "agent" && (
-            <div className="h-[60vh] border border-zinc-850 rounded-xl overflow-hidden bg-black/10">
-              <AgentConsole
-                chatMessages={chatMessages}
-                inputMessage={inputMessage}
-                setInputMessage={setInputMessage}
-                onSendChat={handleSendChat}
-                onRefreshMovies={fetchCampaignDetail}
-              />
-            </div>
-          )}
-        </div>
+                  <div className="col-span-2 space-y-6">
+                    <IngestConfig
+                      ingestQuery={ingestQuery}
+                      setIngestQuery={setIngestQuery}
+                      ingestLimit={ingestLimit}
+                      setIngestLimit={setIngestLimit}
+                      isIngesting={isIngesting}
+                      onTriggerIngest={handleTriggerIngest}
+                    />
+
+                    <AudiencePulse
+                      comments={comments}
+                      sentiment={sentiment}
+                      pulseSummary={pulseSummary}
+                      dominantTopic={themeStats.length > 0 ? themeStats[0].name : "Unknown"}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === "intelligence" && (
+              <div className="space-y-6">
+                <MarketingDirectives campaign={campaign} themeStats={themeStats} />
+                <WhatChanged timelineData={timelineData} />
+                <div className="grid grid-cols-2 gap-5">
+                  <TopThemes themeStats={themeStats} />
+                  <ConflictingSignals conflictingSignals={conflictingSignals} />
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
