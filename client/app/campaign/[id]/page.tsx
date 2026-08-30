@@ -302,24 +302,41 @@ function CampaignWorkspaceInner() {
         ) : (
           <div className="flex-1 overflow-y-auto p-6 space-y-6">
             {activeTab === "overview" && (
-              <div className="space-y-6">
-                <div className="grid grid-cols-3 gap-6">
-                  <div className="col-span-1 bg-zinc-900/30 border border-zinc-800 rounded-xl p-5 space-y-4">
-                    <h3 className="font-bold text-xs uppercase tracking-widest text-zinc-400">Campaign Details</h3>
-                    <div className="space-y-3.5 text-sm font-sans">
-                      <div>
-                        <span className="text-zinc-550 block text-xs uppercase font-medium">Description</span>
-                        <p className="text-zinc-250 leading-relaxed">{campaign.description}</p>
+              <div className="space-y-8 font-sans max-w-5xl">
+                {/* Campaign Header Description */}
+                <div className="space-y-2">
+                  <h2 className="text-xl font-bold text-zinc-100 tracking-tight">{campaign.title}</h2>
+                  <p className="text-zinc-300 text-sm leading-relaxed max-w-3xl">{campaign.description}</p>
+                </div>
+
+                <div className="grid grid-cols-3 gap-8 pt-6 border-t border-[#1a1a1f]">
+                  {/* Brief Metadata Column */}
+                  <div className="col-span-1 space-y-5 text-xs">
+                    <h3 className="text-[10px] font-bold uppercase tracking-widest text-zinc-550">
+                      Campaign brief
+                    </h3>
+                    <div className="space-y-3">
+                      <div className="flex justify-between py-1.5 border-b border-[#1a1a1f]/50">
+                        <span className="text-zinc-500 font-medium">Telemetry status</span>
+                        <span className="text-zinc-200 capitalize font-medium">{campaign.status}</span>
                       </div>
-                      <div>
-                        <span className="text-zinc-550 block text-xs uppercase font-medium">Release Date</span>
-                        <p className="text-zinc-200 font-semibold">{campaign.release_date || "To Be Announced"}</p>
+                      <div className="flex justify-between py-1.5 border-b border-[#1a1a1f]/50">
+                        <span className="text-zinc-500 font-medium">Evidence collected</span>
+                        <span className="text-zinc-200 font-medium">{comments.length} comments</span>
                       </div>
-                      <div>
-                        <span className="text-zinc-550 block text-xs uppercase font-medium">Target Search Terms</span>
-                        <div className="flex flex-wrap gap-1.5 pt-1">
+                      <div className="flex justify-between py-1.5 border-b border-[#1a1a1f]/50">
+                        <span className="text-zinc-500 font-medium">Source channels</span>
+                        <span className="text-zinc-200 font-medium">YouTube</span>
+                      </div>
+                      <div className="flex justify-between py-1.5 border-b border-[#1a1a1f]/50">
+                        <span className="text-zinc-500 font-medium">Release date</span>
+                        <span className="text-zinc-200 font-medium">{campaign.release_date || "TBD"}</span>
+                      </div>
+                      <div className="space-y-1.5 pt-2">
+                        <span className="text-zinc-500 block font-medium">Search query terms</span>
+                        <div className="flex flex-wrap gap-1.5">
                           {campaign.target_terms.map((t, idx) => (
-                            <span key={idx} className="bg-zinc-800 border border-zinc-700 text-xs px-2 py-0.5 rounded text-zinc-300">
+                            <span key={idx} className="bg-[#131316] border border-[#232329] px-2 py-0.5 rounded text-zinc-300 text-[10px]">
                               {t}
                             </span>
                           ))}
@@ -328,7 +345,15 @@ function CampaignWorkspaceInner() {
                     </div>
                   </div>
 
-                  <div className="col-span-2 space-y-6">
+                  {/* Settings & Pulse Signals */}
+                  <div className="col-span-2 space-y-8">
+                    <AudiencePulse
+                      comments={comments}
+                      sentiment={sentiment}
+                      pulseSummary={pulseSummary}
+                      dominantTopic={themeStats.length > 0 ? themeStats[0].name : "Unknown"}
+                    />
+                    
                     <IngestConfig
                       ingestQuery={ingestQuery}
                       setIngestQuery={setIngestQuery}
@@ -336,13 +361,6 @@ function CampaignWorkspaceInner() {
                       setIngestLimit={setIngestLimit}
                       isIngesting={isIngesting}
                       onTriggerIngest={handleTriggerIngest}
-                    />
-
-                    <AudiencePulse
-                      comments={comments}
-                      sentiment={sentiment}
-                      pulseSummary={pulseSummary}
-                      dominantTopic={themeStats.length > 0 ? themeStats[0].name : "Unknown"}
                     />
                   </div>
                 </div>

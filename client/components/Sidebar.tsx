@@ -68,7 +68,7 @@ export default function Sidebar() {
         setShowModal(false);
         
         window.dispatchEvent(new Event("refresh-campaigns"));
-        router.push(`/campaign/${result.content_id}`);
+        router.push(`/campaign/${result.content_id}?tab=overview`);
       } else {
         alert("Failed to register campaign.");
       }
@@ -81,35 +81,35 @@ export default function Sidebar() {
   };
 
   return (
-    <div className="w-[18%] border-r border-zinc-800 bg-[#0d0d0f] flex flex-col h-screen shrink-0 text-sm">
-      <div className="p-4.5 border-b border-zinc-800 flex items-center justify-between bg-zinc-900/40">
-        <Link href="/" className="font-bold text-base tracking-wider uppercase text-amber-500">
+    <div className="w-[18%] border-r border-[#1a1a1f] bg-[#0a0a0c] flex flex-col h-screen shrink-0 text-sm">
+      <div className="p-5 border-b border-[#1a1a1f] flex items-center justify-between">
+        <Link href="/" className="font-semibold text-sm tracking-widest uppercase text-zinc-300 hover:text-zinc-100 transition">
           StudioOracle
         </Link>
       </div>
 
-      <div className="p-3">
+      <div className="p-4">
         <button
           onClick={() => setShowModal(true)}
-          className="w-full flex items-center justify-center gap-2 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-150 py-2 rounded-lg font-bold transition text-xs uppercase tracking-wider cursor-pointer"
+          className="w-full flex items-center justify-center gap-1.5 bg-[#131316] hover:bg-[#1a1a1f] border border-[#232329] text-zinc-200 py-1.5 rounded transition text-xs font-semibold uppercase tracking-wider cursor-pointer"
         >
-          <Plus className="h-4 w-4 text-amber-500" />
+          <Plus className="h-3.5 w-3.5 text-amber-500" />
           New Campaign
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-3 space-y-2">
-        <span className="text-[10px] text-zinc-550 uppercase tracking-widest font-bold block mb-1">
-          Campaigns Workspace
+      <div className="flex-1 overflow-y-auto px-4 py-2 space-y-3">
+        <span className="text-[10px] text-zinc-550 uppercase tracking-widest font-bold block">
+          Campaigns
         </span>
 
         {isLoading ? (
           <div className="flex items-center gap-2 text-xs text-zinc-500 py-2">
-            <Loader2 className="h-4 w-4 animate-spin text-amber-500" />
-            Loading campaigns...
+            <Loader2 className="h-3.5 w-3.5 animate-spin text-amber-500" />
+            Loading...
           </div>
         ) : (
-          <div className="space-y-1">
+          <div className="space-y-2">
             {campaigns.map((c) => {
               const url = `/campaign/${c.content_id}`;
               const isActive = pathname.startsWith(url);
@@ -119,16 +119,16 @@ export default function Sidebar() {
                 <div key={c.content_id} className="space-y-1">
                   <Link
                     href={`${url}?tab=overview`}
-                    className={`flex items-center justify-between px-3 py-2 rounded-lg border transition text-sm ${
+                    className={`flex items-center justify-between px-3 py-1.5 rounded transition text-xs font-medium ${
                       isActive
-                        ? "bg-zinc-800/80 border-amber-500/20 text-zinc-150 font-bold"
-                        : "border-transparent text-zinc-400 hover:bg-zinc-900/50 hover:text-zinc-200"
+                        ? "bg-[#131316] text-zinc-100 font-semibold"
+                        : "text-zinc-400 hover:bg-[#131316]/50 hover:text-zinc-200"
                     }`}
                   >
                     <span className="truncate pr-2 block">{c.title}</span>
-                    <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${
+                    <span className={`h-1 w-1 rounded-full shrink-0 ${
                       c.status === "active" 
-                        ? "bg-emerald-500 animate-pulse" 
+                        ? "bg-emerald-500" 
                         : c.status === "collecting"
                         ? "bg-amber-500 animate-pulse"
                         : "bg-rose-500"
@@ -136,22 +136,22 @@ export default function Sidebar() {
                   </Link>
 
                   {isActive && (
-                    <div className="pl-4 pr-2 py-0.5 space-y-1 border-l border-zinc-850 ml-3.5 mt-0.5">
+                    <div className="pl-3.5 py-0.5 space-y-0.5 border-l border-[#1a1a1f] ml-4 mt-0.5">
                       {[
                         { tabId: "overview", label: "Overview" },
                         { tabId: "intelligence", label: "Intelligence" },
-                        { tabId: "evidence", label: "Evidence Ledger" },
-                        { tabId: "agent", label: "Agent Chat" }
+                        { tabId: "evidence", label: "Evidence" },
+                        { tabId: "agent", label: "Agent" }
                       ].map((subItem) => {
                         const isSubActive = currentTab === subItem.tabId;
                         return (
                           <Link
                             key={subItem.tabId}
                             href={`${url}?tab=${subItem.tabId}`}
-                            className={`flex items-center gap-2 px-2.5 py-1 rounded text-xs transition ${
+                            className={`flex items-center px-2 py-1 rounded text-[11px] transition ${
                               isSubActive
-                                ? "bg-amber-500/10 text-amber-400 font-bold border border-amber-500/15"
-                                : "text-zinc-500 hover:text-zinc-350 hover:bg-zinc-900/30"
+                                ? "text-amber-500 font-semibold border-l border-amber-500 -ml-[15px] pl-[14px] bg-transparent"
+                                : "text-zinc-500 hover:text-zinc-300"
                             }`}
                           >
                             {subItem.label}
@@ -167,8 +167,8 @@ export default function Sidebar() {
         )}
       </div>
 
-      <div className="p-4 border-t border-zinc-850 bg-black/20 text-[10px] text-zinc-500 text-center font-medium">
-        <span>Audience Ops Console v1.2</span>
+      <div className="p-4 border-t border-[#1a1a1f] bg-black/10 text-[9px] text-zinc-600 text-center font-semibold tracking-wider uppercase">
+        <span>Research Console v1.3</span>
       </div>
 
       {showModal && (
@@ -189,4 +189,3 @@ export default function Sidebar() {
     </div>
   );
 }
-

@@ -20,25 +20,25 @@ export default function CampaignHeader({
   onTabChange,
 }: CampaignHeaderProps) {
   return (
-    <div className="shrink-0 flex flex-col">
+    <div className="shrink-0 flex flex-col bg-[#0a0a0c] border-b border-[#1a1a1f]">
       {/* Upper header */}
-      <div className="p-4 border-b border-zinc-800 bg-[#0e0e11] flex items-center justify-between">
+      <div className="px-6 py-5 flex items-center justify-between">
         <div className="space-y-1">
-          <h1 className="font-bold text-lg text-zinc-100 tracking-tight uppercase flex items-center gap-2">
+          <h1 className="font-bold text-lg text-zinc-100 tracking-tight">
             {campaign.title}
           </h1>
-          <div className="flex items-center gap-2 text-xs text-zinc-500 uppercase font-semibold">
-            <span>{campaign.content_type}</span>
-            <span>·</span>
-            <div className="flex items-center gap-1">
-              <span className={`h-2 w-2 rounded-full ${
+          <div className="flex items-center gap-2 text-xs text-zinc-400 font-medium">
+            <span className="capitalize">{campaign.content_type}</span>
+            <span className="text-zinc-600">·</span>
+            <div className="flex items-center gap-1.5">
+              <span className={`h-1.5 w-1.5 rounded-full ${
                 campaign.status === "active"
-                  ? "bg-emerald-500 animate-pulse"
+                  ? "bg-emerald-500"
                   : campaign.status === "collecting"
-                  ? "bg-amber-500"
+                  ? "bg-amber-500 animate-pulse"
                   : "bg-rose-500"
               }`} />
-              <span>{campaign.status}</span>
+              <span className="capitalize">{campaign.status}</span>
             </div>
           </div>
         </div>
@@ -47,19 +47,19 @@ export default function CampaignHeader({
           <button
             onClick={onToggleStatus}
             disabled={isToggling}
-            className={`flex items-center gap-1.5 border px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition cursor-pointer ${
+            className={`flex items-center gap-1.5 border px-3 py-1.5 rounded text-xs font-semibold tracking-wide transition cursor-pointer ${
               campaign.status === "stopped"
-                ? "bg-emerald-600 border-emerald-500 hover:bg-emerald-500 text-white"
-                : "bg-zinc-800 border-zinc-700 hover:bg-zinc-700 text-zinc-300"
+                ? "bg-emerald-600/10 border-emerald-500/20 hover:bg-emerald-600/20 text-emerald-400"
+                : "bg-transparent border-[#232329] hover:bg-[#131316] text-zinc-300"
             }`}
           >
             {campaign.status === "stopped" ? (
               <>
-                <Play className="h-3 w-3 fill-white" /> Start
+                <Play className="h-3 w-3 fill-emerald-400 text-emerald-400" /> Start tracking
               </>
             ) : (
               <>
-                <Square className="h-3 w-3 fill-zinc-300" /> Stop
+                <Square className="h-3 w-3 fill-zinc-300 text-zinc-350" /> Stop tracking
               </>
             )}
           </button>
@@ -67,9 +67,9 @@ export default function CampaignHeader({
           {activeTab !== "agent" && (
             <button
               onClick={() => onTabChange("agent")}
-              className="flex items-center gap-1.5 bg-amber-600 hover:bg-amber-500 text-white px-3.5 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition cursor-pointer"
+              className="flex items-center gap-1.5 bg-amber-600 hover:bg-amber-500 text-white px-3.5 py-1.5 rounded text-xs font-semibold tracking-wide transition cursor-pointer border border-amber-600 hover:border-amber-500 shadow-sm"
             >
-              <MessageSquare className="h-4 w-4" /> Ask StudioOracle
+              <MessageSquare className="h-3.5 w-3.5" /> Ask StudioOracle
             </button>
           )}
         </div>
@@ -77,4 +77,3 @@ export default function CampaignHeader({
     </div>
   );
 }
-

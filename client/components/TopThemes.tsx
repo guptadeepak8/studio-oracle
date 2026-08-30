@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import { BarChart } from "lucide-react";
 
 interface ThemeItem {
   name: string;
@@ -14,33 +13,32 @@ interface TopThemesProps {
 
 export default function TopThemes({ themeStats }: TopThemesProps) {
   return (
-    <div className="bg-zinc-900/30 border border-zinc-800 rounded-xl p-5 space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <BarChart className="h-5 w-5 text-amber-500" />
-          <h2 className="font-bold text-sm uppercase tracking-wider text-zinc-300">Top Audience Themes</h2>
-        </div>
+    <div className="space-y-4">
+      <div>
+        <h3 className="text-xs font-semibold uppercase tracking-widest text-zinc-550">
+          Top audience themes
+        </h3>
       </div>
 
       {themeStats.length === 0 || themeStats.every((t) => t.count === 0) ? (
-        <p className="text-sm text-zinc-500 text-center py-5 bg-zinc-900/10 border border-dashed border-zinc-850 rounded">
+        <p className="text-xs text-zinc-500 italic py-2">
           No themes registered. Ingest feedback to view topics.
         </p>
       ) : (
-        <div className="space-y-3.5">
+        <div className="space-y-4 pt-2">
           {themeStats.map((t) => {
             const totalVal = Math.max(...themeStats.map((x) => x.count)) || 1;
             const widthPercent = Math.min(100, Math.round((t.count / totalVal) * 100));
 
             return (
-              <div key={t.name} className="space-y-1.5 text-sm">
+              <div key={t.name} className="space-y-1.5 text-xs font-sans">
                 <div className="flex justify-between text-zinc-400">
-                  <span className="font-semibold">{t.name}</span>
-                  <span className="text-zinc-500 font-medium">{t.count} mentions</span>
+                  <span className="font-semibold text-zinc-350">{t.name}</span>
+                  <span className="text-zinc-550">{t.count} mentions</span>
                 </div>
-                <div className="w-full bg-zinc-855 h-3 rounded-full overflow-hidden flex">
+                <div className="w-full bg-[#131316] h-1.5 rounded-full overflow-hidden flex">
                   <div
-                    className="bg-zinc-700 h-full border-r border-zinc-650"
+                    className="bg-zinc-600 h-full rounded-full"
                     style={{ width: `${widthPercent}%` }}
                   />
                 </div>
