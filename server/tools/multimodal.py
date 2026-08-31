@@ -58,3 +58,4 @@ def analyze_visual_alignment(content_id: str, visual_concept_or_url: str = "Colo
     }
 
 analyze_visual_alignment_tool = FunctionTool(analyze_visual_alignment)
+

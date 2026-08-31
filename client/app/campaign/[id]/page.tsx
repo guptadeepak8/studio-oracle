@@ -2,8 +2,7 @@
 
 import React, { useState, useEffect, Suspense } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { Loader2, AlertTriangle, PlayCircle } from "lucide-react";
-
+import { Loader2, AlertTriangle, PlayCircle, Film, Sparkles, Database, MessageSquare } from "lucide-react";
 import { API_ENDPOINTS, SESSION_CONFIG } from "../../../utils/constants";
 import { Movie, Comment, ChatMessage, IngestResponse } from "../../../utils/types";
 import {
@@ -14,26 +13,24 @@ import {
 } from "../../../utils/analytics";
 
 import AudiencePulse from "../../../components/AudiencePulse";
-import MarketingDirectives from "../../../components/MarketingDirectives";
 import WhatChanged from "../../../components/WhatChanged";
 import TopThemes from "../../../components/TopThemes";
 import ConflictingSignals from "../../../components/ConflictingSignals";
-import EvidenceLedger from "../../../components/EvidenceLedger";
+import MarketingDirectives from "../../../components/MarketingDirectives";
 import AgentConsole from "../../../components/AgentConsole";
+import EvidenceLedger from "../../../components/EvidenceLedger";
 import CampaignHeader from "../../../components/CampaignHeader";
 import IngestConfig from "../../../components/IngestConfig";
 
-type ActiveTab = "overview" | "intelligence" | "evidence" | "agent";
-
 function CampaignWorkspaceInner() {
-  const router = useRouter();
   const params = useParams();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const campaignId = params.id as string;
+  const activeTab = (searchParams.get("tab") as "overview" | "evidence" | "agent") || "overview";
 
   const [campaign, setCampaign] = useState<Movie | null>(null);
   const [isLoadingCampaign, setIsLoadingCampaign] = useState(true);
-  const activeTab = (searchParams.get("tab") as ActiveTab) || "overview";
 
   const [ingestQuery, setIngestQuery] = useState("");
   const [ingestLimit, setIngestLimit] = useState(3);
@@ -70,25 +67,15 @@ function CampaignWorkspaceInner() {
     try {
       const res = await fetch(API_ENDPOINTS.MOVIES);
       if (res.ok) {
-        const data = (await res.json()) as Movie[];
-        const matched = data.find((x) => x.content_id === campaignId);
-        if (matched) {
-          setCampaign(matched);
-          setIngestQuery(`${matched.title} Trailer`);
-          
-          setChatMessages([
-            {
-              id: "welcome",
-              sender: "agent",
-              text: `Hello! I am StudioOracle, your AI strategist for the "${matched.title}" campaign. How can I assist you with this campaign's audience evidence?`,
-            },
-          ]);
-        } else {
-          router.push("/");
+        const movies: Movie[] = await res.json();
+        const found = movies.find((m) => m.content_id === campaignId);
+        if (found) {
+          setCampaign(found);
+          setIngestQuery(found.target_terms?.[0] || `${found.title} Trailer`);
         }
       }
-    } catch (e) {
-      console.error("Error fetching campaign details:", e);
+    } catch (err) {
+      console.error("Error fetching campaign details:", err);
     } finally {
       setIsLoadingCampaign(false);
     }
@@ -99,7 +86,7 @@ function CampaignWorkspaceInner() {
     try {
       const res = await fetch(API_ENDPOINTS.COMMENTS(campaignId));
       if (res.ok) {
-        const data = (await res.json()) as Comment[];
+        const data = await res.json();
         setComments(data);
       }
     } catch (err) {
@@ -115,21 +102,21 @@ function CampaignWorkspaceInner() {
       const resAnalytics = await fetch(API_ENDPOINTS.ANALYTICS(campaignId));
       if (resAnalytics.ok) {
         const data = await resAnalytics.json();
-        setSentiment(data.sentiment);
-        setThemeStats(data.themes);
-        setConflictingSignals(data.conflicts);
+        setSentiment(data.sentiment || { positive: 0, negative: 0, neutral: 0, posPercent: 0, negPercent: 0 });
+        setThemeStats(data.themes || []);
+        setConflictingSignals(data.conflicts || []);
       }
       
       const resTimeline = await fetch(API_ENDPOINTS.TIMELINE(campaignId));
       if (resTimeline.ok) {
         const data = await resTimeline.json();
-        setTimelineData(data);
+        setTimelineData(data || []);
       }
       
       const resPulse = await fetch(API_ENDPOINTS.PULSE(campaignId));
       if (resPulse.ok) {
         const data = await resPulse.json();
-        setPulseSummary(data.pulseSummary);
+        setPulseSummary(data.pulseSummary || "Audience metrics show mixed engagement across tracked thematic aspects.");
       }
     } catch (err) {
       console.error("Error fetching campaign analytics:", err);
@@ -138,11 +125,15 @@ function CampaignWorkspaceInner() {
     }
   };
 
+  const refreshAll = () => {
+    fetchCampaignDetail();
+    fetchComments();
+    fetchAnalytics();
+  };
+
   useEffect(() => {
     if (campaignId) {
-      fetchCampaignDetail();
-      fetchComments();
-      fetchAnalytics();
+      refreshAll();
     }
   }, [campaignId]);
 
@@ -150,6 +141,7 @@ function CampaignWorkspaceInner() {
     if (!campaign) return;
     setIsToggling(true);
     const nextStatus = campaign.status === "stopped" ? "active" : "stopped";
+
     try {
       const res = await fetch(API_ENDPOINTS.CAMPAIGN_STATUS(campaign.content_id), {
         method: "POST",
@@ -160,16 +152,15 @@ function CampaignWorkspaceInner() {
         setCampaign({ ...campaign, status: nextStatus });
         window.dispatchEvent(new Event("refresh-campaigns"));
       }
-    } catch (e) {
-      console.error(e);
+    } catch (err) {
+      console.error("Error toggling campaign status:", err);
     } finally {
       setIsToggling(false);
     }
   };
 
   const handleTriggerIngest = async () => {
-    if (!campaign || !ingestQuery.trim()) return;
-
+    if (!campaign) return;
     setIsIngesting(true);
     try {
       const res = await fetch(API_ENDPOINTS.INGEST, {
@@ -177,29 +168,27 @@ function CampaignWorkspaceInner() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           content_id: campaign.content_id,
-          query: ingestQuery,
+          query: ingestQuery || campaign.title,
           limit: ingestLimit,
         }),
       });
-
       if (res.ok) {
         const data = (await res.json()) as IngestResponse;
         if (data.status === "success") {
           const ingestNotice: ChatMessage = {
             id: Math.random().toString(),
             sender: "agent",
-            text: `[Ingestion Complete] Ingested ${data.ingested_posts} posts and ${data.ingested_comments} comments from YouTube. ClickHouse is synchronized!`,
+            text: `### Ingestion Telemetry Complete\nObserved: Ingested ${data.ingested_comments} feedback comments from ${data.source} matching query "${ingestQuery}".`,
           };
           setChatMessages((prev) => [...prev, ingestNotice]);
-          fetchComments();
-          fetchAnalytics();
+          refreshAll();
         } else {
           alert(`Ingestion failed: ${data.message || "Unknown error"}`);
         }
       }
     } catch (err) {
       console.error(err);
-      alert("Failed to connect to ingestion server.");
+      alert("Error triggering data ingestion.");
     } finally {
       setIsIngesting(false);
     }
@@ -281,9 +270,9 @@ function CampaignWorkspaceInner() {
 
   if (isLoadingCampaign) {
     return (
-      <div className="flex-1 bg-zinc-950 flex flex-col items-center justify-center text-zinc-550 text-sm gap-2">
-        <Loader2 className="h-6 w-6 animate-spin text-amber-500" />
-        Synchronizing workspace details...
+      <div className="flex-1 bg-[#09090b] flex flex-col items-center justify-center text-zinc-400 text-sm gap-3">
+        <Loader2 className="h-7 w-7 animate-spin text-amber-500" />
+        Synchronizing campaign workspace...
       </div>
     );
   }
@@ -295,45 +284,47 @@ function CampaignWorkspaceInner() {
   );
 
   return (
-    <div className="flex-1 flex bg-zinc-950 overflow-hidden h-screen relative">
+    <div className="flex-1 flex bg-[#09090b] overflow-hidden h-screen relative text-zinc-100 font-sans">
       {campaign.status === "collecting" && (
-        <div className="absolute inset-0 bg-zinc-950/95 flex flex-col items-center justify-center text-center p-8 z-30">
+        <div className="absolute inset-0 bg-black/90 flex flex-col items-center justify-center text-center p-8 z-30">
           <Loader2 className="h-10 w-10 animate-spin text-amber-500 mb-4" />
-          <h3 className="font-bold text-base text-zinc-100 uppercase tracking-widest mb-1.5">
-            Collecting Audience Evidence
+          <h3 className="font-bold text-base text-zinc-100 uppercase tracking-widest mb-2">
+            Collecting Real-Time Telemetry
           </h3>
-          <p className="text-sm text-zinc-400 max-w-sm leading-relaxed">
-            Synchronizing with ClickHouse database tables. Fetching and index-matching YouTube social feeds for "{campaign.title}"...
+          <p className="text-sm text-zinc-300 max-w-md leading-relaxed font-sans">
+            Streaming live YouTube & Reddit discussion feeds into ClickHouse for "{campaign.title}"...
           </p>
         </div>
       )}
 
       {campaign.status === "stopped" && activeTab !== "agent" && (
-        <div className="absolute inset-0 bg-zinc-950/95 flex flex-col items-center justify-center text-center p-8 z-30">
-          <AlertTriangle className="h-10 w-10 text-rose-500 mb-4" />
-          <h3 className="font-bold text-base text-zinc-100 uppercase tracking-widest mb-1.5">
-            Campaign Inactive
+        <div className="absolute inset-0 bg-black/90 flex flex-col items-center justify-center text-center p-8 z-30">
+          <AlertTriangle className="h-10 w-10 text-rose-400 mb-4" />
+          <h3 className="font-bold text-base text-zinc-100 uppercase tracking-widest mb-2">
+            Telemetry Stream Paused
           </h3>
-          <p className="text-sm text-zinc-400 max-w-sm leading-relaxed mb-4">
-            Audience telemetry pipeline is currently stopped. Resume tracking to analyze fresh insights.
+          <p className="text-sm text-zinc-300 max-w-md leading-relaxed mb-5 font-sans">
+            Real-time audience monitoring is currently paused for this campaign.
           </p>
           <button
             onClick={handleToggleStatus}
             disabled={isToggling}
-            className="bg-emerald-600 hover:bg-emerald-500 text-xs uppercase tracking-wider font-bold text-white px-4 py-2.5 rounded shadow flex items-center gap-1.5 cursor-pointer"
+            className="bg-emerald-600 hover:bg-emerald-500 text-xs uppercase tracking-wider font-bold text-white px-5 py-3 rounded-lg shadow-lg flex items-center gap-2 cursor-pointer"
           >
-            <PlayCircle className="h-4.5 w-4.5" /> Resume Tracking
+            <PlayCircle className="h-4 w-4" /> Resume Monitoring
           </button>
         </div>
       )}
 
       <div className="flex-1 flex flex-col h-full overflow-hidden w-full">
+        {/* Executive Control Header */}
         <CampaignHeader
           campaign={campaign}
           onToggleStatus={handleToggleStatus}
           isToggling={isToggling}
           activeTab={activeTab}
           onTabChange={(tab) => router.push(`/campaign/${campaignId}?tab=${tab}`)}
+          evidenceCount={comments.length}
         />
 
         {activeTab === "agent" ? (
@@ -348,7 +339,7 @@ function CampaignWorkspaceInner() {
             />
           </div>
         ) : activeTab === "evidence" ? (
-          <div className="flex-1 overflow-hidden p-6">
+          <div className="flex-1 overflow-hidden p-8">
             <EvidenceLedger
               filteredComments={filteredComments}
               isLoadingComments={isLoadingComments}
@@ -358,83 +349,73 @@ function CampaignWorkspaceInner() {
             />
           </div>
         ) : (
-          <div className="flex-1 overflow-y-auto p-6 space-y-6">
-            {activeTab === "overview" && (
-              <div className="space-y-8 font-sans max-w-5xl">
-                {/* Campaign Header Description */}
-                <div className="space-y-2">
-                  <h2 className="text-xl font-bold text-zinc-100 tracking-tight">{campaign.title}</h2>
-                  <p className="text-zinc-300 text-sm leading-relaxed max-w-3xl">{campaign.description}</p>
+          /* Unified Executive Intelligence Dashboard */
+          <div className="flex-1 overflow-y-auto p-8 space-y-8 max-w-7xl mx-auto w-full">
+            {/* Top Row: Synopsis + Ingest Trigger */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Campaign Synopsis Card */}
+              <div className="bg-[#121215] border border-[#27272a] rounded-2xl p-6 space-y-4 shadow-sm">
+                <div className="flex items-center gap-2 border-b border-[#27272a] pb-3">
+                  <Film className="h-4 w-4 text-amber-400" />
+                  <h3 className="font-bold text-xs uppercase tracking-widest text-zinc-300">
+                    Campaign Dossier
+                  </h3>
                 </div>
-
-                <div className="grid grid-cols-3 gap-8 pt-6 border-t border-[#1a1a1f]">
-                  {/* Brief Metadata Column */}
-                  <div className="col-span-1 space-y-5 text-xs">
-                    <h3 className="text-[10px] font-bold uppercase tracking-widest text-zinc-550">
-                      Campaign brief
-                    </h3>
-                    <div className="space-y-3">
-                      <div className="flex justify-between py-1.5 border-b border-[#1a1a1f]/50">
-                        <span className="text-zinc-500 font-medium">Telemetry status</span>
-                        <span className="text-zinc-200 capitalize font-medium">{campaign.status}</span>
-                      </div>
-                      <div className="flex justify-between py-1.5 border-b border-[#1a1a1f]/50">
-                        <span className="text-zinc-500 font-medium">Evidence collected</span>
-                        <span className="text-zinc-200 font-medium">{comments.length} comments</span>
-                      </div>
-                      <div className="flex justify-between py-1.5 border-b border-[#1a1a1f]/50">
-                        <span className="text-zinc-500 font-medium">Source channels</span>
-                        <span className="text-zinc-200 font-medium">YouTube</span>
-                      </div>
-                      <div className="flex justify-between py-1.5 border-b border-[#1a1a1f]/50">
-                        <span className="text-zinc-500 font-medium">Release date</span>
-                        <span className="text-zinc-200 font-medium">{campaign.release_date || "TBD"}</span>
-                      </div>
-                      <div className="space-y-1.5 pt-2">
-                        <span className="text-zinc-500 block font-medium">Search query terms</span>
-                        <div className="flex flex-wrap gap-1.5">
-                          {campaign.target_terms.map((t, idx) => (
-                            <span key={idx} className="bg-[#131316] border border-[#232329] px-2 py-0.5 rounded text-zinc-300 text-[10px]">
-                              {t}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
+                <p className="text-xs text-zinc-300 leading-relaxed font-sans">
+                  {campaign.description}
+                </p>
+                <div className="space-y-2 pt-2 border-t border-[#27272a] text-xs">
+                  <div className="flex justify-between text-zinc-400">
+                    <span>Target Tracking Terms:</span>
                   </div>
-
-                  {/* Settings & Pulse Signals */}
-                  <div className="col-span-2 space-y-8">
-                    <AudiencePulse
-                      comments={comments}
-                      sentiment={sentiment}
-                      pulseSummary={pulseSummary}
-                      dominantTopic={themeStats.length > 0 ? themeStats[0].name : "Unknown"}
-                    />
-                    
-                    <IngestConfig
-                      ingestQuery={ingestQuery}
-                      setIngestQuery={setIngestQuery}
-                      ingestLimit={ingestLimit}
-                      setIngestLimit={setIngestLimit}
-                      isIngesting={isIngesting}
-                      onTriggerIngest={handleTriggerIngest}
-                    />
+                  <div className="flex flex-wrap gap-1.5">
+                    {campaign.target_terms?.map((term, idx) => (
+                      <span key={idx} className="bg-[#18181b] border border-[#27272a] px-2 py-0.5 rounded text-zinc-300 text-[10px] font-mono">
+                        {term}
+                      </span>
+                    ))}
                   </div>
                 </div>
               </div>
-            )}
 
-            {activeTab === "intelligence" && (
-              <div className="space-y-6">
+              {/* Ingestion Stream Config */}
+              <div className="lg:col-span-2">
+                <IngestConfig
+                  campaignId={campaign.content_id}
+                  ingestQuery={ingestQuery}
+                  setIngestQuery={setIngestQuery}
+                  ingestLimit={ingestLimit}
+                  setIngestLimit={setIngestLimit}
+                  isIngesting={isIngesting}
+                  onTriggerIngest={handleTriggerIngest}
+                  onRefreshAll={refreshAll}
+                />
+              </div>
+            </div>
+
+            {/* Audience Signal Pulse */}
+            <AudiencePulse
+              comments={comments}
+              sentiment={sentiment}
+              pulseSummary={pulseSummary}
+              dominantTopic={themeStats.length > 0 ? themeStats[0].name : "Unknown"}
+            />
+
+            {/* Mid Row: What Changed & Polarizing Conflicts */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <WhatChanged timelineData={timelineData} />
+              <ConflictingSignals conflictingSignals={conflictingSignals} />
+            </div>
+
+            {/* Bottom Row: Top Themes & Actionable Directives */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-1">
+                <TopThemes themeStats={themeStats} />
+              </div>
+              <div className="lg:col-span-2">
                 <MarketingDirectives campaign={campaign} themeStats={themeStats} />
-                <WhatChanged timelineData={timelineData} />
-                <div className="grid grid-cols-2 gap-5">
-                  <TopThemes themeStats={themeStats} />
-                  <ConflictingSignals conflictingSignals={conflictingSignals} />
-                </div>
               </div>
-            )}
+            </div>
           </div>
         )}
       </div>
@@ -445,8 +426,8 @@ function CampaignWorkspaceInner() {
 export default function CampaignWorkspace() {
   return (
     <Suspense fallback={
-      <div className="flex-1 bg-zinc-950 flex flex-col items-center justify-center text-zinc-550 text-sm gap-2 h-screen">
-        <Loader2 className="h-6 w-6 animate-spin text-amber-500" />
+      <div className="flex-1 bg-[#09090b] flex flex-col items-center justify-center text-zinc-400 text-sm gap-3 h-screen">
+        <Loader2 className="h-7 w-7 animate-spin text-amber-500" />
         Synchronizing workspace details...
       </div>
     }>

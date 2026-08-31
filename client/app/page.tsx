@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Plus, Loader2, Film } from "lucide-react";
+import Link from "next/link";
+import { Plus, Loader2, Film, Sparkles, Database, ArrowRight, ShieldCheck, PlayCircle, BarChart3 } from "lucide-react";
 
 import { API_ENDPOINTS } from "../utils/constants";
 import { Movie } from "../utils/types";
@@ -80,42 +81,79 @@ export default function Page() {
   const stoppedCampaigns = campaigns.filter(c => c.status === "stopped");
 
   return (
-    <div className="flex-1 bg-zinc-950 p-8 space-y-8 overflow-y-auto max-h-screen">
-      <div className="flex items-center justify-between border-b border-zinc-900 pb-5">
-        <div className="space-y-1">
-          <h1 className="font-bold text-xl uppercase tracking-wider text-zinc-100 flex items-center gap-2">
-            Campaign Home
-          </h1>
-          <p className="text-sm text-zinc-500 font-sans">
-            Track and monitor marketing signals for entertainment launches.
+    <div className="flex-1 bg-[#09090b] p-8 space-y-8 overflow-y-auto max-h-screen text-zinc-100">
+      {/* Top Header */}
+      <div className="flex items-center justify-between border-b border-[#27272a] pb-6">
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-2.5">
+            <span className="h-2 w-2 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.6)]" />
+            <h1 className="font-bold text-2xl uppercase tracking-wider text-zinc-100">
+              Studio Launchpad
+            </h1>
+          </div>
+          <p className="text-sm text-zinc-400 font-sans max-w-2xl leading-relaxed">
+            Real-time audience telemetry and evidence-backed intelligence engine for high-stakes entertainment campaigns.
           </p>
         </div>
         <button
           onClick={() => setShowModal(true)}
-          className="flex items-center gap-1.5 bg-zinc-700 hover:bg-zinc-650 border border-zinc-600 text-xs font-bold uppercase tracking-wider px-4 py-2.5 rounded-lg transition text-zinc-100 cursor-pointer"
+          className="flex items-center gap-2 bg-amber-600 hover:bg-amber-500 text-xs font-bold uppercase tracking-wider px-5 py-3 rounded-lg transition text-white shadow-md hover:shadow-amber-500/20 cursor-pointer border border-amber-500/30"
         >
           <Plus className="h-4 w-4" />
-          New Campaign
+          Track New Campaign
         </button>
       </div>
 
+      {/* 3-Step Workflow Onboarding Guide */}
+      <div className="grid grid-cols-3 gap-5">
+        <div className="bg-[#121215] border border-[#27272a] rounded-xl p-5 space-y-2.5 hover:border-zinc-700 transition">
+          <div className="h-8 w-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 font-bold text-xs">
+            01
+          </div>
+          <h3 className="font-semibold text-sm text-zinc-200">1. Initialize Campaign</h3>
+          <p className="text-xs text-zinc-400 leading-relaxed font-sans">
+            Register your movie, series, or promotional launch with search terms and release milestones.
+          </p>
+        </div>
+
+        <div className="bg-[#121215] border border-[#27272a] rounded-xl p-5 space-y-2.5 hover:border-zinc-700 transition">
+          <div className="h-8 w-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 font-bold text-xs">
+            02
+          </div>
+          <h3 className="font-semibold text-sm text-zinc-200">2. Ingest Live Telemetry</h3>
+          <p className="text-xs text-zinc-400 leading-relaxed font-sans">
+            Stream YouTube comments and Reddit enthusiast threads into ClickHouse with Gemini batch sentiment classification.
+          </p>
+        </div>
+
+        <div className="bg-[#121215] border border-[#27272a] rounded-xl p-5 space-y-2.5 hover:border-zinc-700 transition">
+          <div className="h-8 w-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 font-bold text-xs">
+            03
+          </div>
+          <h3 className="font-semibold text-sm text-zinc-200">3. Reason & Direct</h3>
+          <p className="text-xs text-zinc-400 leading-relaxed font-sans">
+            Investigate why audience reactions changed, identify polarizing contradictions, and generate targeted marketing directives.
+          </p>
+        </div>
+      </div>
+
       {isLoading ? (
-        <div className="flex flex-col items-center justify-center py-20 text-zinc-550 text-sm gap-2">
-          <Loader2 className="h-6 w-6 animate-spin text-amber-500" />
-          Loading workspace campaigns...
+        <div className="flex flex-col items-center justify-center py-24 text-zinc-400 text-sm gap-3">
+          <Loader2 className="h-7 w-7 animate-spin text-amber-500" />
+          Synchronizing ClickHouse campaigns...
         </div>
       ) : campaigns.length === 0 ? (
-        <div className="flex flex-col items-center justify-center text-center py-16 px-6 border border-dashed border-zinc-850 rounded-2xl max-w-md mx-auto my-12 bg-zinc-900/10">
-          <Film className="h-10 w-10 text-zinc-600 mb-3" />
-          <h3 className="font-bold text-base text-zinc-300 uppercase tracking-widest mb-1">
-            No Campaigns Found
+        <div className="flex flex-col items-center justify-center text-center py-16 px-6 border border-dashed border-[#27272a] rounded-2xl max-w-lg mx-auto my-8 bg-[#121215]/50">
+          <Film className="h-12 w-12 text-zinc-500 mb-3" />
+          <h3 className="font-bold text-base text-zinc-200 uppercase tracking-widest mb-1.5">
+            No Active Campaigns
           </h3>
-          <p className="text-xs text-zinc-500 leading-relaxed mb-4">
-            You are not tracking any launch campaigns yet. Click "New Campaign" to initialize tracking.
+          <p className="text-xs text-zinc-400 leading-relaxed mb-5 max-w-sm">
+            You are not currently monitoring any entertainment launches. Click below to initialize your first campaign.
           </p>
           <button
             onClick={() => setShowModal(true)}
-            className="bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-semibold px-4 py-2 rounded-lg text-xs transition cursor-pointer"
+            className="bg-amber-600 hover:bg-amber-500 text-white font-bold px-5 py-2.5 rounded-lg text-xs uppercase tracking-wider transition cursor-pointer shadow"
           >
             Create First Campaign
           </button>
@@ -123,10 +161,15 @@ export default function Page() {
       ) : (
         <div className="space-y-8">
           {activeCampaigns.length > 0 && (
-            <div className="space-y-3.5">
-              <h2 className="font-bold text-xs uppercase tracking-widest text-zinc-500">
-                Active Campaigns ({activeCampaigns.length})
-              </h2>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="font-bold text-xs uppercase tracking-widest text-zinc-400 flex items-center gap-2">
+                  <span>Active Telemetry Streams</span>
+                  <span className="bg-emerald-950/40 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded text-[10px] font-bold">
+                    {activeCampaigns.length} Active
+                  </span>
+                </h2>
+              </div>
               <div className="grid grid-cols-3 gap-6">
                 {activeCampaigns.map((c) => (
                   <CampaignCard key={c.content_id} campaign={c} onRefresh={loadCampaigns} />
@@ -136,9 +179,9 @@ export default function Page() {
           )}
 
           {stoppedCampaigns.length > 0 && (
-            <div className="space-y-3.5">
-              <h2 className="font-bold text-xs uppercase tracking-widest text-zinc-500">
-                Stopped Campaigns ({stoppedCampaigns.length})
+            <div className="space-y-4 pt-4 border-t border-[#27272a]">
+              <h2 className="font-bold text-xs uppercase tracking-widest text-zinc-500 flex items-center gap-2">
+                <span>Paused Campaigns ({stoppedCampaigns.length})</span>
               </h2>
               <div className="grid grid-cols-3 gap-6">
                 {stoppedCampaigns.map((c) => (
