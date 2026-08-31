@@ -18,7 +18,7 @@ export default function ExecutiveScorecard({
   pulseSummary,
 }: ExecutiveScorecardProps) {
   // Score from -100 to +100 based on positive and negative percentages
-  const audienceScore = Math.min(100, Math.max(-100, sentiment.posPercent - sentiment.negPercent));
+  const audienceScore = Math.min(100, Math.max(-100, (sentiment.posPercent || 0) - (sentiment.negPercent || 0)));
   const isScorePositive = audienceScore >= 0;
 
   return (
@@ -26,7 +26,7 @@ export default function ExecutiveScorecard({
       {/* 3 Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Card 1: Overall Audience Score */}
-        <div className="bg-[#121215] border border-[#27272a] rounded-2xl p-5 space-y-2 hover:border-zinc-700 transition">
+        <div className="bg-[#121215] border border-[#27272a] rounded-2xl p-5 space-y-2 hover:border-zinc-700 transition shadow-sm">
           <div className="flex items-center justify-between text-xs text-zinc-400">
             <span className="font-semibold uppercase tracking-wider text-[11px]">Overall Audience Score</span>
             <Activity className="h-4 w-4 text-amber-400" />
@@ -47,12 +47,12 @@ export default function ExecutiveScorecard({
             </span>
           </div>
           <p className="text-[11px] text-zinc-400 pt-1">
-            {sentiment.posPercent}% positive vs {sentiment.negPercent}% critical reactions
+            {sentiment.posPercent || 0}% positive vs {sentiment.negPercent || 0}% critical reactions
           </p>
         </div>
 
         {/* Card 2: Comments Tracked & Speed */}
-        <div className="bg-[#121215] border border-[#27272a] rounded-2xl p-5 space-y-2 hover:border-zinc-700 transition">
+        <div className="bg-[#121215] border border-[#27272a] rounded-2xl p-5 space-y-2 hover:border-zinc-700 transition shadow-sm">
           <div className="flex items-center justify-between text-xs text-zinc-400">
             <span className="font-semibold uppercase tracking-wider text-[11px]">Audience Reactions</span>
             <Zap className="h-4 w-4 text-amber-400" />
@@ -72,10 +72,10 @@ export default function ExecutiveScorecard({
         </div>
 
         {/* Card 3: Top Warning / Discussion */}
-        <div className="bg-[#121215] border border-[#27272a] rounded-2xl p-5 space-y-2 hover:border-zinc-700 transition">
+        <div className="bg-[#121215] border border-[#27272a] rounded-2xl p-5 space-y-2 hover:border-zinc-700 transition shadow-sm">
           <div className="flex items-center justify-between text-xs text-zinc-400">
             <span className="font-semibold uppercase tracking-wider text-[11px]">Main Topic of Discussion</span>
-            {sentiment.negPercent >= 20 ? (
+            {(sentiment.negPercent || 0) >= 20 ? (
               <AlertTriangle className="h-4 w-4 text-rose-400" />
             ) : (
               <TrendingUp className="h-4 w-4 text-emerald-400" />
@@ -86,15 +86,15 @@ export default function ExecutiveScorecard({
               {dominantTopic || "General Tone"}
             </span>
             <span className={`ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full ${
-              sentiment.negPercent >= 20
+              (sentiment.negPercent || 0) >= 20
                 ? "bg-rose-950/60 text-rose-400 border border-rose-500/30"
                 : "bg-emerald-950/60 text-emerald-400 border border-emerald-500/30"
             }`}>
-              {sentiment.negPercent >= 20 ? "Watch Topic" : "Positive Driver"}
+              {(sentiment.negPercent || 0) >= 20 ? "Watch Topic" : "Positive Driver"}
             </span>
           </div>
           <p className="text-[11px] text-zinc-400 pt-1">
-            {sentiment.negPercent >= 20 ? "Showing friction in audience comments" : "Driving high audience excitement"}
+            {(sentiment.negPercent || 0) >= 20 ? "Showing friction in audience comments" : "Driving high audience excitement"}
           </p>
         </div>
       </div>
