@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 from tools import ingest_youtube_tool, create_content_tool
 from tools.timeline import query_trailer_inflection_tool
 from tools.reddit import ingest_reddit_tool
+from tools.multimodal import analyze_visual_alignment_tool
 
 # Load environment variables
 load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"))
@@ -78,6 +79,7 @@ root_agent=LlmAgent(
         ingest_youtube_tool,
         ingest_reddit_tool,
         query_trailer_inflection_tool,
+        analyze_visual_alignment_tool,
         McpToolset(
        connection_params=StdioConnectionParams(
         server_params = StdioServerParameters(

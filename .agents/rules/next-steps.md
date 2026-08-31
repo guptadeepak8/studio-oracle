@@ -41,7 +41,7 @@ This document serves as the tactical engineering roadmap, technical risk log, an
 
 ## P2 — If Time Permits (Polish & Stretch)
 
-- [ ] **Multimodal Poster / Trailer Sentiment Alignment**
+- [x] **Multimodal Poster / Trailer Sentiment Alignment**
   - Ingest thumbnail/trailer keyframes using Gemini 2.5 Flash Multimodal to compare intended trailer tone against audience reception.
 - [x] **Automated Marketing Strategy Generator**
   - Connect dynamic ClickHouse findings directly to the `MarketingDirectives` component to generate custom mitigation copy.
