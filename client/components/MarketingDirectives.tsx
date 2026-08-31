@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Megaphone, Target, ChevronDown, ChevronUp, Layers, Send, Users, Sparkles, Check, Copy, AlertCircle, ArrowUpRight, Zap } from "lucide-react";
+import { ChevronDown, ChevronRight, Target, Send, Users, Layers, Sparkles, Check, Copy, AlertCircle, Zap, Megaphone } from "lucide-react";
 import { Movie } from "../utils/types";
 
 interface ThemeItem {
@@ -27,7 +27,7 @@ interface MarketingDirectivesProps {
 }
 
 export default function MarketingDirectives({ campaign, themeStats }: MarketingDirectivesProps) {
-  const [expandedIndex, setExpandedIndex] = useState<number | null>(0);
+  const [isOpen, setIsOpen] = useState(true);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
 
   const generateActionPlan = (stats: ThemeItem[]): ActionPlanItem[] => {
@@ -36,7 +36,7 @@ export default function MarketingDirectives({ campaign, themeStats }: MarketingD
     if (stats.length === 0 || stats.every((s) => s.count === 0)) {
       return [
         {
-          title: "Waiting for Audience Feedback",
+          title: "Awaiting Audience Feedback Data",
           priority: "Recommended",
           whyItMatters: `No audience feedback comments have been imported for "${campaign.title}" yet.`,
           action: "Import live comments from YouTube or Reddit to generate customized, high-priority marketing actions.",
@@ -66,8 +66,8 @@ export default function MarketingDirectives({ campaign, themeStats }: MarketingD
         plans.push({
           title: "Mitigate Casting Doubts with Dramatic Scene Previews",
           priority: "High Priority",
-          whyItMatters: `Audience commentary shows active debate regarding casting (${topFriction.count} mentions, ${topFriction.negPercent}% critical).`,
-          action: "Shift promotional focus away from quick-cut montage clips to dialogue-heavy scene previews that showcase the lead actors' emotional depth.",
+          whyItMatters: `Audience commentary shows debate regarding casting choices (${topFriction.count} mentions, ${topFriction.negPercent}% critical).`,
+          action: "Shift promotional focus away from fast-paced action montage to dialogue-heavy scene previews showcasing lead actors' dramatic range.",
           copyDraft: `\"Built on drama, driven by passion. Witness powerful performances in ${campaign.title} that stand on their own merit.\"`,
           channels: ["Cinematic Featurettes", "Press Junket Interviews", "IMAX Pre-rolls"],
           audience: "Franchise purists and dramatic cinephiles",
@@ -77,7 +77,7 @@ export default function MarketingDirectives({ campaign, themeStats }: MarketingD
           title: "Highlight Physical Set Sincerity & Practical Stunts",
           priority: "High Priority",
           whyItMatters: `Comments express skepticism regarding CGI realism and digital lighting (${topFriction.count} mentions, ${topFriction.negPercent}% critical).`,
-          action: "Release behind-the-scenes footage showing physical arena construction, authentic props, and real practical stunts.",
+          action: "Release behind-the-scenes reels highlighting practical set construction, authentic arena props, and physical stunt work.",
           copyDraft: `\"Real stunts. Physical sets. Experience the authentic craft and scale behind the making of ${campaign.title}.\"`,
           channels: ["Making-Of Featurettes", "Director Commentary Reels", "Social Video Breakdowns"],
           audience: "CGI skeptics and cinematic craft enthusiasts",
@@ -87,7 +87,7 @@ export default function MarketingDirectives({ campaign, themeStats }: MarketingD
           title: `Address Audience Concerns Regarding '${topFriction.name}'`,
           priority: "High Priority",
           whyItMatters: `Identified as a major friction point (${topFriction.count} mentions, ${topFriction.negPercent}% critical).`,
-          action: `Deploy clarifying interviews, narrative context, and creator testimonials directly addressing '${topFriction.name}' concerns.`,
+          action: `Deploy clarifying interviews, narrative context, and creator testimonials directly addressing '${topFriction.name}'.`,
           copyDraft: `\"Experience the true vision and craft of ${campaign.title}. In theaters this season.\"`,
           channels: ["Targeted Digital Pre-rolls", "Social Q&A Panels", "Press Releases"],
           audience: "Engaged moviegoers and online fan communities",
@@ -161,7 +161,7 @@ export default function MarketingDirectives({ campaign, themeStats }: MarketingD
       });
     }
 
-    return plans.slice(0, 4); // Limit to top 3-4 high-leverage strategic actions
+    return plans.slice(0, 3); // Top 3 high-impact strategic actions
   };
 
   const actionPlans = generateActionPlan(themeStats);
@@ -173,152 +173,130 @@ export default function MarketingDirectives({ campaign, themeStats }: MarketingD
   };
 
   return (
-    <div className="space-y-6 font-sans">
-      {/* Header Banner */}
-      <div className="bg-[#121215] border border-[#27272a] rounded-2xl p-6 space-y-3 shadow-sm">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="h-8 w-8 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
-              <Megaphone className="h-4.5 w-4.5" />
-            </div>
-            <div>
-              <h2 className="font-bold text-base text-zinc-100 uppercase tracking-wider">
-                Marketing Action Plan
-              </h2>
-              <p className="text-xs text-zinc-400">
-                Top prioritized marketing adjustments and copy drafts based on audience telemetry for "{campaign.title}"
-              </p>
-            </div>
-          </div>
-          <span className="text-xs font-mono font-bold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-3 py-1 rounded-full">
-            {actionPlans.length} Strategic Directives
-          </span>
-        </div>
+    <div className="space-y-4 font-sans">
+      {/* Section Header with Chevron matching ClickHouse Cloud */}
+      <div className="flex items-center justify-between">
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="flex items-center gap-1.5 text-sm font-bold text-zinc-100 hover:text-[#e6fc4f] transition cursor-pointer select-none"
+        >
+          {isOpen ? (
+            <ChevronDown className="h-4 w-4 text-zinc-400" />
+          ) : (
+            <ChevronRight className="h-4 w-4 text-zinc-400" />
+          )}
+          <span>Marketing Action Directives</span>
+        </button>
+
+        <span className="text-xs font-mono font-bold text-[#e6fc4f] bg-[#1c1c1f] border border-[#28282b] px-3 py-1 rounded-md">
+          {actionPlans.length} Prioritized Directives
+        </span>
       </div>
 
-      {/* Action Cards List */}
-      <div className="space-y-4">
-        {actionPlans.map((plan, idx) => {
-          const isExpanded = expandedIndex === idx;
-          return (
+      <p className="text-xs text-zinc-500">
+        AI-synthesized strategic marketing pivots and promotional ad copy based on ClickHouse telemetry.
+      </p>
+
+      {isOpen && (
+        <div className="space-y-3.5">
+          {actionPlans.map((plan, idx) => (
             <div
               key={idx}
-              className="bg-[#121215] border border-[#27272a] rounded-2xl overflow-hidden hover:border-zinc-700 transition shadow-sm"
+              className="bg-[#1c1c1f] border border-[#28282b] rounded-xl p-5 space-y-4 shadow-xs hover:border-zinc-700 transition"
             >
-              <div
-                onClick={() => setExpandedIndex(isExpanded ? null : idx)}
-                className="p-5 flex items-center justify-between cursor-pointer select-none bg-[#121215] hover:bg-[#18181b] transition"
-              >
-                <div className="flex items-center gap-3.5">
-                  <div className="p-2 rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/20 shrink-0">
-                    <Target className="h-4.5 w-4.5" />
+              {/* Directive Header */}
+              <div className="flex items-center justify-between flex-wrap gap-2 border-b border-[#28282b]/70 pb-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="h-6 w-6 rounded-md bg-[#242428] flex items-center justify-center text-[#e6fc4f] shrink-0">
+                    <Target className="h-3.5 w-3.5" />
                   </div>
-                  <div>
-                    <h3 className="font-bold text-sm text-zinc-100">{plan.title}</h3>
-                    <span className="text-xs text-zinc-400 font-medium">Click to inspect strategic rationale & ready-to-use copy draft</span>
-                  </div>
+                  <h3 className="font-bold text-sm text-zinc-100">{plan.title}</h3>
                 </div>
 
-                <div className="flex items-center gap-3">
-                  <span className={`text-[10px] px-2.5 py-1 rounded-full font-bold uppercase tracking-wider ${
-                    plan.priority === "High Priority"
-                      ? "bg-rose-950/60 text-rose-400 border border-rose-500/40"
-                      : plan.priority === "Quick Win"
-                      ? "bg-emerald-950/60 text-emerald-400 border border-emerald-500/40"
-                      : "bg-blue-950/60 text-blue-400 border border-blue-500/40"
-                  }`}>
-                    {plan.priority}
-                  </span>
-                  {isExpanded ? (
-                    <ChevronUp className="h-4 w-4 text-zinc-400" />
-                  ) : (
-                    <ChevronDown className="h-4 w-4 text-zinc-400" />
-                  )}
-                </div>
+                <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider ${
+                  plan.priority === "High Priority"
+                    ? "bg-[#331b20] text-[#f87171] border border-[#4c242a]"
+                    : plan.priority === "Quick Win"
+                    ? "bg-[#183424] text-[#4ade80] border border-[#234e35]"
+                    : "bg-[#1e293b] text-[#60a5fa] border border-[#334155]"
+                }`}>
+                  {plan.priority}
+                </span>
               </div>
 
-              {isExpanded && (
-                <div className="p-6 border-t border-[#27272a] bg-[#18181b] space-y-5 text-xs">
-                  {/* Rationale & Action */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <div className="space-y-1.5 bg-[#121215] border border-[#27272a] p-4 rounded-xl">
-                      <span className="text-zinc-400 font-bold uppercase tracking-widest text-[10px] block flex items-center gap-1.5">
-                        <AlertCircle className="h-3.5 w-3.5 text-amber-400" />
-                        Why This Matters (Audience Signal)
-                      </span>
-                      <p className="text-zinc-200 font-sans leading-relaxed">{plan.whyItMatters}</p>
-                    </div>
-
-                    <div className="space-y-1.5 bg-[#121215] border border-amber-500/20 p-4 rounded-xl">
-                      <span className="text-amber-400 font-bold uppercase tracking-widest text-[10px] block flex items-center gap-1.5">
-                        <Sparkles className="h-3.5 w-3.5" />
-                        Recommended Strategic Action
-                      </span>
-                      <p className="text-zinc-100 font-sans leading-relaxed font-medium">{plan.action}</p>
-                    </div>
+              {/* 2-Column Strategy & Copy Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                {/* Left: Audience Signal & Recommended Action */}
+                <div className="space-y-3">
+                  <div className="bg-[#161618] border border-[#28282b] rounded-lg p-3 space-y-1">
+                    <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block flex items-center gap-1.5">
+                      <AlertCircle className="h-3 w-3 text-[#e6fc4f]" />
+                      Audience Signal Rationale
+                    </span>
+                    <p className="text-zinc-300 leading-relaxed font-sans">{plan.whyItMatters}</p>
                   </div>
 
-                  {/* Copy Draft & Target Execution */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-2 border-t border-[#27272a]">
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-zinc-400 font-bold uppercase tracking-widest text-[10px] block flex items-center gap-1.5">
-                          <Send className="h-3.5 w-3.5 text-amber-400" />
-                          Ready-to-Use Ad & Social Copy Draft
-                        </span>
-                        <button
-                          onClick={() => handleCopyDraft(plan.copyDraft, idx)}
-                          className="flex items-center gap-1 text-[10px] text-amber-400 hover:text-amber-300 font-bold uppercase tracking-wider bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded transition cursor-pointer"
-                        >
-                          {copiedIndex === idx ? (
-                            <>
-                              <Check className="h-3 w-3 text-emerald-400" /> Copied
-                            </>
-                          ) : (
-                            <>
-                              <Copy className="h-3 w-3" /> Copy Text
-                            </>
-                          )}
-                        </button>
-                      </div>
-                      <p className="text-zinc-100 font-serif italic bg-[#121215] border border-[#27272a] rounded-xl p-3.5 leading-relaxed">
-                        {plan.copyDraft}
-                      </p>
+                  <div className="bg-[#161618] border border-[#28282b] rounded-lg p-3 space-y-1">
+                    <span className="text-[10px] font-bold text-[#e6fc4f] uppercase tracking-wider block flex items-center gap-1.5">
+                      <Sparkles className="h-3 w-3" />
+                      Recommended Marketing Action
+                    </span>
+                    <p className="text-zinc-100 leading-relaxed font-sans font-medium">{plan.action}</p>
+                  </div>
+                </div>
+
+                {/* Right: Ad Copy Draft & Target Execution */}
+                <div className="space-y-3">
+                  <div className="bg-[#161618] border border-[#28282b] rounded-lg p-3 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block flex items-center gap-1.5">
+                        <Send className="h-3 w-3 text-[#e6fc4f]" />
+                        Ready-to-Use Promotional Copy
+                      </span>
+                      <button
+                        onClick={() => handleCopyDraft(plan.copyDraft, idx)}
+                        className="flex items-center gap-1 bg-[#e6fc4f] hover:bg-[#d8ed47] text-black font-bold text-[10px] px-2 py-0.5 rounded transition cursor-pointer shadow-xs"
+                      >
+                        {copiedIndex === idx ? (
+                          <>
+                            <Check className="h-3 w-3" /> Copied
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="h-3 w-3" /> Copy Text
+                          </>
+                        )}
+                      </button>
+                    </div>
+                    <p className="text-zinc-100 font-serif italic text-xs leading-relaxed border-l-2 border-[#e6fc4f]/70 pl-2.5">
+                      {plan.copyDraft}
+                    </p>
+                  </div>
+
+                  <div className="bg-[#161618] border border-[#28282b] rounded-lg p-3 space-y-2">
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="text-zinc-400 font-medium">Target Audience:</span>
+                      <span className="font-semibold text-zinc-200">{plan.audience}</span>
                     </div>
 
-                    <div className="space-y-3.5">
-                      <div className="space-y-1">
-                        <span className="text-zinc-400 font-bold uppercase tracking-widest text-[10px] block flex items-center gap-1.5">
-                          <Users className="h-3.5 w-3.5 text-amber-400" />
-                          Target Audience Segment
+                    <div className="flex items-center gap-1.5 flex-wrap pt-1 border-t border-[#28282b]/60">
+                      <span className="text-[10px] text-zinc-500 font-medium mr-1">Channels:</span>
+                      {plan.channels.map((chan, cIdx) => (
+                        <span
+                          key={cIdx}
+                          className="bg-[#242428] border border-[#2e2e33] px-2 py-0.5 rounded text-zinc-300 text-[10px] font-medium"
+                        >
+                          {chan}
                         </span>
-                        <p className="text-zinc-200 font-sans font-semibold text-xs">{plan.audience}</p>
-                      </div>
-
-                      <div className="space-y-1.5">
-                        <span className="text-zinc-400 font-bold uppercase tracking-widest text-[10px] block flex items-center gap-1.5">
-                          <Layers className="h-3.5 w-3.5 text-amber-400" />
-                          Recommended Distribution Channels
-                        </span>
-                        <div className="flex flex-wrap gap-1.5">
-                          {plan.channels.map((chan, cIdx) => (
-                            <span
-                              key={cIdx}
-                              className="bg-[#121215] border border-[#27272a] px-2.5 py-1 rounded-md text-zinc-200 text-[11px] font-medium"
-                            >
-                              {chan}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
+                      ))}
                     </div>
                   </div>
                 </div>
-              )}
+              </div>
             </div>
-          );
-        })}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
