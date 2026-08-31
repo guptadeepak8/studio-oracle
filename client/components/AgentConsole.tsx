@@ -10,6 +10,7 @@ interface AgentConsoleProps {
   setInputMessage: (msg: string) => void;
   onSendChat: (messageText?: string) => void;
   onRefreshMovies: () => void;
+  onSelectEvidence?: (commentId: string) => void;
 }
 
 export default function AgentConsole({
@@ -18,6 +19,7 @@ export default function AgentConsole({
   setInputMessage,
   onSendChat,
   onRefreshMovies,
+  onSelectEvidence,
 }: AgentConsoleProps) {
   const chatEndRef = useRef<HTMLDivElement>(null);
 
@@ -40,7 +42,7 @@ export default function AgentConsole({
   const parseInlineMarkdown = (text: string) => {
     const parts: React.ReactNode[] = [];
     let currentIdx = 0;
-    const regex = /(\*\*.*?\*\*|`.*?`)/g;
+    const regex = /(\*\*.*?\*\*|`.*?`|\[ref:\s*[\w\-_]+\])/gi;
     let match;
     let key = 0;
     
@@ -63,6 +65,18 @@ export default function AgentConsole({
           <code key={key++} className="font-mono text-[11px] bg-[#131316] border border-[#232329] px-1 py-0.5 rounded text-amber-500/90">
             {matchText.slice(1, -1)}
           </code>
+        );
+      } else if (matchText.toLowerCase().startsWith("[ref:")) {
+        const commentId = matchText.slice(5, -1).trim();
+        parts.push(
+          <button
+            key={key++}
+            onClick={() => onSelectEvidence?.(commentId)}
+            className="inline-flex items-center gap-1 mx-1 px-1.5 py-0.25 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 rounded text-[10px] font-mono text-amber-400 cursor-pointer transition"
+            title={`Inspect evidence comment ${commentId}`}
+          >
+            <span>🔍</span> Ref: {commentId.slice(0, 12)}
+          </button>
         );
       }
       

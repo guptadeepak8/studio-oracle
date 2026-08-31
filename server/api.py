@@ -170,6 +170,23 @@ def delete_campaign(content_id: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.post("/api/campaigns/{content_id}/ingest-reddit")
+def trigger_reddit_ingestion(content_id: str, query: str = None):
+    """
+    Trigger Reddit audience feedback ingestion for a campaign.
+    """
+    try:
+        from ingestion.reddit import ingest_reddit_data
+        search_query = query or "Gladiator II Reddit discussions"
+        result = ingest_reddit_data(content_id=content_id, query=search_query)
+        return {
+            "status": "success",
+            "message": f"Successfully ingested {result.get('ingested_comments', 0)} Reddit community comments.",
+            "data": result
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.post("/api/chat")
 async def chat(request: ChatRequest):
     """

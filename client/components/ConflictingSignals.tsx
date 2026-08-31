@@ -25,18 +25,12 @@ interface ConflictingSignalsProps {
 }
 
 export default function ConflictingSignals({ conflictingSignals }: ConflictingSignalsProps) {
-  const getWhyItMatters = (theme: string): string => {
-    const t = theme.toUpperCase();
-    if (t === "CASTING") {
-      return "Audience reactions are split on casting choices. Some express excitement about the chemistry and fit of lead performers, while others remain skeptical or make critical comparisons.";
-    }
-    if (t === "VISUALS") {
-      return "The visual style is driving polarization. Some viewers praise the cinematic scale and look, while others are highly critical of CGI quality or special effects realism.";
-    }
-    if (t === "SOUNDTRACK") {
-      return "Audio cues trigger mixed emotions. Nostalgic instrumental cues resonate positively, but modern trailer tracks or music choices are causing friction.";
-    }
-    return `The audience is not uniformly negative or positive; reaction is split around the ${theme.toLowerCase()} execution.`;
+  const getWhyItMatters = (item: ConflictItem): string => {
+    const themeName = item.theme.toLowerCase();
+    const posSnippet = item.positive.text.length > 80 ? item.positive.text.slice(0, 80) + "..." : item.positive.text;
+    const negSnippet = item.negative.text.length > 80 ? item.negative.text.slice(0, 80) + "..." : item.negative.text;
+    
+    return `Dynamic evidence highlights direct friction surrounding the '${themeName}' aspect. While positive feedback highlights "${posSnippet}", critical commentary expresses active skepticism ("${negSnippet}"). Marketing directives should proactively address this divide.`;
   };
 
   return (
@@ -93,7 +87,7 @@ export default function ConflictingSignals({ conflictingSignals }: ConflictingSi
                   Why this matters
                 </span>
                 <p className="text-zinc-300 font-sans leading-relaxed">
-                  {getWhyItMatters(conf.theme)}
+                  {getWhyItMatters(conf)}
                 </p>
               </div>
             </div>

@@ -32,6 +32,20 @@ export default function AudiencePulse({
         </p>
       </div>
 
+      {sentiment.negPercent >= 20 && (
+        <div className="bg-rose-950/20 border border-rose-500/30 p-3.5 rounded flex items-center gap-3">
+          <div className="h-2 w-2 rounded-full bg-rose-500 animate-ping shrink-0" />
+          <div className="text-xs space-y-0.5">
+            <span className="font-bold text-rose-400 uppercase tracking-wider text-[10px] block">
+              Emerging Friction Alert
+            </span>
+            <p className="text-zinc-300 font-sans">
+              Critical audience telemetry detected ({sentiment.negPercent}% critical sentiment). Elevated friction centered around <span className="font-semibold text-zinc-100 capitalize">{dominantTopic}</span>.
+            </p>
+          </div>
+        </div>
+      )}
+
       {comments.length > 0 && (
         <div className="space-y-4 pt-4 border-t border-[#1a1a1f]">
           <div className="flex items-center justify-between text-xs text-zinc-400 font-medium">

@@ -14,13 +14,13 @@ This document serves as the tactical engineering roadmap, technical risk log, an
   - Pulse synthesis endpoint using Gemini to summarize audience telemetry in 2 sentences.
 - [x] **Frontend Dashboard & Streaming Console (`client/`)**
   - Next.js workspace visualizing live ClickHouse campaign telemetry, evidence ledger, and real-time streaming agent thoughts.
-- [ ] **Structured Insight & Evidence Contract (`server/agent.py`, `client/utils/types.ts`)**
+- [x] **Structured Insight & Evidence Contract (`server/agent.py`, `client/utils/types.ts`)**
   - Upgrade agent responses from plain markdown blocks to an explicit typed schema:
     `{ claim: string, type: 'Observed' | 'Inferred' | 'Prediction' | 'Unknown', confidence: number, evidence_ids: string[], sources: string[], reasoning: string }`
   - Render an interactive **"Inspect Evidence"** badge/drawer in the chat UI when clicking on any claim.
-- [ ] **Temporal Trailer Inflection Tool (`server/tools/timeline.py`)**
+- [x] **Temporal Trailer Inflection Tool (`server/tools/timeline.py`)**
   - Create a dedicated ClickHouse tool: `query_trailer_inflection(content_id, trailer_date)` to compare audience topic distribution and sentiment delta before vs. after a major promotional drop.
-- [ ] **Reddit Live / High-Fidelity Ingestor (`server/ingestion/reddit.py`)**
+- [x] **Reddit Live / High-Fidelity Ingestor (`server/ingestion/reddit.py`)**
   - Ingest Reddit thread commentary into `studio_oracle.audience_comments` with `source = 'reddit'`.
   - Enable the agent and UI to contrast YouTube hype against Reddit enthusiast critiques on specific topics (e.g., lore, casting).
 
@@ -28,11 +28,11 @@ This document serves as the tactical engineering roadmap, technical risk log, an
 
 ## P1 — High Impact (Strong Differentiators)
 
-- [ ] **Interactive Evidence Highlighting in UI (`client/components/EvidenceLedger.tsx`)**
+- [x] **Interactive Evidence Highlighting in UI (`client/components/EvidenceLedger.tsx`)**
   - Clicking an evidence reference in the Agent Console or Conflicting Signals card automatically scrolls and highlights the specific comment in the Evidence Ledger.
-- [ ] **Dynamic "Contradiction Radar" in Overview (`client/components/ConflictingSignals.tsx`)**
+- [x] **Dynamic "Contradiction Radar" in Overview (`client/components/ConflictingSignals.tsx`)**
   - Replace static `getWhyItMatters` hardcoded switches with dynamic LLM or ClickHouse-driven contradiction explanations directly from `audience_comments`.
-- [ ] **Anomaly & Emergence Alert Banner (`client/components/AudiencePulse.tsx`)**
+- [x] **Anomaly & Emergence Alert Banner (`client/components/AudiencePulse.tsx`)**
   - Query ClickHouse for sudden surges (>200% mention velocity) in negative keywords or emerging topics and display an alert banner: *"Emerging Friction Detected: 48% increase in casting skepticism in last 48h."*
 - [ ] **Exportable Studio Intelligence Memo (`client/components/AgentConsole.tsx`)**
   - One-click button to compile the current session's Observed/Inferred findings into a downloadable Markdown/PDF executive briefing for studio executives.

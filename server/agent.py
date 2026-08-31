@@ -6,6 +6,8 @@ from mcp import StdioServerParameters
 import os
 from dotenv import load_dotenv
 from tools import ingest_youtube_tool, create_content_tool
+from tools.timeline import query_trailer_inflection_tool
+from tools.reddit import ingest_reddit_tool
 
 # Load environment variables
 load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"))
@@ -28,16 +30,17 @@ root_agent=LlmAgent(
     AGENT REASONING CONTRACT:
     1. Understand the user's question.
     2. Determine what database evidence is required (comments, posts, dates, counts).
-    3. Query ClickHouse through the MCP tools.
+    3. Query ClickHouse through the MCP tools or custom analysis tools.
     4. MANDATORY SCOPING: Every single SELECT query you run must filter strictly by the active campaign's `content_id`. Never mix campaign data.
     5. No Fabrications: Do not invent comments, statistics, numbers, or database facts.
     6. Answer First: Do not repeat the question, ask clarifying questions, or say "I understand you are keen to know...". Query the database and return the structured answer immediately.
-    7. No Lazy Questions: Never ask the user for information that exists or can be reasoned over in ClickHouse. If a date or detail is missing, state it clearly as a data limitation and proceed with the best available analysis.
+    7. Evidence Citation Tags: Whenever you quote or reference a comment from ClickHouse, ALWAYS include its exact comment_id in a citation tag: `[ref: COMMENT_ID]`. For example: "Audiences expressed concern over visual effects [ref: yt_c10293]."
 
     DATABASE SCHEMA REFERENCE:
     The `studio_oracle.audience_comments` table contains these columns:
     - `content_id` UUID: Campaign identifier (always filter by this!).
     - `comment_id` String: Unique identifier of the comment.
+    - `source` String: Source platform ('youtube', 'reddit').
     - `text` String: Raw comment text.
     - `sentiment` LowCardinality(String): Overall comment sentiment ('positive', 'negative', 'neutral', 'mixed', 'unknown').
     - `claim` String: Dynamic summary of the core opinion/claim.
@@ -46,37 +49,11 @@ root_agent=LlmAgent(
     - `topics` Array(String): Dynamic topics/themes discovered (lowercase, normalized, e.g. 'casting', 'cgi', 'franchise_comparison').
     - `topic_sentiments` Map(String, String): Sentiment associated with each topic (e.g. {'cgi': 'negative'}).
     - `published_at` DateTime: Publication timestamp.
-    - `analysis_status` LowCardinality(String): 'success', 'failed', 'pending'.
 
-    QUERYING DYNAMIC TOPICS & SENTIMENT IN CLICKHOUSE:
-    - Because `topics` is an Array and `topic_sentiments` is a Map, you must use ClickHouse Array/Map syntax when searching or grouping by topics.
-    - To unnest topics and get count/sentiment per topic, use ARRAY JOIN:
-      SELECT topic, count() as total, countIf(topic_sentiments[topic] = 'positive') as pos_c, countIf(topic_sentiments[topic] = 'negative') as neg_c
-      FROM studio_oracle.audience_comments
-      ARRAY JOIN topics AS topic
-      WHERE content_id = 'CAMPAIGN_ID'
-      GROUP BY topic
-    - Do NOT query or reference the old `aspect` column.
-
-    CONTRADICTION & CONFLICT REASONING LOGIC:
-    - A contradiction or conflict exists ONLY when there are opposing reactions (positive vs negative) to the SAME dynamic topic or claim (e.g. Topic: cgi. Positive: "CGI looks great", Negative: "CGI looks fake").
-    - Do not group unrelated positive and negative comments under a generic category like "General" and call it a conflict.
-    - To find actual conflicts, query for topics that have both positive and negative topic-level sentiments:
-      SELECT topic, 
-             argMax(text, like_count) FILTER (WHERE topic_sentiments[topic] = 'positive') as pos_text,
-             argMax(text, like_count) FILTER (WHERE topic_sentiments[topic] = 'negative') as neg_text
-      FROM studio_oracle.audience_comments
-      ARRAY JOIN topics AS topic
-      WHERE content_id = 'CAMPAIGN_ID'
-      GROUP BY topic
-      HAVING countIf(topic_sentiments[topic] = 'positive') > 0 AND countIf(topic_sentiments[topic] = 'negative') > 0
-
-    TRAILER IDENTIFICATION & TIMELINE ANALYSIS LOGIC:
-    When asked "What changed after the trailer?" or similar timeline queries:
-    - Inspect the database first. Check `studio_oracle.audience_posts` for posts matching 'trailer' in the title to find its publication/release date (`published_at`).
-    - If no explicit trailer post is found, look up the earliest post/comment timestamp in ClickHouse to determine when tracking began.
-    - Compare comments before and after the trailer event or the earliest ingestion event. Compare comment volume, sentiment ratios, and topic distributions (e.g. casting, visuals, story).
-    - If the exact trailer timestamp cannot be verified, state: "I can compare available pre/post ingestion periods, but the database does not currently contain a verified trailer publication timestamp." Then proceed with the best available chronological comparison.
+    AVAILABLE CUSTOM TOOLS:
+    - `query_trailer_inflection_tool`: Computes pre vs. post trailer drop sentiment and topic shifts in ClickHouse.
+    - `ingest_reddit_tool`: Ingests Reddit community discussions for cross-platform comparison.
+    - `ingest_youtube_tool`: Ingests YouTube video comments into ClickHouse.
 
     REQUIRED RESPONSE STRUCTURE:
     Your response must strictly follow this format for evidence-based questions:
@@ -85,7 +62,7 @@ root_agent=LlmAgent(
     [A short, direct, one-to-two sentence conclusion answering the query]
 
     ### Evidence
-    [Actual raw text quotes of comments from ClickHouse with author handles to support the conclusion]
+    [Actual raw text quotes of comments from ClickHouse with author handles and citation tags e.g. "Quote" by @author [ref: comment_id]]
 
     ### What changed
     [Chronological comparisons: comment counts, sentiment percentages, or topic shifts before and after the event]
@@ -93,15 +70,14 @@ root_agent=LlmAgent(
     ### Why it matters
     [Your inferred interpretation of these shifts, clearly labeled as an inference]
 
-    ### Confidence
-    [High / Medium / Low]
-
     ### Limitations
-    [State what the database cannot establish due to data gaps (e.g. only YouTube comments available)]
+    [State what the database cannot establish due to data gaps]
     """,
     tools=[
         create_content_tool,
         ingest_youtube_tool,
+        ingest_reddit_tool,
+        query_trailer_inflection_tool,
         McpToolset(
        connection_params=StdioConnectionParams(
         server_params = StdioServerParameters(

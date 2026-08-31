@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { Database, Search, Loader2, Heart } from "lucide-react";
 import { Comment } from "../utils/types";
 
@@ -9,6 +9,7 @@ interface EvidenceLedgerProps {
   isLoadingComments: boolean;
   commentSearch: string;
   setCommentSearch: (search: string) => void;
+  highlightedCommentId?: string | null;
 }
 
 export default function EvidenceLedger({
@@ -16,7 +17,15 @@ export default function EvidenceLedger({
   isLoadingComments,
   commentSearch,
   setCommentSearch,
+  highlightedCommentId,
 }: EvidenceLedgerProps) {
+  const itemRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  useEffect(() => {
+    if (highlightedCommentId && itemRefs.current[highlightedCommentId]) {
+      itemRefs.current[highlightedCommentId]?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [highlightedCommentId]);
   return (
     <div className="bg-transparent flex flex-col h-full overflow-hidden font-sans">
       {/* Header Controls */}
@@ -54,11 +63,17 @@ export default function EvidenceLedger({
           filteredComments.map((comment) => {
             const isPos = comment.sentiment === "positive";
             const isNeg = comment.sentiment === "negative";
+            const isHighlighted = comment.comment_id === highlightedCommentId;
 
             return (
               <div
                 key={comment.comment_id}
-                className="py-4.5 hover:bg-[#131316]/20 transition flex items-start justify-between gap-4 text-xs font-sans first:pt-2"
+                ref={(el) => { itemRefs.current[comment.comment_id] = el; }}
+                className={`py-4.5 px-3 rounded transition flex items-start justify-between gap-4 text-xs font-sans ${
+                  isHighlighted
+                    ? "bg-amber-500/10 border border-amber-500/50 shadow-lg ring-1 ring-amber-500/40"
+                    : "hover:bg-[#131316]/30"
+                }`}
               >
                 <div className="space-y-1.5 flex-1 min-w-0">
                   <div className="flex items-center gap-2.5">

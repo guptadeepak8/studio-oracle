@@ -42,6 +42,12 @@ function CampaignWorkspaceInner() {
   const [comments, setComments] = useState<Comment[]>([]);
   const [isLoadingComments, setIsLoadingComments] = useState(false);
   const [commentSearch, setCommentSearch] = useState("");
+  const [highlightedCommentId, setHighlightedCommentId] = useState<string | null>(null);
+
+  const handleSelectEvidence = (commentId: string) => {
+    setHighlightedCommentId(commentId);
+    router.push(`/campaign/${campaignId}?tab=evidence`);
+  };
 
   const [sentiment, setSentiment] = useState<SentimentStats>({
     positive: 0,
@@ -338,6 +344,7 @@ function CampaignWorkspaceInner() {
               setInputMessage={setInputMessage}
               onSendChat={handleSendChat}
               onRefreshMovies={fetchCampaignDetail}
+              onSelectEvidence={handleSelectEvidence}
             />
           </div>
         ) : activeTab === "evidence" ? (
@@ -347,6 +354,7 @@ function CampaignWorkspaceInner() {
               isLoadingComments={isLoadingComments}
               commentSearch={commentSearch}
               setCommentSearch={setCommentSearch}
+              highlightedCommentId={highlightedCommentId}
             />
           </div>
         ) : (
