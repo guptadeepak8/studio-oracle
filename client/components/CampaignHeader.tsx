@@ -8,8 +8,8 @@ interface CampaignHeaderProps {
   campaign: Movie;
   onToggleStatus: () => void;
   isToggling: boolean;
-  activeTab: "overview" | "agent";
-  onTabChange: (tab: "overview" | "agent") => void;
+  activeTab: "overview" | "marketing" | "agent";
+  onTabChange: (tab: "overview" | "marketing" | "agent") => void;
   evidenceCount?: number;
 }
 

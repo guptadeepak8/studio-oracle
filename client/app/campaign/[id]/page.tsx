@@ -26,7 +26,7 @@ function CampaignWorkspaceInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const campaignId = params.id as string;
-  const activeTab = (searchParams.get("tab") as "overview" | "agent") || "overview";
+  const activeTab = (searchParams.get("tab") as "overview" | "marketing" | "agent") || "overview";
 
   const [campaign, setCampaign] = useState<Movie | null>(null);
   const [isLoadingCampaign, setIsLoadingCampaign] = useState(true);
@@ -310,6 +310,11 @@ function CampaignWorkspaceInner() {
               onSelectEvidence={() => {}}
             />
           </div>
+        ) : activeTab === "marketing" ? (
+          /* Dedicated Marketing Action Plan Tab */
+          <div className="flex-1 overflow-y-auto p-8 max-w-5xl mx-auto w-full">
+            <MarketingDirectives campaign={campaign} themeStats={themeStats} />
+          </div>
         ) : (
           /* Main Clean Executive Dashboard */
           <div className="flex-1 overflow-y-auto p-8 space-y-8 max-w-7xl mx-auto w-full">
@@ -330,13 +335,10 @@ function CampaignWorkspaceInner() {
               dominantTopic={themeStats.length > 0 ? themeStats[0].name : "General"}
             />
 
-            {/* 4. Audience Reaction Over Time */}
+            {/* 4. Audience Reaction Over Time (with functioning 24h, 3d, Drop, All Time filters) */}
             <LaunchTimeline timelineData={timelineData} />
 
-            {/* 5. Marketing Action Plan */}
-            <MarketingDirectives campaign={campaign} themeStats={themeStats} />
-
-            {/* 6. Import Comments Control */}
+            {/* 5. Import Comments Control */}
             <IngestConfig
               campaignId={campaign.content_id}
               ingestQuery={ingestQuery}

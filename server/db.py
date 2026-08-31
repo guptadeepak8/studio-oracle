@@ -246,7 +246,7 @@ def fetch_campaign_timeline(content_id: str) -> list[dict]:
     timeline = []
     for r in rows:
         date_grp = r[0]
-        date_str = date_grp.strftime("%m-%d") if hasattr(date_grp, "strftime") else str(date_grp)
+        date_str = date_grp.strftime("%b %d, %Y") if hasattr(date_grp, "strftime") else str(date_grp)
         topic = str(r[1])
         total = int(r[2])
         pos_c = int(r[3])

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Plus, Loader2, Sparkles, LayoutDashboard, Compass, Database, Bot, ChevronRight } from "lucide-react";
+import { Plus, Loader2, Sparkles, LayoutDashboard, Compass, Database, Bot, ChevronRight, Megaphone } from "lucide-react";
 import { API_ENDPOINTS } from "../utils/constants";
 import { Movie } from "../utils/types";
 import RegisterModal from "./RegisterModal";
@@ -152,6 +152,7 @@ export default function Sidebar() {
                     <div className="pl-3 py-1 space-y-0.5 border-l-2 border-amber-500/40 ml-4 my-1">
                       {[
                         { tabId: "overview", label: "Executive Dashboard", icon: LayoutDashboard },
+                        { tabId: "marketing", label: "Marketing Action Plan", icon: Megaphone },
                         { tabId: "agent", label: "AI Research Assistant", icon: Bot }
                       ].map((subItem) => {
                         const isSubActive = currentTab === subItem.tabId;
