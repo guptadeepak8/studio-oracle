@@ -1,7 +1,7 @@
 "use client";
 
-import React from "react";
-import { Play, Square, MessageSquare, Database } from "lucide-react";
+import React, { useState } from "react";
+import { ChevronDown, Play, Square, MessageSquare, Download, RefreshCw, Radio } from "lucide-react";
 import { Movie } from "../utils/types";
 
 interface CampaignHeaderProps {
@@ -11,6 +11,7 @@ interface CampaignHeaderProps {
   activeTab: "overview" | "marketing" | "agent";
   onTabChange: (tab: "overview" | "marketing" | "agent") => void;
   evidenceCount?: number;
+  onRefreshData?: () => void;
 }
 
 export default function CampaignHeader({
@@ -20,80 +21,97 @@ export default function CampaignHeader({
   activeTab,
   onTabChange,
   evidenceCount = 0,
+  onRefreshData,
 }: CampaignHeaderProps) {
-  return (
-    <div className="shrink-0 flex flex-col bg-[#0c0c0e] border-b border-[#27272a] shadow-sm">
-      <div className="px-8 py-5 flex items-center justify-between">
-        {/* Left Title & Status */}
-        <div className="space-y-1.5">
-          <div className="flex items-center gap-3">
-            <h1 className="font-bold text-xl text-zinc-100 tracking-tight">
-              {campaign.title}
-            </h1>
-            <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 ${
-              campaign.status === "active"
-                ? "bg-emerald-950/60 text-emerald-400 border border-emerald-500/40"
-                : campaign.status === "collecting"
-                ? "bg-amber-950/60 text-amber-400 border border-amber-500/40 animate-pulse"
-                : "bg-rose-950/60 text-rose-400 border border-rose-500/40"
-            }`}>
-              <span className={`h-1.5 w-1.5 rounded-full ${
-                campaign.status === "active" ? "bg-emerald-400" : campaign.status === "collecting" ? "bg-amber-400" : "bg-rose-400"
-              }`} />
-              {campaign.status === "active" ? "Tracking Active" : campaign.status === "collecting" ? "Importing" : "Paused"}
-            </span>
-          </div>
+  const [showActionsMenu, setShowActionsMenu] = useState(false);
 
-          <div className="flex items-center gap-3 text-xs text-zinc-400 font-medium">
-            <span className="capitalize text-zinc-200 font-semibold">{campaign.content_type}</span>
-            <span className="text-zinc-600">·</span>
-            <span>Target Release: <strong className="text-zinc-200">{campaign.release_date || "TBD"}</strong></span>
-            <span className="text-zinc-600">·</span>
-            <span className="flex items-center gap-1 text-zinc-300">
-              <Database className="h-3 w-3 text-amber-500" />
-              <strong>{evidenceCount}</strong> audience comments
-            </span>
-          </div>
+  const getPageTitle = () => {
+    if (activeTab === "marketing") return `${campaign.title} · Marketing Action Plan`;
+    if (activeTab === "agent") return `${campaign.title} · AI Research Assistant`;
+    return `${campaign.title} · Executive Dashboard`;
+  };
+
+  return (
+    <div className="shrink-0 flex flex-col bg-[#141416] border-b border-[#202023] shadow-xs">
+      <div className="px-8 py-4 flex items-center justify-between">
+        {/* Left Page Title matching screenshot header */}
+        <div className="flex items-center gap-3">
+          <h1 className="font-bold text-base text-zinc-100 tracking-tight">
+            {getPageTitle()}
+          </h1>
+          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+            campaign.status === "active"
+              ? "bg-[#183424] text-[#4ade80] border border-[#234e35]"
+              : "bg-zinc-800 text-zinc-400 border border-zinc-700"
+          }`}>
+            {campaign.status === "active" ? "Active" : "Paused"}
+          </span>
         </div>
 
-        {/* Right Action Buttons */}
-        <div className="flex items-center gap-3">
+        {/* Right Actions Dropdown matching screenshot */}
+        <div className="flex items-center gap-3 relative">
           <button
-            onClick={onToggleStatus}
-            disabled={isToggling}
-            className={`flex items-center gap-1.5 border px-3.5 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition cursor-pointer ${
-              campaign.status === "stopped"
-                ? "bg-emerald-600/10 border-emerald-500/30 hover:bg-emerald-600/20 text-emerald-400"
-                : "bg-[#18181b] border-[#27272a] hover:bg-zinc-800 text-zinc-300"
-            }`}
+            onClick={() => onTabChange(activeTab === "agent" ? "overview" : "agent")}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-[#1f1f23] hover:bg-[#28282d] text-zinc-200 border border-[#2d2d32] transition cursor-pointer"
           >
-            {campaign.status === "stopped" ? (
-              <>
-                <Play className="h-3.5 w-3.5 fill-emerald-400 text-emerald-400" /> Resume Tracking
-              </>
-            ) : (
-              <>
-                <Square className="h-3.5 w-3.5 fill-zinc-300 text-zinc-300" /> Pause Tracking
-              </>
-            )}
+            <MessageSquare className="h-3.5 w-3.5 text-[#e6fc4f]" />
+            <span>{activeTab === "agent" ? "Back to Dashboard" : "Ask AI Assistant"}</span>
           </button>
 
-          {activeTab !== "agent" ? (
+          <div className="relative">
             <button
-              onClick={() => onTabChange("agent")}
-              className="flex items-center gap-2 bg-amber-600 hover:bg-amber-500 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition cursor-pointer border border-amber-500/40 shadow-[0_0_12px_rgba(245,158,11,0.25)]"
+              onClick={() => setShowActionsMenu(!showActionsMenu)}
+              className="flex items-center gap-1.5 bg-[#1f1f23] hover:bg-[#28282d] text-zinc-100 font-semibold px-3 py-1.5 rounded-md text-xs border border-[#2d2d32] transition cursor-pointer"
             >
-              <MessageSquare className="h-4 w-4" />
-              <span>Ask AI Assistant</span>
+              <span>Actions</span>
+              <ChevronDown className="h-3.5 w-3.5 text-zinc-400" />
             </button>
-          ) : (
-            <button
-              onClick={() => onTabChange("overview")}
-              className="flex items-center gap-2 bg-[#18181b] hover:bg-zinc-800 text-zinc-200 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition cursor-pointer border border-[#27272a]"
-            >
-              <span>Back to Dashboard</span>
-            </button>
-          )}
+
+            {showActionsMenu && (
+              <>
+                <div className="fixed inset-0 z-10" onClick={() => setShowActionsMenu(false)} />
+                <div className="absolute right-0 mt-1.5 bg-[#1c1c1f] border border-[#28282b] rounded-lg py-1.5 w-48 shadow-2xl z-20 text-xs text-zinc-300">
+                  <button
+                    onClick={() => {
+                      onTabChange("marketing");
+                      setShowActionsMenu(false);
+                    }}
+                    className="w-full text-left px-3.5 py-2 hover:bg-[#242428] hover:text-zinc-100 transition font-medium cursor-pointer"
+                  >
+                    View Marketing Plan
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (onRefreshData) onRefreshData();
+                      setShowActionsMenu(false);
+                    }}
+                    className="w-full text-left px-3.5 py-2 hover:bg-[#242428] hover:text-zinc-100 transition font-medium flex items-center gap-2 cursor-pointer"
+                  >
+                    <RefreshCw className="h-3 w-3 text-zinc-400" /> Refresh Telemetry
+                  </button>
+                  <div className="border-t border-[#28282b] my-1" />
+                  <button
+                    onClick={() => {
+                      onToggleStatus();
+                      setShowActionsMenu(false);
+                    }}
+                    disabled={isToggling}
+                    className="w-full text-left px-3.5 py-2 hover:bg-[#242428] transition font-medium flex items-center gap-2 cursor-pointer"
+                  >
+                    {campaign.status === "stopped" ? (
+                      <>
+                        <Play className="h-3 w-3 text-[#4ade80] fill-[#4ade80]" /> Resume Telemetry
+                      </>
+                    ) : (
+                      <>
+                        <Square className="h-3 w-3 text-zinc-400 fill-zinc-400" /> Pause Telemetry
+                      </>
+                    )}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </div>
     </div>

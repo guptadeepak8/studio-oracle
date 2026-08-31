@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { TrendingUp, AlertTriangle, MessageSquare, Zap, Activity } from "lucide-react";
+import { Plus, CheckCircle2, MessageSquare, Sparkles } from "lucide-react";
 import { SentimentStats } from "../utils/analytics";
 
 interface ExecutiveScorecardProps {
@@ -9,6 +9,9 @@ interface ExecutiveScorecardProps {
   totalComments: number;
   dominantTopic: string;
   pulseSummary: string;
+  releaseDate?: string | null;
+  campaignTitle: string;
+  onTriggerImport?: () => void;
 }
 
 export default function ExecutiveScorecard({
@@ -16,99 +19,88 @@ export default function ExecutiveScorecard({
   totalComments,
   dominantTopic,
   pulseSummary,
+  releaseDate,
+  campaignTitle,
+  onTriggerImport,
 }: ExecutiveScorecardProps) {
-  // Score from -100 to +100 based on positive and negative percentages
   const audienceScore = Math.min(100, Math.max(-100, (sentiment.posPercent || 0) - (sentiment.negPercent || 0)));
   const isScorePositive = audienceScore >= 0;
 
   return (
     <div className="space-y-4 font-sans">
-      {/* 3 Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Card 1: Overall Audience Score */}
-        <div className="bg-[#121215] border border-[#27272a] rounded-2xl p-5 space-y-2 hover:border-zinc-700 transition shadow-sm">
-          <div className="flex items-center justify-between text-xs text-zinc-400">
-            <span className="font-semibold uppercase tracking-wider text-[11px]">Overall Audience Score</span>
-            <Activity className="h-4 w-4 text-amber-400" />
-          </div>
+      {/* Exact 5-Card Horizontal Row matching the screenshot */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
+        {/* Card 1: Plan / Score */}
+        <div className="bg-[#1c1c1f] border border-[#28282b] rounded-xl p-4 space-y-1.5 shadow-xs">
+          <span className="text-[11px] text-zinc-400 font-medium block">
+            Audience Score
+          </span>
           <div className="flex items-baseline gap-2">
-            <span className={`text-3xl font-bold font-mono ${isScorePositive ? "text-emerald-400" : "text-rose-400"}`}>
-              {audienceScore > 0 ? `+${audienceScore}` : audienceScore}
+            <span className={`text-base font-bold font-mono ${isScorePositive ? "text-zinc-100" : "text-rose-400"}`}>
+              {audienceScore > 0 ? `+${audienceScore}` : audienceScore} / 100
             </span>
-            <span className="text-xs text-zinc-400 font-semibold">/ 100</span>
-            <span className={`ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full ${
-              audienceScore >= 30
-                ? "bg-emerald-950/60 text-emerald-400 border border-emerald-500/30"
-                : audienceScore >= 0
-                ? "bg-amber-950/60 text-amber-400 border border-amber-500/30"
-                : "bg-rose-950/60 text-rose-400 border border-rose-500/30"
-            }`}>
-              {audienceScore >= 30 ? "High Excitement" : audienceScore >= 0 ? "Moderate" : "Needs Attention"}
+            <span className="text-[11px] text-[#e6fc4f] hover:underline cursor-pointer font-medium">
+              {audienceScore >= 30 ? "High Excitement" : audienceScore >= 0 ? "Moderate" : "Watch Friction"}
             </span>
           </div>
-          <p className="text-[11px] text-zinc-400 pt-1">
-            {sentiment.posPercent || 0}% positive vs {sentiment.negPercent || 0}% critical reactions
-          </p>
         </div>
 
-        {/* Card 2: Comments Tracked & Speed */}
-        <div className="bg-[#121215] border border-[#27272a] rounded-2xl p-5 space-y-2 hover:border-zinc-700 transition shadow-sm">
-          <div className="flex items-center justify-between text-xs text-zinc-400">
-            <span className="font-semibold uppercase tracking-wider text-[11px]">Audience Reactions</span>
-            <Zap className="h-4 w-4 text-amber-400" />
+        {/* Card 2: Comments Tracked */}
+        <div className="bg-[#1c1c1f] border border-[#28282b] rounded-xl p-4 space-y-1.5 shadow-xs">
+          <span className="text-[11px] text-zinc-400 font-medium block">
+            Reactions Analyzed
+          </span>
+          <div className="text-base font-bold text-zinc-100 font-mono">
+            {totalComments} <span className="text-xs text-zinc-400 font-normal font-sans">comments</span>
           </div>
-          <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-bold text-zinc-100 font-mono">
-              {totalComments}
-            </span>
-            <span className="text-xs text-zinc-400">analyzed</span>
-            <span className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-950/60 text-blue-400 border border-blue-500/30">
-              Live Stream
-            </span>
-          </div>
-          <p className="text-[11px] text-zinc-400 pt-1">
-            Across YouTube comments and Reddit discussions
-          </p>
         </div>
 
-        {/* Card 3: Top Warning / Discussion */}
-        <div className="bg-[#121215] border border-[#27272a] rounded-2xl p-5 space-y-2 hover:border-zinc-700 transition shadow-sm">
-          <div className="flex items-center justify-between text-xs text-zinc-400">
-            <span className="font-semibold uppercase tracking-wider text-[11px]">Main Topic of Discussion</span>
-            {(sentiment.negPercent || 0) >= 20 ? (
-              <AlertTriangle className="h-4 w-4 text-rose-400" />
-            ) : (
-              <TrendingUp className="h-4 w-4 text-emerald-400" />
-            )}
+        {/* Card 3: Target Release Date */}
+        <div className="bg-[#1c1c1f] border border-[#28282b] rounded-xl p-4 space-y-1.5 shadow-xs">
+          <span className="text-[11px] text-zinc-400 font-medium block">
+            Target Release Date
+          </span>
+          <div className="text-base font-bold text-zinc-100">
+            {releaseDate || "Nov 22, 2026"}
           </div>
-          <div className="flex items-baseline gap-2">
-            <span className="text-xl font-bold text-zinc-100 capitalize truncate max-w-[180px]">
-              {dominantTopic || "General Tone"}
-            </span>
-            <span className={`ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full ${
-              (sentiment.negPercent || 0) >= 20
-                ? "bg-rose-950/60 text-rose-400 border border-rose-500/30"
-                : "bg-emerald-950/60 text-emerald-400 border border-emerald-500/30"
-            }`}>
-              {(sentiment.negPercent || 0) >= 20 ? "Watch Topic" : "Positive Driver"}
-            </span>
+        </div>
+
+        {/* Card 4: Action Button with Lime/Yellow styling matching screenshot */}
+        <div className="bg-[#1c1c1f] border border-[#28282b] rounded-xl p-4 space-y-1.5 flex flex-col justify-between shadow-xs">
+          <span className="text-[11px] text-zinc-400 font-medium block">
+            Telemetry Action
+          </span>
+          <button
+            onClick={onTriggerImport}
+            className="w-full flex items-center justify-center gap-1.5 bg-[#e6fc4f] hover:bg-[#d8ed47] text-black font-bold text-xs py-1.5 px-3 rounded-md transition cursor-pointer shadow-xs"
+          >
+            <Plus className="h-3.5 w-3.5 stroke-[3]" />
+            <span>Import Comments</span>
+          </button>
+        </div>
+
+        {/* Card 5: Ingestion Feeds */}
+        <div className="bg-[#1c1c1f] border border-[#28282b] rounded-xl p-4 space-y-1.5 shadow-xs">
+          <span className="text-[11px] text-zinc-400 font-medium block">
+            Telemetry Channels
+          </span>
+          <div className="flex items-center gap-1.5 text-xs text-zinc-100 font-medium truncate">
+            <span className="h-2 w-2 rounded-full bg-[#4ade80]" />
+            <span>YouTube & Reddit</span>
           </div>
-          <p className="text-[11px] text-zinc-400 pt-1">
-            {(sentiment.negPercent || 0) >= 20 ? "Showing friction in audience comments" : "Driving high audience excitement"}
-          </p>
         </div>
       </div>
 
       {/* Clean AI Executive Summary Banner */}
-      <div className="bg-[#18181b] border border-[#27272a] rounded-2xl p-4.5 flex items-start gap-3.5 shadow-sm">
-        <div className="h-7 w-7 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0 mt-0.5">
-          <MessageSquare className="h-4 w-4" />
+      <div className="bg-[#1c1c1f] border border-[#28282b] rounded-xl p-4.5 flex items-start gap-3.5 shadow-xs">
+        <div className="h-6 w-6 rounded-md bg-[#242428] flex items-center justify-center text-[#e6fc4f] shrink-0 mt-0.5">
+          <Sparkles className="h-3.5 w-3.5" />
         </div>
-        <div className="space-y-1">
-          <span className="text-[11px] font-bold text-amber-400 uppercase tracking-wider block">
-            Executive Summary
+        <div className="space-y-0.5">
+          <span className="text-[11px] font-bold text-zinc-300 uppercase tracking-wider block">
+            Executive Synthesis
           </span>
-          <p className="text-sm text-zinc-200 leading-relaxed font-medium">
+          <p className="text-xs text-zinc-300 leading-relaxed font-sans font-medium">
             {pulseSummary}
           </p>
         </div>
@@ -116,4 +108,3 @@ export default function ExecutiveScorecard({
     </div>
   );
 }
-

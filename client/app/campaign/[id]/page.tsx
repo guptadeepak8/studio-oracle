@@ -258,8 +258,8 @@ function CampaignWorkspaceInner() {
 
   if (isLoadingCampaign) {
     return (
-      <div className="flex-1 bg-[#09090b] flex flex-col items-center justify-center text-zinc-400 text-sm gap-3">
-        <Loader2 className="h-7 w-7 animate-spin text-amber-500" />
+      <div className="flex-1 bg-[#0e0e10] flex flex-col items-center justify-center text-zinc-400 text-xs gap-2">
+        <Loader2 className="h-6 w-6 animate-spin text-[#e6fc4f]" />
         Loading campaign dashboard...
       </div>
     );
@@ -268,20 +268,20 @@ function CampaignWorkspaceInner() {
   if (!campaign) return null;
 
   return (
-    <div className="flex-1 flex bg-[#09090b] overflow-hidden h-screen relative text-zinc-100 font-sans">
+    <div className="flex-1 flex bg-[#0e0e10] overflow-hidden h-screen relative text-zinc-100 font-sans">
       {campaign.status === "stopped" && activeTab !== "agent" && (
         <div className="absolute inset-0 bg-black/90 flex flex-col items-center justify-center text-center p-8 z-30">
-          <AlertTriangle className="h-10 w-10 text-rose-400 mb-4" />
-          <h3 className="font-bold text-base text-zinc-100 uppercase tracking-widest mb-2">
+          <AlertTriangle className="h-8 w-8 text-rose-400 mb-3" />
+          <h3 className="font-bold text-sm text-zinc-100 uppercase tracking-wider mb-1">
             Campaign Monitoring Paused
           </h3>
-          <p className="text-sm text-zinc-300 max-w-md leading-relaxed mb-5 font-sans">
+          <p className="text-xs text-zinc-400 max-w-md leading-relaxed mb-4">
             Real-time comment tracking is currently paused for "{campaign.title}".
           </p>
           <button
             onClick={handleToggleStatus}
             disabled={isToggling}
-            className="bg-emerald-600 hover:bg-emerald-500 text-xs uppercase tracking-wider font-bold text-white px-5 py-3 rounded-lg shadow-lg flex items-center gap-2 cursor-pointer"
+            className="bg-[#e6fc4f] hover:bg-[#d8ed47] text-xs font-bold text-black px-4 py-2 rounded-md shadow-xs flex items-center gap-2 cursor-pointer"
           >
             <PlayCircle className="h-4 w-4" /> Resume Tracking
           </button>
@@ -289,7 +289,7 @@ function CampaignWorkspaceInner() {
       )}
 
       <div className="flex-1 flex flex-col h-full overflow-hidden w-full">
-        {/* Campaign Header */}
+        {/* Campaign Header with Actions Dropdown */}
         <CampaignHeader
           campaign={campaign}
           onToggleStatus={handleToggleStatus}
@@ -297,6 +297,7 @@ function CampaignWorkspaceInner() {
           activeTab={activeTab}
           onTabChange={(tab) => router.push(`/campaign/${campaignId}?tab=${tab}`)}
           evidenceCount={comments.length}
+          onRefreshData={refreshAll}
         />
 
         {activeTab === "agent" ? (
@@ -312,43 +313,51 @@ function CampaignWorkspaceInner() {
           </div>
         ) : activeTab === "marketing" ? (
           /* Dedicated Marketing Action Plan Tab */
-          <div className="flex-1 overflow-y-auto p-8 max-w-5xl mx-auto w-full">
+          <div className="flex-1 overflow-y-auto p-8 max-w-5xl mx-auto w-full space-y-6">
             <MarketingDirectives campaign={campaign} themeStats={themeStats} />
           </div>
         ) : (
-          /* Main Clean Executive Dashboard */
+          /* Main ClickHouse Cloud Style Executive Dashboard */
           <div className="flex-1 overflow-y-auto p-8 space-y-8 max-w-7xl mx-auto w-full">
-            {/* 1. Executive Summary & Scorecard */}
+            {/* 1. 5-Card Top Metrics Row matching screenshot */}
             <ExecutiveScorecard
               sentiment={sentiment}
               totalComments={comments.length}
               dominantTopic={themeStats.length > 0 ? themeStats[0].name : "General Tone"}
               pulseSummary={pulseSummary}
+              releaseDate={campaign.release_date}
+              campaignTitle={campaign.title}
+              onTriggerImport={() => {
+                const element = document.getElementById("ingest-section");
+                if (element) element.scrollIntoView({ behavior: "smooth" });
+              }}
             />
 
-            {/* 2. What's Working vs What's Not (Bars) */}
+            {/* 2. Expandable Section: What Fans Love vs What's Not (Table) */}
             <WhatsWorking themeStats={themeStats} />
 
-            {/* 3. Platform Comparison: YouTube vs Reddit */}
+            {/* 3. Expandable Section: YouTube vs Reddit Reaction */}
             <PlatformComparison
               conflicts={conflictingSignals}
               dominantTopic={themeStats.length > 0 ? themeStats[0].name : "General"}
             />
 
-            {/* 4. Audience Reaction Over Time (with functioning 24h, 3d, Drop, All Time filters) */}
+            {/* 4. Expandable Section: Launch Timeline Statements (Table) */}
             <LaunchTimeline timelineData={timelineData} />
 
-            {/* 5. Import Comments Control */}
-            <IngestConfig
-              campaignId={campaign.content_id}
-              ingestQuery={ingestQuery}
-              setIngestQuery={setIngestQuery}
-              ingestLimit={ingestLimit}
-              setIngestLimit={setIngestLimit}
-              isIngesting={isIngesting}
-              onTriggerIngest={handleTriggerIngest}
-              onRefreshAll={refreshAll}
-            />
+            {/* 5. Ingestion Control Section */}
+            <div id="ingest-section">
+              <IngestConfig
+                campaignId={campaign.content_id}
+                ingestQuery={ingestQuery}
+                setIngestQuery={setIngestQuery}
+                ingestLimit={ingestLimit}
+                setIngestLimit={setIngestLimit}
+                isIngesting={isIngesting}
+                onTriggerIngest={handleTriggerIngest}
+                onRefreshAll={refreshAll}
+              />
+            </div>
           </div>
         )}
       </div>
@@ -359,8 +368,8 @@ function CampaignWorkspaceInner() {
 export default function CampaignWorkspace() {
   return (
     <Suspense fallback={
-      <div className="flex-1 bg-[#09090b] flex flex-col items-center justify-center text-zinc-400 text-sm gap-3 h-screen">
-        <Loader2 className="h-7 w-7 animate-spin text-amber-500" />
+      <div className="flex-1 bg-[#0e0e10] flex flex-col items-center justify-center text-zinc-400 text-xs gap-2 h-screen">
+        <Loader2 className="h-6 w-6 animate-spin text-[#e6fc4f]" />
         Loading workspace...
       </div>
     }>
