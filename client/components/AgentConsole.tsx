@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useRef, useEffect } from "react";
-import { RefreshCw, User, Database, Send } from "lucide-react";
+import { RefreshCw, User, Database, Send, Download } from "lucide-react";
 import { ChatMessage } from "../utils/types";
 
 interface AgentConsoleProps {
@@ -213,6 +213,29 @@ export default function AgentConsole({
     });
   };
 
+  const handleExportMemo = () => {
+    let memoContent = `# StudioOracle — Executive Intelligence Briefing\n\n`;
+    memoContent += `**Generated**: ${new Date().toLocaleString()}\n\n`;
+    memoContent += `---\n\n## Campaign Research Log\n\n`;
+
+    chatMessages.forEach((msg) => {
+      if (msg.sender === "user") {
+        memoContent += `### 👤 Query\n${msg.text}\n\n`;
+      } else {
+        memoContent += `### 🤖 StudioOracle Analysis\n${msg.text}\n\n`;
+      }
+    });
+
+    const blob = new Blob([memoContent], { type: "text/markdown;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `studio_oracle_executive_briefing_${Date.now()}.md`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="w-full flex flex-col h-full bg-[#0a0a0c]">
       {/* Header bar */}
@@ -223,13 +246,24 @@ export default function AgentConsole({
             StudioOracle Research Agent
           </span>
         </div>
-        <button
-          onClick={onRefreshMovies}
-          className="p-1.5 hover:bg-[#131316] rounded transition cursor-pointer"
-          title="Refresh Metadata"
-        >
-          <RefreshCw className="h-3.5 w-3.5 text-zinc-500 hover:text-zinc-300 transition" />
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleExportMemo}
+            disabled={chatMessages.length === 0}
+            className="flex items-center gap-1.5 px-2.5 py-1 bg-[#131316] hover:bg-[#1a1a1f] border border-[#232329] rounded text-[10px] uppercase font-bold text-zinc-300 transition cursor-pointer disabled:opacity-40"
+            title="Download Executive Intelligence Briefing"
+          >
+            <Download className="h-3 w-3 text-amber-500" />
+            Export Briefing
+          </button>
+          <button
+            onClick={onRefreshMovies}
+            className="p-1.5 hover:bg-[#131316] rounded transition cursor-pointer"
+            title="Refresh Metadata"
+          >
+            <RefreshCw className="h-3.5 w-3.5 text-zinc-500 hover:text-zinc-300 transition" />
+          </button>
+        </div>
       </div>
 
       {/* Main chat window */}

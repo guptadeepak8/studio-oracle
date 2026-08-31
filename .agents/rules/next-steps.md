@@ -34,7 +34,7 @@ This document serves as the tactical engineering roadmap, technical risk log, an
   - Replace static `getWhyItMatters` hardcoded switches with dynamic LLM or ClickHouse-driven contradiction explanations directly from `audience_comments`.
 - [x] **Anomaly & Emergence Alert Banner (`client/components/AudiencePulse.tsx`)**
   - Query ClickHouse for sudden surges (>200% mention velocity) in negative keywords or emerging topics and display an alert banner: *"Emerging Friction Detected: 48% increase in casting skepticism in last 48h."*
-- [ ] **Exportable Studio Intelligence Memo (`client/components/AgentConsole.tsx`)**
+- [x] **Exportable Studio Intelligence Memo (`client/components/AgentConsole.tsx`)**
   - One-click button to compile the current session's Observed/Inferred findings into a downloadable Markdown/PDF executive briefing for studio executives.
 
 ---
