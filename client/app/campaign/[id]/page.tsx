@@ -15,7 +15,7 @@ import {
 import ExecutiveScorecard from "../../../components/ExecutiveScorecard";
 import WhatsWorking from "../../../components/WhatsWorking";
 import PlatformComparison from "../../../components/PlatformComparison";
-import LaunchTimeline from "../../../components/LaunchTimeline";
+import TrailerComparison from "../../../components/TrailerComparison";
 import MarketingDirectives from "../../../components/MarketingDirectives";
 import AgentConsole from "../../../components/AgentConsole";
 import CampaignHeader from "../../../components/CampaignHeader";
@@ -46,7 +46,6 @@ function CampaignWorkspaceInner() {
     negPercent: 0,
   });
   const [themeStats, setThemeStats] = useState<ThemeItem[]>([]);
-  const [timelineData, setTimelineData] = useState<TimelineNode[]>([]);
   const [conflictingSignals, setConflictingSignals] = useState<ConflictItem[]>([]);
   const [pulseSummary, setPulseSummary] = useState("Loading audience summary...");
 
@@ -95,12 +94,6 @@ function CampaignWorkspaceInner() {
         setSentiment(data.sentiment || { positive: 0, negative: 0, neutral: 0, posPercent: 0, negPercent: 0 });
         setThemeStats(data.themes || []);
         setConflictingSignals(data.conflicts || []);
-      }
-      
-      const resTimeline = await fetch(API_ENDPOINTS.TIMELINE(campaignId));
-      if (resTimeline.ok) {
-        const data = await resTimeline.json();
-        setTimelineData(data || []);
       }
       
       const resPulse = await fetch(API_ENDPOINTS.PULSE(campaignId));
@@ -312,14 +305,14 @@ function CampaignWorkspaceInner() {
             />
           </div>
         ) : activeTab === "marketing" ? (
-          /* Dedicated Marketing Action Plan Tab */
-          <div className="flex-1 overflow-y-auto p-8 max-w-5xl mx-auto w-full space-y-6">
+          /* Full-Width Dedicated Marketing Action Plan Tab */
+          <div className="flex-1 overflow-y-auto p-8 max-w-7xl mx-auto w-full space-y-8">
             <MarketingDirectives campaign={campaign} themeStats={themeStats} />
           </div>
         ) : (
           /* Main ClickHouse Cloud Style Executive Dashboard */
           <div className="flex-1 overflow-y-auto p-8 space-y-8 max-w-7xl mx-auto w-full">
-            {/* 1. 5-Card Top Metrics Row matching screenshot */}
+            {/* 1. 5-Card Top Metrics Row */}
             <ExecutiveScorecard
               sentiment={sentiment}
               totalComments={comments.length}
@@ -333,17 +326,17 @@ function CampaignWorkspaceInner() {
               }}
             />
 
-            {/* 2. Expandable Section: What Fans Love vs What's Not (Table) */}
+            {/* 2. What Changed: Trailer 1 Drop vs Trailer 2 Drop */}
+            <TrailerComparison campaign={campaign} themeStats={themeStats} />
+
+            {/* 3. Expandable Section: What Fans Love vs What's Not (Table) */}
             <WhatsWorking themeStats={themeStats} />
 
-            {/* 3. Expandable Section: YouTube vs Reddit Reaction */}
+            {/* 4. Expandable Section: YouTube vs Reddit Reaction */}
             <PlatformComparison
               conflicts={conflictingSignals}
               dominantTopic={themeStats.length > 0 ? themeStats[0].name : "General"}
             />
-
-            {/* 4. Expandable Section: Launch Timeline Statements (Table) */}
-            <LaunchTimeline timelineData={timelineData} />
 
             {/* 5. Ingestion Control Section */}
             <div id="ingest-section">

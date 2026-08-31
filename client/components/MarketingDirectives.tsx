@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
-import { ChevronDown, ChevronRight, Target, Send, Users, Layers, Sparkles, Check, Copy, AlertCircle, Zap, Megaphone } from "lucide-react";
+import { ChevronDown, ChevronRight, Target, Send, Users, Layers, Sparkles, Check, Copy, AlertCircle, Zap, Megaphone, TrendingUp, Film, Play } from "lucide-react";
 import { Movie } from "../utils/types";
+import TrailerComparison from "./TrailerComparison";
 
 interface ThemeItem {
   name: string;
@@ -27,7 +28,6 @@ interface MarketingDirectivesProps {
 }
 
 export default function MarketingDirectives({ campaign, themeStats }: MarketingDirectivesProps) {
-  const [isOpen, setIsOpen] = useState(true);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
 
   const generateActionPlan = (stats: ThemeItem[]): ActionPlanItem[] => {
@@ -173,42 +173,37 @@ export default function MarketingDirectives({ campaign, themeStats }: MarketingD
   };
 
   return (
-    <div className="space-y-4 font-sans">
-      {/* Section Header with Chevron matching ClickHouse Cloud */}
-      <div className="flex items-center justify-between">
-        <button
-          onClick={() => setIsOpen(!isOpen)}
-          className="flex items-center gap-1.5 text-sm font-bold text-zinc-100 hover:text-[#e6fc4f] transition cursor-pointer select-none"
-        >
-          {isOpen ? (
-            <ChevronDown className="h-4 w-4 text-zinc-400" />
-          ) : (
-            <ChevronRight className="h-4 w-4 text-zinc-400" />
-          )}
-          <span>Marketing Action Directives</span>
-        </button>
+    <div className="w-full space-y-8 font-sans">
+      {/* 1. What Changed: Trailer 1 Drop vs Trailer 2 Drop */}
+      <TrailerComparison campaign={campaign} themeStats={themeStats} />
 
-        <span className="text-xs font-mono font-bold text-[#e6fc4f] bg-[#1c1c1f] border border-[#28282b] px-3 py-1 rounded-md">
-          {actionPlans.length} Prioritized Directives
-        </span>
-      </div>
+      {/* 2. Marketing Action Directives List */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between border-b border-[#202023] pb-3">
+          <div>
+            <h2 className="font-bold text-base text-zinc-100 uppercase tracking-wider">
+              Marketing Strategic Directives
+            </h2>
+            <p className="text-xs text-zinc-500">
+              High-leverage marketing pivots and ready-to-use promotional copy generated from audience reaction signals.
+            </p>
+          </div>
+          <span className="text-xs font-mono font-bold text-[#e6fc4f] bg-[#1c1c1f] border border-[#28282b] px-3 py-1 rounded-md">
+            {actionPlans.length} Strategic Actions
+          </span>
+        </div>
 
-      <p className="text-xs text-zinc-500">
-        AI-synthesized strategic marketing pivots and promotional ad copy based on ClickHouse telemetry.
-      </p>
-
-      {isOpen && (
-        <div className="space-y-3.5">
+        <div className="space-y-4">
           {actionPlans.map((plan, idx) => (
             <div
               key={idx}
-              className="bg-[#1c1c1f] border border-[#28282b] rounded-xl p-5 space-y-4 shadow-xs hover:border-zinc-700 transition"
+              className="bg-[#1c1c1f] border border-[#28282b] rounded-xl p-6 space-y-5 shadow-xs hover:border-zinc-700 transition"
             >
-              {/* Directive Header */}
-              <div className="flex items-center justify-between flex-wrap gap-2 border-b border-[#28282b]/70 pb-3">
-                <div className="flex items-center gap-2.5">
-                  <div className="h-6 w-6 rounded-md bg-[#242428] flex items-center justify-center text-[#e6fc4f] shrink-0">
-                    <Target className="h-3.5 w-3.5" />
+              {/* Header */}
+              <div className="flex items-center justify-between flex-wrap gap-2 border-b border-[#28282b]/70 pb-3.5">
+                <div className="flex items-center gap-3">
+                  <div className="h-7 w-7 rounded-md bg-[#242428] flex items-center justify-center text-[#e6fc4f] shrink-0 font-mono font-bold text-xs">
+                    0{idx + 1}
                   </div>
                   <h3 className="font-bold text-sm text-zinc-100">{plan.title}</h3>
                 </div>
@@ -225,21 +220,21 @@ export default function MarketingDirectives({ campaign, themeStats }: MarketingD
               </div>
 
               {/* 2-Column Strategy & Copy Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 text-xs">
                 {/* Left: Audience Signal & Recommended Action */}
                 <div className="space-y-3">
-                  <div className="bg-[#161618] border border-[#28282b] rounded-lg p-3 space-y-1">
+                  <div className="bg-[#161618] border border-[#28282b] rounded-lg p-4 space-y-1.5">
                     <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block flex items-center gap-1.5">
-                      <AlertCircle className="h-3 w-3 text-[#e6fc4f]" />
+                      <AlertCircle className="h-3.5 w-3.5 text-[#e6fc4f]" />
                       Audience Signal Rationale
                     </span>
                     <p className="text-zinc-300 leading-relaxed font-sans">{plan.whyItMatters}</p>
                   </div>
 
-                  <div className="bg-[#161618] border border-[#28282b] rounded-lg p-3 space-y-1">
+                  <div className="bg-[#161618] border border-[#28282b] rounded-lg p-4 space-y-1.5">
                     <span className="text-[10px] font-bold text-[#e6fc4f] uppercase tracking-wider block flex items-center gap-1.5">
-                      <Sparkles className="h-3 w-3" />
-                      Recommended Marketing Action
+                      <Sparkles className="h-3.5 w-3.5" />
+                      Recommended Strategic Action
                     </span>
                     <p className="text-zinc-100 leading-relaxed font-sans font-medium">{plan.action}</p>
                   </div>
@@ -247,15 +242,15 @@ export default function MarketingDirectives({ campaign, themeStats }: MarketingD
 
                 {/* Right: Ad Copy Draft & Target Execution */}
                 <div className="space-y-3">
-                  <div className="bg-[#161618] border border-[#28282b] rounded-lg p-3 space-y-2">
+                  <div className="bg-[#161618] border border-[#28282b] rounded-lg p-4 space-y-2.5">
                     <div className="flex items-center justify-between">
                       <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block flex items-center gap-1.5">
-                        <Send className="h-3 w-3 text-[#e6fc4f]" />
+                        <Send className="h-3.5 w-3.5 text-[#e6fc4f]" />
                         Ready-to-Use Promotional Copy
                       </span>
                       <button
                         onClick={() => handleCopyDraft(plan.copyDraft, idx)}
-                        className="flex items-center gap-1 bg-[#e6fc4f] hover:bg-[#d8ed47] text-black font-bold text-[10px] px-2 py-0.5 rounded transition cursor-pointer shadow-xs"
+                        className="flex items-center gap-1 bg-[#e6fc4f] hover:bg-[#d8ed47] text-black font-bold text-[10px] px-2.5 py-1 rounded transition cursor-pointer shadow-xs"
                       >
                         {copiedIndex === idx ? (
                           <>
@@ -268,23 +263,23 @@ export default function MarketingDirectives({ campaign, themeStats }: MarketingD
                         )}
                       </button>
                     </div>
-                    <p className="text-zinc-100 font-serif italic text-xs leading-relaxed border-l-2 border-[#e6fc4f]/70 pl-2.5">
+                    <p className="text-zinc-100 font-serif italic text-xs leading-relaxed border-l-2 border-[#e6fc4f]/80 pl-3 py-0.5">
                       {plan.copyDraft}
                     </p>
                   </div>
 
-                  <div className="bg-[#161618] border border-[#28282b] rounded-lg p-3 space-y-2">
-                    <div className="flex items-center justify-between text-[11px]">
+                  <div className="bg-[#161618] border border-[#28282b] rounded-lg p-4 space-y-2.5">
+                    <div className="flex items-center justify-between text-xs">
                       <span className="text-zinc-400 font-medium">Target Audience:</span>
                       <span className="font-semibold text-zinc-200">{plan.audience}</span>
                     </div>
 
-                    <div className="flex items-center gap-1.5 flex-wrap pt-1 border-t border-[#28282b]/60">
+                    <div className="flex items-center gap-1.5 flex-wrap pt-2 border-t border-[#28282b]/60">
                       <span className="text-[10px] text-zinc-500 font-medium mr-1">Channels:</span>
                       {plan.channels.map((chan, cIdx) => (
                         <span
                           key={cIdx}
-                          className="bg-[#242428] border border-[#2e2e33] px-2 py-0.5 rounded text-zinc-300 text-[10px] font-medium"
+                          className="bg-[#242428] border border-[#2e2e33] px-2.5 py-0.5 rounded text-zinc-300 text-[11px] font-medium"
                         >
                           {chan}
                         </span>
@@ -296,7 +291,7 @@ export default function MarketingDirectives({ campaign, themeStats }: MarketingD
             </div>
           ))}
         </div>
-      )}
+      </div>
     </div>
   );
 }
