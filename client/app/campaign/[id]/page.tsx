@@ -230,12 +230,16 @@ function CampaignWorkspaceInner() {
       const decoder = new TextDecoder();
       let done = false;
       let accumulatedText = "";
+      let buffer = "";
 
       while (!done) {
         const { value, done: doneReading } = await reader.read();
         done = doneReading;
-        const chunk = decoder.decode(value, { stream: !done });
-        const lines = chunk.split("\n\n");
+        buffer += decoder.decode(value, { stream: !done });
+        
+        const lines = buffer.split("\n\n");
+        buffer = lines.pop() || "";
+        
         for (const line of lines) {
           if (line.startsWith("data: ")) {
             const data = line.slice(6);
@@ -248,8 +252,16 @@ function CampaignWorkspaceInner() {
           }
         }
       }
+      
+      if (buffer.startsWith("data: ")) {
+        const data = buffer.slice(6);
+        if (data) {
+          accumulatedText += data;
+        }
+      }
+      
       setChatMessages((prev) =>
-        prev.map((msg) => (msg.id === agentMsgId ? { ...msg, isStreaming: false } : msg))
+        prev.map((msg) => (msg.id === agentMsgId ? { ...msg, text: accumulatedText, isStreaming: false } : msg))
       );
     } catch (err) {
       console.error(err);

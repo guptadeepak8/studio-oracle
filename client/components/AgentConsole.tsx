@@ -37,6 +37,45 @@ export default function AgentConsole({
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chatMessages]);
 
+  const parseInlineMarkdown = (text: string) => {
+    const parts: React.ReactNode[] = [];
+    let currentIdx = 0;
+    const regex = /(\*\*.*?\*\*|`.*?`)/g;
+    let match;
+    let key = 0;
+    
+    while ((match = regex.exec(text)) !== null) {
+      const matchStart = match.index;
+      const matchText = match[0];
+      
+      if (matchStart > currentIdx) {
+        parts.push(text.substring(currentIdx, matchStart));
+      }
+      
+      if (matchText.startsWith("**") && matchText.endsWith("**")) {
+        parts.push(
+          <strong key={key++} className="font-bold text-zinc-100">
+            {matchText.slice(2, -2)}
+          </strong>
+        );
+      } else if (matchText.startsWith("`") && matchText.endsWith("`")) {
+        parts.push(
+          <code key={key++} className="font-mono text-[11px] bg-[#131316] border border-[#232329] px-1 py-0.5 rounded text-amber-500/90">
+            {matchText.slice(1, -1)}
+          </code>
+        );
+      }
+      
+      currentIdx = regex.lastIndex;
+    }
+    
+    if (currentIdx < text.length) {
+      parts.push(text.substring(currentIdx));
+    }
+    
+    return parts.length > 0 ? parts : text;
+  };
+
   const renderMessageText = (text: string) => {
     const paragraphs = text.split("\n\n");
     return paragraphs.map((para, index) => {
@@ -49,6 +88,43 @@ export default function AgentConsole({
           <h4 key={index} className="text-xs font-bold text-amber-500 uppercase tracking-wider pt-3 pb-1 first:pt-0">
             {title}
           </h4>
+        );
+      }
+
+      // Check agent tool call/response
+      const isToolCall = paraTrimmed.startsWith("> 🔍") || paraTrimmed.includes("Agent Tool Call");
+      const isToolResponse = paraTrimmed.startsWith("> 📥") || paraTrimmed.includes("Agent Tool Response");
+      
+      if (isToolCall || isToolResponse) {
+        const isResponse = isToolResponse;
+        const cleanText = paraTrimmed
+          .replace(/^>\s*/, "") // Remove starting >
+          .replace(/\*\*/g, "") // Remove bold indicators
+          .replace(/`/g, "") // Remove code ticks
+          .replace(/^[🔍📥]\s*/, ""); // Remove emojis if at start
+        
+        return (
+          <div key={index} className="flex items-center gap-2 text-[11px] font-mono text-zinc-400 bg-[#131316] border border-[#232329]/50 px-3 py-2.5 rounded my-1.5 w-full">
+            <span className="shrink-0">{isResponse ? "📥" : "🔍"}</span>
+            <span className="truncate">{cleanText}</span>
+          </div>
+        );
+      }
+
+      // Check list items
+      if (paraTrimmed.startsWith("* ") || paraTrimmed.startsWith("- ")) {
+        return (
+          <ul key={index} className="list-disc pl-5 my-2 space-y-1">
+            {para.split("\n").map((line, lIdx) => {
+              const cleanLine = line.trim().replace(/^[\*\-]\s*/, "");
+              if (!cleanLine) return null;
+              return (
+                <li key={lIdx} className="text-sm text-zinc-250 leading-relaxed font-sans font-medium">
+                  {parseInlineMarkdown(cleanLine)}
+                </li>
+              );
+            })}
+          </ul>
         );
       }
 
@@ -73,8 +149,8 @@ export default function AgentConsole({
         return (
           <div key={index} className="border-l-2 border-blue-500 bg-blue-950/10 p-3 rounded my-2 text-xs font-sans">
             <span className="font-bold text-blue-400 block tracking-wider mb-0.5 uppercase text-[10px]">Observed Facts</span>
-            <p className="text-zinc-300">
-              {para.replace(/^(OBSERVED|\*   \*\*OBSERVED\*\*:\s*|\*\*OBSERVED\*\*\s*:?\s*)/, "")}
+            <p className="text-zinc-300 text-xs">
+              {parseInlineMarkdown(para.replace(/^(OBSERVED|\*   \*\*OBSERVED\*\*:\s*|\*\*OBSERVED\*\*\s*:?\s*)/, ""))}
             </p>
           </div>
         );
@@ -85,8 +161,8 @@ export default function AgentConsole({
             <span className="font-bold text-amber-400 block tracking-wider mb-0.5 uppercase text-[10px]">
               Inferred Interpretation
             </span>
-            <p className="text-zinc-300">
-              {para.replace(/^(INFERRED|\*   \*\*INFERRED\*\*:\s*|\*\*INFERRED\*\*\s*:?\s*)/, "")}
+            <p className="text-zinc-300 text-xs">
+              {parseInlineMarkdown(para.replace(/^(INFERRED|\*   \*\*INFERRED\*\*:\s*|\*\*INFERRED\*\*\s*:?\s*)/, ""))}
             </p>
           </div>
         );
@@ -97,8 +173,8 @@ export default function AgentConsole({
             <span className="font-bold text-purple-400 block tracking-wider mb-0.5 uppercase text-[10px]">
               Forward Hypothesis
             </span>
-            <p className="text-zinc-300">
-              {para.replace(/^(PREDICTION|\*   \*\*PREDICTION\*\*:\s*|\*\*PREDICTION\*\*\s*:?\s*)/, "")}
+            <p className="text-zinc-300 text-xs">
+              {parseInlineMarkdown(para.replace(/^(PREDICTION|\*   \*\*PREDICTION\*\*:\s*|\*\*PREDICTION\*\*\s*:?\s*)/, ""))}
             </p>
           </div>
         );
@@ -109,15 +185,15 @@ export default function AgentConsole({
             <span className="font-bold text-zinc-400 block tracking-wider mb-0.5 uppercase text-[10px]">
               Unknown / Data Gap
             </span>
-            <p className="text-zinc-350">
-              {para.replace(/^(UNKNOWN|\*   \*\*UNKNOWN\*\*:\s*|\*\*UNKNOWN\*\*\s*:?\s*)/, "")}
+            <p className="text-zinc-350 text-xs">
+              {parseInlineMarkdown(para.replace(/^(UNKNOWN|\*   \*\*UNKNOWN\*\*:\s*|\*\*UNKNOWN\*\*\s*:?\s*)/, ""))}
             </p>
           </div>
         );
       }
       return (
         <p key={index} className="text-sm text-zinc-250 leading-relaxed font-sans font-medium my-1.5">
-          {para}
+          {parseInlineMarkdown(para)}
         </p>
       );
     });

@@ -1,118 +1,163 @@
-# StudioOracle — Implementation Roadmap
+# StudioOracle — Hackathon Execution Roadmap & Upgrade Plan
 
-This document outlines the current engineering roadmap for StudioOracle, tracking tasks, technical risks, hackathon compliance, and the immediate development milestone.
-
----
-
-## P0 — Must work for the hackathon
-*Things required for a functioning end-to-end demo.*
-
-### Task 1: Implement Python Backend API Server (`server/api.py`)
-* **Task:** Create a FastAPI web server exposing endpoint interfaces to run the agent and manage content ingestion.
-* **Why it is required:** The frontend Next.js app needs a structured HTTP interface to communicate with the ADK agent and trigger database ingestion.
-* **Current status:** Completed (FastAPI endpoints created and verified).
-* **Relevant files:**
-  - [api.py](file:///d:/deepak/project/studio-oracle/server/api.py)
-  - [agent.py](file:///d:/deepak/project/studio-oracle/server/agent.py)
-* **Dependencies:** `fastapi`, `uvicorn`, `google-adk`, `clickhouse-connect`.
-* **Verification method:** Run `uvicorn api:app --reload` from `server/` and call endpoints via curl/HTTP requests, verifying streaming/responses.
-
-### Task 2: Implement Frontend Dashboard UI (`apps/web`)
-* **Task:** Replace Next.js template with a workspace to add movies, view ingestion progress, and interact with the AI agent.
-* **Why it is required:** Provides the interactive user experience to demonstrate the real-time audience intelligence platform.
-* **Current status:** Default Next.js template.
-* **Relevant files:**
-  - [page.tsx](file:///d:/deepak/project/studio-oracle/apps/web/app/page.tsx)
-* **Dependencies:** Python Backend API Server endpoints.
-* **Verification method:** Launch `pnpm dev` and interact with the dashboard, verifying chat rendering and ingestion updates.
-
-### Task 3: Setup End-to-End Chat & Ingest Communication Flow
-* **Task:** Connect frontend chat requests and content addition requests to the FastAPI endpoints.
-* **Why it is required:** Ensures the UI displays live database facts (Observed, Inferred, Predictions, Unknowns) and allows real-time agent queries.
-* **Current status:** Not started.
-* **Relevant files:**
-  - [page.tsx](file:///d:/deepak/project/studio-oracle/apps/web/app/page.tsx)
-  - [api.py](file:///d:/deepak/project/studio-oracle/server/api.py)
-* **Dependencies:** API endpoints and frontend layout.
-* **Verification method:** Enter a prompt in the frontend chat, verify the agent runs tools, queries ClickHouse, and displays the response.
+This document serves as the tactical engineering roadmap, technical risk log, and judge-readiness plan for **StudioOracle**.
 
 ---
 
-## P1 — Important product functionality
-*Features that materially improve the StudioOracle demonstration.*
+## P0 — Demo Critical (Must Complete for 3–5 Min Demo)
 
-### 1. Reddit Ingestion Integration
-* **Task:** Code `server/ingestion/reddit.py` and `server/tools/reddit.py` to ingest Reddit posts/comments.
-* **Why it is required:** Enables cross-platform comparisons (e.g. comparing sentiments on YouTube vs. Reddit) to identify contradictions.
-* **Current status:** Not started.
-* **Relevant files:** `server/ingestion/reddit.py` [NEW], `server/tools/reddit.py` [NEW], `server/agent.py`.
-* **Dependencies:** Reddit API keys or mock fallback generator.
-* **Verification method:** Ingest a campaign and verify comments count increases in ClickHouse under platform source "reddit".
-
-### 2. Time-series Sentiment & Contradiction Reasoning Prompting
-* **Task:** Write detailed system prompts and schema validation to extract temporal sentiment shifts and platform-level conflicts.
-* **Why it is required:** Highlights the core differentiator of evidence-based reasoning rather than simple aggregate counts.
-* **Current status:** Completed (Instructions and contradiction SQL queries successfully integrated in agent.py and verified).
-* **Relevant files:** `server/agent.py`.
-* **Dependencies:** Ingested database tables with rich sentiment timelines.
-* **Verification method:** Query the agent for conflicts and confirm it successfully references specific contradicting posts.
-
----
-
-## P2 — Improvements
-*Features that are useful but should not delay the working MVP.*
-
-### 1. Streaming Server-Sent Events (SSE)
-* **Task:** Implement streaming SSE responses from the agent back to the Next.js UI.
-* **Why it is required:** Lowers perceived latency by showing agent thoughts and tool calls in real time.
-* **Current status:** Completed (Uvicorn endpoint updated to stream dynamic tool calls and responses in real-time).
-* **Relevant files:** `server/api.py`, frontend chat client.
-* **Dependencies:** Basic API server working.
-* **Verification method:** Inspect stream output in browser dev tools.
-
-### 2. Cloud Deployment Pipelines
-* **Task:** Host frontend on Vercel and backend FastAPI on GCP Cloud Run.
-* **Why it is required:** Allows external review and live presentation of the hackathon project.
-* **Current status:** Local-only.
-* **Dependencies:** GCP and Vercel credentials.
-* **Verification method:** Open public URL and query the agent.
+- [x] **Live Ingestion & Gemini Batch Classifier (`server/ingestion/youtube.py`)**
+  - Ingest real YouTube comments and classify them in batches of 20 with Gemini 2.5 Flash.
+  - Store structured columns: `sentiment`, `topics` (Array), `topic_sentiments` (Map), `claim`, `evidence_type`, and `confidence`.
+- [x] **ClickHouse Analytics Endpoints (`server/db.py`, `server/api.py`)**
+  - Aggregation queries for sentiment breakdown, top dynamic themes with `ARRAY JOIN topics`, and timeline nodes.
+  - Pulse synthesis endpoint using Gemini to summarize audience telemetry in 2 sentences.
+- [x] **Frontend Dashboard & Streaming Console (`client/`)**
+  - Next.js workspace visualizing live ClickHouse campaign telemetry, evidence ledger, and real-time streaming agent thoughts.
+- [ ] **Structured Insight & Evidence Contract (`server/agent.py`, `client/utils/types.ts`)**
+  - Upgrade agent responses from plain markdown blocks to an explicit typed schema:
+    `{ claim: string, type: 'Observed' | 'Inferred' | 'Prediction' | 'Unknown', confidence: number, evidence_ids: string[], sources: string[], reasoning: string }`
+  - Render an interactive **"Inspect Evidence"** badge/drawer in the chat UI when clicking on any claim.
+- [ ] **Temporal Trailer Inflection Tool (`server/tools/timeline.py`)**
+  - Create a dedicated ClickHouse tool: `query_trailer_inflection(content_id, trailer_date)` to compare audience topic distribution and sentiment delta before vs. after a major promotional drop.
+- [ ] **Reddit Live / High-Fidelity Ingestor (`server/ingestion/reddit.py`)**
+  - Ingest Reddit thread commentary into `studio_oracle.audience_comments` with `source = 'reddit'`.
+  - Enable the agent and UI to contrast YouTube hype against Reddit enthusiast critiques on specific topics (e.g., lore, casting).
 
 ---
 
-## Technical risks
-*Risk assessment based on the current codebase:*
+## P1 — High Impact (Strong Differentiators)
 
-* **Gemini/Vertex AI integration:** Routing `google-genai` through Vertex AI using `GOOGLE_GENAI_USE_VERTEXAI=TRUE` requires proper IAM permissions. Incorrect environment configurations can block model generation.
-* **Google ADK:** The ADK is in experimental/fast-moving release. APIs and helper classes (like `McpToolset` vs. deprecated `MCPToolset`) can drift.
-* **MCP:** Spawning stdio-based MCP servers requires clean subprocess execution. Any crash in `mcp-clickhouse` will disconnect the agent.
-* **Official mcp-clickhouse:** The server depends on the specific executable location. On non-Windows platforms, finding the binary globally or via virtual environment path needs robust fallbacks.
-* **ClickHouse connectivity:** The hosted ClickHouse Cloud instance requires secure TLS (port 8443) and handles timeouts. Subprocess connections must be pooled or re-established cleanly to avoid running out of sockets.
-* **Database schema:** The tables `audience_posts` and `audience_comments` are platform-neutral, but schema changes require manual migration or rebuilds of ClickHouse tables.
-* **Ingestion reliability:** Real-time YouTube ingestion depends on valid YouTube developer API keys. If the quota is exceeded or key fails, the mock dataset fallback must gracefully trigger.
-* **API limits:** YouTube API quota limits (10,000 units/day) restrict large-scale ingestion.
-* **Data freshness:** Ingested comments are a snapshot in time. A timestamp check is needed to prevent duplicate fetches or stale analytical results.
-* **Deployment:** Deploying stdio subprocesses like `mcp-clickhouse` within a Dockerized container on Cloud Run requires the executable to be packaged and accessible.
-* **Authentication:** Next.js and API communication must be secured, particularly if exposing manual ingestion triggers to prevent abuse.
-* **Secrets:** `studiooracle-key.json` and `.env` contain database and cloud credentials. They must be safely managed on hosted environments and never pushed to GitHub.
-* **Frontend/backend communication:** Handling large JSON schemas and streaming responses requires robust serialization/deserialization.
+- [ ] **Interactive Evidence Highlighting in UI (`client/components/EvidenceLedger.tsx`)**
+  - Clicking an evidence reference in the Agent Console or Conflicting Signals card automatically scrolls and highlights the specific comment in the Evidence Ledger.
+- [ ] **Dynamic "Contradiction Radar" in Overview (`client/components/ConflictingSignals.tsx`)**
+  - Replace static `getWhyItMatters` hardcoded switches with dynamic LLM or ClickHouse-driven contradiction explanations directly from `audience_comments`.
+- [ ] **Anomaly & Emergence Alert Banner (`client/components/AudiencePulse.tsx`)**
+  - Query ClickHouse for sudden surges (>200% mention velocity) in negative keywords or emerging topics and display an alert banner: *"Emerging Friction Detected: 48% increase in casting skepticism in last 48h."*
+- [ ] **Exportable Studio Intelligence Memo (`client/components/AgentConsole.tsx`)**
+  - One-click button to compile the current session's Observed/Inferred findings into a downloadable Markdown/PDF executive briefing for studio executives.
 
 ---
 
-## Hackathon compliance checklist
+## P2 — If Time Permits (Polish & Stretch)
 
-* **Google AI tooling:** Core dependency using Gemini 2.5 and Google Vertex AI.
-* **Google ADK:** Used to model the agent, register custom Python tools, and manage execution loops.
-* **Gemini/Vertex AI:** Configured to invoke LLM sessions securely via Google GenAI SDK.
-* **Official mcp-clickhouse:** Subprocess-based stdio connection registered to the ADK Agent.
-* **ClickHouse runtime usage:** Active analytical database storing evidence and claims at runtime.
-* **Public repository requirements:** Secrets kept out of Git via `.gitignore` configurations.
-* **Deployment:** Target host setup planned for Vercel and GCP Cloud Run.
-* **Demo:** End-to-end interface designed to visualize claims from database evidence.
-* **Third-party data/API compliance:** Fallback mock datasets implemented to prevent developer key exhaustion during test runs.
+- [ ] **Multimodal Poster / Trailer Sentiment Alignment**
+  - Ingest thumbnail/trailer keyframes using Gemini 2.5 Flash Multimodal to compare intended trailer tone against audience reception.
+- [ ] **Automated Marketing Strategy Generator**
+  - Connect dynamic ClickHouse findings directly to the `MarketingDirectives` component to generate custom mitigation copy.
 
-## Current milestone
+---
 
-### Milestone: Frontend Dashboard UI Implementation (`apps/web`)
-**Why this comes first:**
-With the backend FastAPI server fully implemented and verified (supporting movie retrieval, comment querying, agent chat responses, and streaming SSE tokens), the critical bridge between the user and the agent is complete. The next logical step is to replace the default Next.js template in `apps/web` with the real interactive dashboard interface to connect with this API.
+## Architecture Changes
+
+```text
+[ YouTube API / Reddit ]
+           │
+           ▼
+[ Ingestion & Batch Analysis (Gemini 2.5 Flash) ]
+   - Extracts: topics[], topic_sentiments{}, claim, evidence_type, confidence
+           │
+           ▼
+[ ClickHouse Cloud (Columnar Analytical Engine) ]
+   - Tables: audience_posts, audience_comments, content
+   - Materialized / Array Queries: topic aggregations, conflict pairs, temporal deltas
+           │
+     ┌─────┴─────────────────────────┐
+     ▼                               ▼
+[ Analytical REST APIs ]    [ Research Agent (Google ADK) ]
+  - /analytics, /timeline     - Tool: ClickHouse SQL Query Runner
+  - /pulse                    - Tool: Trailer Inflection Comparator
+                              - Tool: Cross-Platform Discrepancy Analyzer
+     └─────┬─────────────────────────┘
+           │ (SSE Token Stream + Tool Events)
+           ▼
+[ Next.js Interactive Studio Dashboard ]
+  - Evidence Ledger with Comment Highlighting
+  - Claim Badge Cards (Observed / Inferred / Prediction / Unknown)
+  - Interactive Conflicting Signals & Timeline Delta
+```
+
+---
+
+## Gemini / Agent Changes
+
+* **Model Tiering**:
+  * **Ingestion Classifier**: `gemini-2.5-flash` with structured JSON schema (`IngestionAnalysisBatch`). Fast, cost-efficient, and strictly typed.
+  * **Interactive Research Agent**: `gemini-2.5-flash` / `gemini-2.5-pro` via Google ADK with `mcp-clickhouse` / custom ClickHouse SQL execution tools.
+* **Reasoning Contract**:
+  * Mandatory enforcement of the 4 epistemic categories:
+    1. **OBSERVED**: Direct facts backed by ClickHouse `comment_id` counts and quotes.
+    2. **INFERRED**: Interpretations connecting multiple observed facts.
+    3. **PREDICTION**: Probable downstream audience behavior.
+    4. **UNKNOWN**: Blind spots and unmeasured demographics.
+
+---
+
+## ClickHouse / Analytics Changes
+
+* **Dynamic Array Joins**:
+  ```sql
+  SELECT topic, count() as mentions,
+         countIf(topic_sentiments[topic] = 'positive') as pos_c,
+         countIf(topic_sentiments[topic] = 'negative') as neg_c
+  FROM studio_oracle.audience_comments
+  ARRAY JOIN topics AS topic
+  WHERE content_id = '{content_id}'
+  GROUP BY topic ORDER BY mentions DESC;
+  ```
+* **Contradiction Pair Extraction**:
+  ```sql
+  SELECT topic,
+         argMax(text, like_count) FILTER (WHERE topic_sentiments[topic] = 'positive') as top_pos,
+         argMax(text, like_count) FILTER (WHERE topic_sentiments[topic] = 'negative') as top_neg
+  FROM studio_oracle.audience_comments
+  ARRAY JOIN topics AS topic
+  WHERE content_id = '{content_id}'
+  GROUP BY topic
+  HAVING countIf(topic_sentiments[topic] = 'positive') > 0 
+     AND countIf(topic_sentiments[topic] = 'negative') > 0;
+  ```
+
+---
+
+## UI Changes
+
+1. **Evidence Badge Verification**: Every claim produced by the agent in `AgentConsole.tsx` displays clickable citation chips linking to the `EvidenceLedger`.
+2. **Platform Discrepancy Split**: In `ConflictingSignals.tsx` or `Overview`, show YouTube vs. Reddit sentiment comparison side-by-side.
+3. **Timeline Inflection Highlights**: Visual marker on `WhatChanged.tsx` indicating when promotional trailers/clips dropped.
+
+---
+
+## 3–5 Minute Demo Script
+
+1. **The Hook (0:00 - 0:45)**:
+   * Introduce the problem: Hollywood studio marketing teams lose millions because traditional social listening only produces vanity sentiment scores without causal evidence or actionable explanations.
+2. **Live Ingestion & Telemetry (0:45 - 1:30)**:
+   * Open the *Gladiator II* campaign. Show ClickHouse real-time telemetry indexing 100+ analyzed YouTube and Reddit comments with dynamic topics and sentiment maps.
+3. **Unprompted Discovery (1:30 - 2:45)**:
+   * Highlight the **Conflicting Signals** and **What Changed** cards: show how the system autonomously detected a contradiction where casual YouTube viewers praise soundtrack energy, while Reddit enthusiast communities criticize historical accuracy and CGI lighting.
+4. **Agent Investigation (2:45 - 4:00)**:
+   * Ask the StudioOracle Research Agent: *"What changed after the trailer drop and why are fans divided?"*
+   * Watch the streaming tool call execute a ClickHouse inflection query live, returning structured **Observed Facts**, **Inferred Context**, and **Forward Recommendations** with clickable evidence IDs.
+5. **Closing & Impact (4:00 - 4:30)**:
+   * Show the Marketing Directive generated from this evidence: switch digital ad spend from CGI battle teasers to narrative character reels.
+
+---
+
+## Judge Differentiators
+
+* **Evidence-Linked Grounding**: Not a generic chatbot. Every assertion is provably anchored in ClickHouse rows with exact IDs.
+* **Strict Epistemic Classification**: Explicitly distinguishes between hard observed data and inferred hypothesis.
+* **Causal & Temporal Reasoning**: Demonstrates how audience perceptions shift across time and across platform silos.
+* **Real Columnar Speed**: Leverages ClickHouse vector and array operations for instantaneous aggregation over thousands of structured feedback nodes.
+
+---
+
+## Definition of Done
+
+1. [x] All API endpoints return live ClickHouse data without mock fallbacks.
+2. [x] Streaming chat emits real-time tool execution logs.
+3. [x] Frontend builds cleanly without TypeScript errors.
+4. [ ] Reddit and YouTube feeds simultaneously queryable in ClickHouse.
+5. [ ] Every agent answer contains verifiable claim badges and supporting comment citations.
 
