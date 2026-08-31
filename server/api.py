@@ -19,10 +19,18 @@ import db
 
 app = FastAPI(title="StudioOracle API")
 
-# Enable CORS for the Next.js frontend application
+# Enable CORS for the Next.js frontend application (supports localhost & 127.0.0.1 on any port)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=[
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:3001",
+        "http://127.0.0.1:3001",
+        "http://localhost:8080",
+        "http://127.0.0.1:8080",
+    ],
+    allow_origin_regex=r"^http://(localhost|127\.0\.0\.1)(:\d+)?$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -297,3 +305,8 @@ def ingest(request: IngestRequest):
         return res
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("api:app", host="127.0.0.1", port=8080, reload=True)
+
