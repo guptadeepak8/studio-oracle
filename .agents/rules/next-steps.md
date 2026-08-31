@@ -52,7 +52,7 @@ This document outlines the current engineering roadmap for StudioOracle, trackin
 ### 2. Time-series Sentiment & Contradiction Reasoning Prompting
 * **Task:** Write detailed system prompts and schema validation to extract temporal sentiment shifts and platform-level conflicts.
 * **Why it is required:** Highlights the core differentiator of evidence-based reasoning rather than simple aggregate counts.
-* **Current status:** Basic instruction in `agent.py`.
+* **Current status:** Completed (Instructions and contradiction SQL queries successfully integrated in agent.py and verified).
 * **Relevant files:** `server/agent.py`.
 * **Dependencies:** Ingested database tables with rich sentiment timelines.
 * **Verification method:** Query the agent for conflicts and confirm it successfully references specific contradicting posts.
@@ -65,7 +65,7 @@ This document outlines the current engineering roadmap for StudioOracle, trackin
 ### 1. Streaming Server-Sent Events (SSE)
 * **Task:** Implement streaming SSE responses from the agent back to the Next.js UI.
 * **Why it is required:** Lowers perceived latency by showing agent thoughts and tool calls in real time.
-* **Current status:** Not started.
+* **Current status:** Completed (Uvicorn endpoint updated to stream dynamic tool calls and responses in real-time).
 * **Relevant files:** `server/api.py`, frontend chat client.
 * **Dependencies:** Basic API server working.
 * **Verification method:** Inspect stream output in browser dev tools.

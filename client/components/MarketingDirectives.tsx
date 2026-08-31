@@ -7,8 +7,8 @@ import { Movie } from "../utils/types";
 interface ThemeItem {
   name: string;
   count: number;
-  positive: number;
-  negative: number;
+  posPercent?: number;
+  negPercent?: number;
 }
 
 interface ExpandedDirective {
@@ -48,11 +48,10 @@ export default function MarketingDirectives({ campaign, themeStats }: MarketingD
 
     stats.forEach((theme) => {
       if (theme.count > 0) {
-        if (theme.name === "Casting") {
-          const totalMentions = theme.positive + theme.negative;
-          const posRatio = Math.round((theme.positive / (totalMentions || 1)) * 100);
-
-          if (theme.positive >= theme.negative) {
+        const themeLower = theme.name.toLowerCase();
+        if (themeLower === "casting" || themeLower === "cast") {
+          const posRatio = theme.posPercent ?? 0;
+          if (posRatio >= 50) {
             directives.push({
               title: "Spotlight Leading Talents",
               status: "Recommended",
@@ -75,11 +74,10 @@ export default function MarketingDirectives({ campaign, themeStats }: MarketingD
           }
         }
 
-        if (theme.name === "Visuals") {
-          const totalMentions = theme.positive + theme.negative;
-          const posRatio = Math.round((theme.positive / (totalMentions || 1)) * 100);
+        if (themeLower === "visuals" || themeLower === "visual" || themeLower === "cgi" || themeLower === "visual_effects") {
+          const posRatio = theme.posPercent ?? 0;
 
-          if (theme.positive >= theme.negative) {
+          if (posRatio >= 50) {
             directives.push({
               title: "Scale Cinematic Promo Cuts",
               status: "Recommended",
@@ -102,11 +100,10 @@ export default function MarketingDirectives({ campaign, themeStats }: MarketingD
           }
         }
 
-        if (theme.name === "Soundtrack") {
-          const totalMentions = theme.positive + theme.negative;
-          const posRatio = Math.round((theme.positive / (totalMentions || 1)) * 100);
+        if (themeLower === "soundtrack" || themeLower === "music" || themeLower === "score") {
+          const posRatio = theme.posPercent ?? 0;
 
-          if (theme.positive >= theme.negative) {
+          if (posRatio >= 50) {
             directives.push({
               title: "Publish Soundtrack Theme Reels",
               status: "Recommended",
@@ -129,11 +126,11 @@ export default function MarketingDirectives({ campaign, themeStats }: MarketingD
           }
         }
 
-        if (theme.name === "Story") {
+        if (themeLower === "story" || themeLower === "plot" || themeLower === "lore" || themeLower === "plot_elements" || themeLower === "storytelling") {
           directives.push({
-            title: "Explain Campaign Lore & Context",
+            title: "Explain Lore & Narrative Paths",
             status: "Nurturing",
-            context: `Triggered by Story theme questions (${theme.count} mentions). Audiences show questions regarding the timeline, prequel/sequel relations, or plot configurations.`,
+            context: `Triggered by Story/Plot theme questions (${theme.count} mentions). Audiences show questions regarding the timeline, prequel/sequel relations, or plot configurations.`,
             strategy: `Deploy explainer infographics, timeline charts, and character lineage reels to bridge the plot gap and build expectation for "${campaign.title}".`,
             copyDraft: `\"The story continues. Explore the characters, motivations, and narrative paths in ${campaign.title}.\"`,
             channels: ["Interactive Story Maps", "YouTube Lore Summaries", "Wiki Database Partnerships"],

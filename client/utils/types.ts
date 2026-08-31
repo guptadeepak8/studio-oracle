@@ -16,6 +16,8 @@ export interface Comment {
   author: string;
   published_at: string;
   like_count: number;
+  sentiment?: "positive" | "negative" | "neutral" | "mixed" | "unknown";
+  topics?: string[];
 }
 
 export interface ChatMessage {

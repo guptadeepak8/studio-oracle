@@ -10,6 +10,9 @@ export const API_ENDPOINTS = {
   CAMPAIGNS: `${API_BASE_URL}/api/campaigns`,
   CAMPAIGN_STATUS: (contentId: string) => `${API_BASE_URL}/api/campaigns/${contentId}/status`,
   DELETE_CAMPAIGN: (contentId: string) => `${API_BASE_URL}/api/campaigns/${contentId}`,
+  ANALYTICS: (contentId: string) => `${API_BASE_URL}/api/campaigns/${contentId}/analytics`,
+  TIMELINE: (contentId: string) => `${API_BASE_URL}/api/campaigns/${contentId}/timeline`,
+  PULSE: (contentId: string) => `${API_BASE_URL}/api/campaigns/${contentId}/pulse`,
 } as const;
 
 export const SESSION_CONFIG = {

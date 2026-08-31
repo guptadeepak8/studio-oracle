@@ -34,6 +34,43 @@ root_agent=LlmAgent(
     6. Answer First: Do not repeat the question, ask clarifying questions, or say "I understand you are keen to know...". Query the database and return the structured answer immediately.
     7. No Lazy Questions: Never ask the user for information that exists or can be reasoned over in ClickHouse. If a date or detail is missing, state it clearly as a data limitation and proceed with the best available analysis.
 
+    DATABASE SCHEMA REFERENCE:
+    The `studio_oracle.audience_comments` table contains these columns:
+    - `content_id` UUID: Campaign identifier (always filter by this!).
+    - `comment_id` String: Unique identifier of the comment.
+    - `text` String: Raw comment text.
+    - `sentiment` LowCardinality(String): Overall comment sentiment ('positive', 'negative', 'neutral', 'mixed', 'unknown').
+    - `claim` String: Dynamic summary of the core opinion/claim.
+    - `evidence_type` LowCardinality(String): 'praise', 'critique', 'question', 'hype', 'mixed', 'neutral'.
+    - `confidence` Float32: Classification confidence score.
+    - `topics` Array(String): Dynamic topics/themes discovered (lowercase, normalized, e.g. 'casting', 'cgi', 'franchise_comparison').
+    - `topic_sentiments` Map(String, String): Sentiment associated with each topic (e.g. {'cgi': 'negative'}).
+    - `published_at` DateTime: Publication timestamp.
+    - `analysis_status` LowCardinality(String): 'success', 'failed', 'pending'.
+
+    QUERYING DYNAMIC TOPICS & SENTIMENT IN CLICKHOUSE:
+    - Because `topics` is an Array and `topic_sentiments` is a Map, you must use ClickHouse Array/Map syntax when searching or grouping by topics.
+    - To unnest topics and get count/sentiment per topic, use ARRAY JOIN:
+      SELECT topic, count() as total, countIf(topic_sentiments[topic] = 'positive') as pos_c, countIf(topic_sentiments[topic] = 'negative') as neg_c
+      FROM studio_oracle.audience_comments
+      ARRAY JOIN topics AS topic
+      WHERE content_id = 'CAMPAIGN_ID'
+      GROUP BY topic
+    - Do NOT query or reference the old `aspect` column.
+
+    CONTRADICTION & CONFLICT REASONING LOGIC:
+    - A contradiction or conflict exists ONLY when there are opposing reactions (positive vs negative) to the SAME dynamic topic or claim (e.g. Topic: cgi. Positive: "CGI looks great", Negative: "CGI looks fake").
+    - Do not group unrelated positive and negative comments under a generic category like "General" and call it a conflict.
+    - To find actual conflicts, query for topics that have both positive and negative topic-level sentiments:
+      SELECT topic, 
+             argMax(text, like_count) FILTER (WHERE topic_sentiments[topic] = 'positive') as pos_text,
+             argMax(text, like_count) FILTER (WHERE topic_sentiments[topic] = 'negative') as neg_text
+      FROM studio_oracle.audience_comments
+      ARRAY JOIN topics AS topic
+      WHERE content_id = 'CAMPAIGN_ID'
+      GROUP BY topic
+      HAVING countIf(topic_sentiments[topic] = 'positive') > 0 AND countIf(topic_sentiments[topic] = 'negative') > 0
+
     TRAILER IDENTIFICATION & TIMELINE ANALYSIS LOGIC:
     When asked "What changed after the trailer?" or similar timeline queries:
     - Inspect the database first. Check `studio_oracle.audience_posts` for posts matching 'trailer' in the title to find its publication/release date (`published_at`).

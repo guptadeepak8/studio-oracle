@@ -8,6 +8,102 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env"))
 
+from google import genai
+from google.genai import types
+from pydantic import BaseModel, Field
+from typing import List, Dict
+
+class CommentAnalysis(BaseModel):
+    comment_id: str
+    overall_sentiment: str = Field(description="Must be one of: 'positive', 'negative', 'neutral', 'mixed', 'unknown'")
+    topics: List[str] = Field(description="Concise, lowercase topics/themes discussed (e.g. 'casting', 'cgi', 'franchise_fatigue'). Return empty list if no specific topic.")
+    topic_sentiments: Dict[str, str] = Field(
+        description="Sentiment associated with each topic. Keys must be present in the topics list, values must be one of: 'positive', 'negative', 'neutral'."
+    )
+    claim: str = Field(description="Summary of commenter's opinion, not stated as objective fact.")
+    evidence_type: str = Field(description="Must be one of: 'praise', 'critique', 'question', 'hype', 'mixed', 'neutral'")
+    confidence: float = Field(description="Confidence rating of model's interpretation between 0.0 and 1.0.")
+
+class IngestionAnalysisBatch(BaseModel):
+    analyses: List[CommentAnalysis]
+
+def analyze_comments(comments: list) -> list:
+    """
+    Given a list of comment tuples (comment_id, post_id, content_id, source, text, author, published_at, like_count, collected_at),
+    calls Gemini to classify them in batches of 20 and returns the expanded tuples containing analysis columns.
+    """
+    if not comments:
+        return []
+        
+    try:
+        client = genai.Client(vertexai=True)
+    except Exception as e:
+        print(f"Failed to initialize GenAI Client: {e}. Falling back to default analysis values.")
+        return [c + ("neutral", "General", "", "neutral", 0.0, [], {}, "failed") for c in comments]
+
+    analyzed = []
+    batch_size = 20
+    
+    for i in range(0, len(comments), batch_size):
+        batch = comments[i:i+batch_size]
+        
+        # Prepare prompt
+        prompt = "Analyze the sentiment, topics, claim, evidence type, and confidence score for the following audience comments:\n\n"
+        for idx, c in enumerate(batch):
+            comment_id, _, _, _, text, _, _, _, _ = c
+            prompt += f"ID: {comment_id}\nText: {text}\n---\n"
+            
+        try:
+            res = client.models.generate_content(
+                model='gemini-2.5-flash',
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    response_schema=IngestionAnalysisBatch,
+                    system_instruction=(
+                        "Perform structured analysis on audience comments. For each comment ID, discover dynamic, specific, "
+                        "concise topics (lowercase, normalized, e.g. 'casting', 'visual_effects', 'soundtrack', 'franchise_fatigue'). "
+                        "Associate topic-level sentiments. Determine overall sentiment (positive/negative/neutral/mixed/unknown), "
+                        "claim (opinion summary without stating opinions as facts), evidence type (praise/critique/question/hype/mixed/neutral), "
+                        "and confidence (lower if sarcastic/ambiguous)."
+                    )
+                )
+            )
+            
+            import json
+            data = json.loads(res.text)
+            analyses_map = {item["comment_id"]: item for item in data.get("analyses", [])}
+            
+            for c in batch:
+                c_id = c[0]
+                analysis = analyses_map.get(c_id, {})
+                sentiment = analysis.get("overall_sentiment", "neutral").lower()
+                claim = analysis.get("claim", "")
+                evidence_type = analysis.get("evidence_type", "neutral").lower()
+                confidence = float(analysis.get("confidence", 1.0))
+                topics = analysis.get("topics", [])
+                topic_sentiments = analysis.get("topic_sentiments", {})
+                
+                # Check valid categories
+                if sentiment not in ["positive", "negative", "neutral", "mixed", "unknown"]:
+                    sentiment = "neutral"
+                if evidence_type not in ["praise", "critique", "question", "hype", "mixed", "neutral"]:
+                    evidence_type = "neutral"
+                if not isinstance(topics, list):
+                    topics = []
+                if not isinstance(topic_sentiments, dict):
+                    topic_sentiments = {}
+                    
+                # Append: sentiment, aspect (temp: 'General'), claim, evidence_type, confidence, topics, topic_sentiments, analysis_status
+                analyzed.append(c + (sentiment, "General", claim, evidence_type, confidence, topics, topic_sentiments, "success"))
+                
+        except Exception as batch_err:
+            print(f"Error analyzing batch: {batch_err}. Falling back to default values for this batch.")
+            for c in batch:
+                analyzed.append(c + ("neutral", "General", "", "neutral", 0.0, [], {}, "failed"))
+                
+    return analyzed
+
 def get_clickhouse_client():
     host = os.getenv("CLICKHOUSE_HOST")
     port = os.getenv("CLICKHOUSE_PORT", "8443")
@@ -161,13 +257,17 @@ def ingest_youtube_data(content_id: str, query: str, limit: int = 3) -> dict:
             print(f"Database error querying existing comments: {db_err}")
             
         if comments_data:
-            print(f"Writing {len(comments_data)} live comments to ClickHouse...")
+            print(f"Analyzing {len(comments_data)} live comments via Gemini...")
+            analyzed_comments = analyze_comments(comments_data)
+            print(f"Writing {len(analyzed_comments)} live analyzed comments to ClickHouse...")
             client.insert(
                 "studio_oracle.audience_comments",
-                comments_data,
+                analyzed_comments,
                 column_names=[
                     "comment_id", "post_id", "content_id", "source", "text",
-                    "author", "published_at", "like_count", "collected_at"
+                    "author", "published_at", "like_count", "collected_at",
+                    "sentiment", "aspect", "claim", "evidence_type", "confidence",
+                    "topics", "topic_sentiments", "analysis_status"
                 ]
             )
         

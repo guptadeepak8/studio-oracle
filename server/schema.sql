@@ -41,7 +41,12 @@ CREATE TABLE IF NOT EXISTS studio_oracle.audience_comments
     author String,
     published_at DateTime,
     like_count UInt32,
-    collected_at DateTime DEFAULT now()
+    collected_at DateTime DEFAULT now(),
+    sentiment LowCardinality(String) DEFAULT 'neutral',
+    aspect LowCardinality(String) DEFAULT 'General',
+    claim String DEFAULT '',
+    evidence_type LowCardinality(String) DEFAULT 'neutral',
+    confidence Float32 DEFAULT 1.0
 )
 ENGINE = MergeTree
 ORDER BY (content_id, source, published_at);

@@ -60,6 +60,61 @@ def get_comments(content_id: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
+@app.get("/api/campaigns/{content_id}/analytics")
+def get_campaign_analytics(content_id: str):
+    """
+    Retrieve aggregated campaign audience metrics (sentiment, aspects, conflicts) from ClickHouse.
+    """
+    try:
+        return db.fetch_campaign_analytics(content_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
+@app.get("/api/campaigns/{content_id}/timeline")
+def get_campaign_timeline(content_id: str):
+    """
+    Retrieve chronological audience engagement metrics from ClickHouse.
+    """
+    try:
+        return db.fetch_campaign_timeline(content_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
+@app.get("/api/campaigns/{content_id}/pulse")
+def get_campaign_pulse(content_id: str):
+    """
+    Generate a dynamic overall audience pulse summary via Gemini using ClickHouse aggregates.
+    """
+    try:
+        analytics = db.fetch_campaign_analytics(content_id)
+        themes = analytics.get("themes", [])
+        sentiment = analytics.get("sentiment", {})
+        
+        if not themes or (sentiment.get("positive", 0) + sentiment.get("negative", 0) == 0):
+            return {"pulseSummary": "No tracking telemetry has been captured for this campaign yet."}
+            
+        from google import genai
+        client = genai.Client(vertexai=True)
+        
+        theme_desc = ", ".join([f"{t['name']} ({t['count']} mentions, {t['posPercent']}% positive)" for t in themes[:3]])
+        prompt = (
+            f"Summarize the overall audience pulse in exactly two sentences based on these metrics:\n"
+            f"Sentiment: {sentiment.get('posPercent')}% Positive, {sentiment.get('negPercent')}% Critical.\n"
+            f"Top Aspects: {theme_desc}."
+        )
+        
+        res = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                system_instruction="You are an AI research analyst. Summarize overall audience reception trends. Do not use bullet points or lists. Be brief, professional, and readable."
+            )
+        )
+        return {"pulseSummary": res.text.strip()}
+    except Exception as e:
+        print(f"Error generating pulse summary: {e}")
+        return {"pulseSummary": "Audience metrics show mixed engagement across tracked thematic aspects."}
+
 @app.post("/api/campaigns")
 def create_campaign(request: CampaignCreateRequest):
     """
@@ -181,6 +236,20 @@ async def chat_stream(request: ChatRequest):
                 session_id=request.session_id,
                 new_message=new_msg
             ):
+                # 1. Stream intermediate tool calls
+                if hasattr(event, "get_function_calls"):
+                    calls = event.get_function_calls()
+                    for call in calls:
+                        args_str = str(call.args)[:200]
+                        yield f"data: > 🔍 **Agent Tool Call**: Running `{call.name}` ({args_str})...\n\n"
+
+                # 2. Stream tool execution responses
+                if hasattr(event, "get_function_responses"):
+                    resps = event.get_function_responses()
+                    for resp in resps:
+                        yield f"data: > 📥 **Agent Tool Response**: Tool `{resp.name}` execution complete.\n\n"
+
+                # 3. Stream generated response tokens
                 if event.content and event.content.parts:
                     for part in event.content.parts:
                         if part.text:

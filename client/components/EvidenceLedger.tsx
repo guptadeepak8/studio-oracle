@@ -52,23 +52,8 @@ export default function EvidenceLedger({
           </p>
         ) : (
           filteredComments.map((comment) => {
-            const textLower = comment.text.toLowerCase();
-            const isPos =
-              textLower.includes("stunning") ||
-              textLower.includes("excited") ||
-              textLower.includes("love") ||
-              textLower.includes("beautiful") ||
-              textLower.includes("great") ||
-              textLower.includes("goosebumps") ||
-              textLower.includes("casting is spot on") ||
-              textLower.includes("exceeded my expectations");
-            const isNeg =
-              textLower.includes("disappointed") ||
-              textLower.includes("ruined") ||
-              textLower.includes("terrible") ||
-              textLower.includes("empty") ||
-              textLower.includes("cash-grab") ||
-              textLower.includes("video-gamey");
+            const isPos = comment.sentiment === "positive";
+            const isNeg = comment.sentiment === "negative";
 
             return (
               <div
@@ -78,9 +63,14 @@ export default function EvidenceLedger({
                 <div className="space-y-1.5 flex-1 min-w-0">
                   <div className="flex items-center gap-2.5">
                     <span className="font-semibold text-zinc-300">{comment.author}</span>
-                    <span className="text-[9px] text-zinc-500 bg-[#131316] border border-[#232329] px-1.5 py-0.25 rounded uppercase tracking-wider font-semibold">
+                    <span className="text-[9px] text-zinc-550 bg-[#131316] border border-[#232329] px-1.5 py-0.25 rounded uppercase tracking-wider font-semibold">
                       {comment.source}
                     </span>
+                    {comment.topics && comment.topics.map((t) => (
+                      <span key={t} className="text-[8px] text-zinc-400 bg-[#131316] border border-[#232329] px-1.5 py-0.25 rounded lowercase">
+                        {t}
+                      </span>
+                    ))}
                   </div>
                   <p className="text-zinc-300 leading-relaxed text-sm">
                     "{comment.text}"

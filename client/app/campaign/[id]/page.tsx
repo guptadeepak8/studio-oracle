@@ -7,11 +7,10 @@ import { Loader2, AlertTriangle, PlayCircle } from "lucide-react";
 import { API_ENDPOINTS, SESSION_CONFIG } from "../../../utils/constants";
 import { Movie, Comment, ChatMessage, IngestResponse } from "../../../utils/types";
 import {
-  getSentimentStats,
-  getThemeStats,
-  getTimelineData,
-  getConflictingSignals,
-  getPulseSummary,
+  SentimentStats,
+  ThemeItem,
+  TimelineNode,
+  ConflictItem,
 } from "../../../utils/analytics";
 
 import AudiencePulse from "../../../components/AudiencePulse";
@@ -43,6 +42,19 @@ function CampaignWorkspaceInner() {
   const [comments, setComments] = useState<Comment[]>([]);
   const [isLoadingComments, setIsLoadingComments] = useState(false);
   const [commentSearch, setCommentSearch] = useState("");
+
+  const [sentiment, setSentiment] = useState<SentimentStats>({
+    positive: 0,
+    negative: 0,
+    neutral: 0,
+    posPercent: 0,
+    negPercent: 0,
+  });
+  const [themeStats, setThemeStats] = useState<ThemeItem[]>([]);
+  const [timelineData, setTimelineData] = useState<TimelineNode[]>([]);
+  const [conflictingSignals, setConflictingSignals] = useState<ConflictItem[]>([]);
+  const [pulseSummary, setPulseSummary] = useState("Loading audience telemetry...");
+  const [isLoadingAnalytics, setIsLoadingAnalytics] = useState(false);
 
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [inputMessage, setInputMessage] = useState("");
@@ -91,10 +103,40 @@ function CampaignWorkspaceInner() {
     }
   };
 
+  const fetchAnalytics = async () => {
+    setIsLoadingAnalytics(true);
+    try {
+      const resAnalytics = await fetch(API_ENDPOINTS.ANALYTICS(campaignId));
+      if (resAnalytics.ok) {
+        const data = await resAnalytics.json();
+        setSentiment(data.sentiment);
+        setThemeStats(data.themes);
+        setConflictingSignals(data.conflicts);
+      }
+      
+      const resTimeline = await fetch(API_ENDPOINTS.TIMELINE(campaignId));
+      if (resTimeline.ok) {
+        const data = await resTimeline.json();
+        setTimelineData(data);
+      }
+      
+      const resPulse = await fetch(API_ENDPOINTS.PULSE(campaignId));
+      if (resPulse.ok) {
+        const data = await resPulse.json();
+        setPulseSummary(data.pulseSummary);
+      }
+    } catch (err) {
+      console.error("Error fetching campaign analytics:", err);
+    } finally {
+      setIsLoadingAnalytics(false);
+    }
+  };
+
   useEffect(() => {
     if (campaignId) {
       fetchCampaignDetail();
       fetchComments();
+      fetchAnalytics();
     }
   }, [campaignId]);
 
@@ -144,6 +186,7 @@ function CampaignWorkspaceInner() {
           };
           setChatMessages((prev) => [...prev, ingestNotice]);
           fetchComments();
+          fetchAnalytics();
         } else {
           alert(`Ingestion failed: ${data.message || "Unknown error"}`);
         }
@@ -229,11 +272,6 @@ function CampaignWorkspaceInner() {
 
   if (!campaign) return null;
 
-  const sentiment = getSentimentStats(comments);
-  const themeStats = getThemeStats(comments);
-  const timelineData = getTimelineData(comments);
-  const conflictingSignals = getConflictingSignals(comments);
-  const pulseSummary = getPulseSummary(comments);
   const filteredComments = comments.filter((c) =>
     c.text.toLowerCase().includes(commentSearch.toLowerCase())
   );
