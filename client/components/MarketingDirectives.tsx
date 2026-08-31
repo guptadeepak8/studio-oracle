@@ -137,6 +137,37 @@ export default function MarketingDirectives({ campaign, themeStats }: MarketingD
             demographics: "Narrative purists, general audiences, and sequel skeptics.",
           });
         }
+
+        // Dynamic fallback for any other discovered topic
+        const matchedKnown = (
+          themeLower.includes("cast") ||
+          themeLower.includes("visual") ||
+          themeLower.includes("cgi") ||
+          themeLower.includes("soundtrack") ||
+          themeLower.includes("music") ||
+          themeLower.includes("score") ||
+          themeLower.includes("story") ||
+          themeLower.includes("plot") ||
+          themeLower.includes("lore")
+        );
+
+        if (!matchedKnown) {
+          const posRatio = theme.posPercent ?? 0;
+          const isFavorable = posRatio >= 50;
+          directives.push({
+            title: isFavorable ? `Amplify ${theme.name} Messaging` : `Mitigate ${theme.name} Skepticism`,
+            status: isFavorable ? "Recommended" : "Critical Adjustment",
+            context: `Triggered by active mentions of '${theme.name}' (${theme.count} mentions, ${posRatio}% positive). Discovered as an emerging audience talking point for "${campaign.title}".`,
+            strategy: isFavorable
+              ? `Leverage high audience resonance around '${theme.name}' to anchor promotional copy and creative teasers.`
+              : `Deploy clarifying interviews, narrative context, and creator testimonials directly addressing '${theme.name}' concerns.`,
+            copyDraft: isFavorable
+              ? `\"Discover the unforgettable ${theme.name.toLowerCase()} that audiences are talking about in ${campaign.title}.\"`
+              : `\"Experience the true vision and craft of ${campaign.title}. In theaters this season.\"`,
+            channels: ["Targeted Digital Pre-rolls", "Social Engagement Teasers", "Community Q&A Panels"],
+            demographics: "Engaged audience segments and online discussion participants.",
+          });
+        }
       }
     });
 

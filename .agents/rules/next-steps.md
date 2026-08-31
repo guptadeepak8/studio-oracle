@@ -43,7 +43,7 @@ This document serves as the tactical engineering roadmap, technical risk log, an
 
 - [ ] **Multimodal Poster / Trailer Sentiment Alignment**
   - Ingest thumbnail/trailer keyframes using Gemini 2.5 Flash Multimodal to compare intended trailer tone against audience reception.
-- [ ] **Automated Marketing Strategy Generator**
+- [x] **Automated Marketing Strategy Generator**
   - Connect dynamic ClickHouse findings directly to the `MarketingDirectives` component to generate custom mitigation copy.
 
 ---
