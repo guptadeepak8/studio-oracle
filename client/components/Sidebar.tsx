@@ -164,22 +164,22 @@ export default function Sidebar() {
             </button>
           </div>
 
-          <div className="space-y-0.5">
+          <div className="space-y-1">
             {campaigns.map((c) => {
               const isSelected = currentCampaign?.content_id === c.content_id;
               return (
                 <Link
                   key={c.content_id}
                   href={`/campaign/${c.content_id}?tab=${currentTab}`}
-                  className={`flex items-center justify-between px-3 py-1.5 rounded-lg text-xs transition ${
+                  className={`flex items-center justify-between px-3 py-2 rounded-lg text-sm transition ${
                     isSelected
-                      ? "bg-[#1f1f23] text-zinc-100 font-semibold"
-                      : "text-zinc-400 hover:text-zinc-200 hover:bg-[#1a1a1d]"
+                      ? "bg-[#222227] text-white font-bold border border-[#323238] shadow-xs"
+                      : "text-zinc-200 hover:text-white hover:bg-[#1a1a1d] font-medium"
                   }`}
                 >
                   <span className="truncate pr-2">{c.title}</span>
-                  <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${
-                    c.status === "active" ? "bg-[#4ade80]" : "bg-zinc-600"
+                  <span className={`h-2 w-2 rounded-full shrink-0 ${
+                    c.status === "active" ? "bg-[#4ade80] shadow-[0_0_6px_#4ade80]" : "bg-zinc-600"
                   }`} />
                 </Link>
               );
@@ -217,8 +217,8 @@ export default function Sidebar() {
         </div>
       </div>
 
-      {/* Footer System Status Links matching screenshot */}
-      <div className="p-3 border-t border-[#202023] space-y-1.5 text-xs text-zinc-400">
+      {/* Footer Links matching screenshot without all systems operational */}
+      <div className="p-3 border-t border-[#202023] space-y-1 text-xs text-zinc-400">
         <a
           href="https://clickhouse.com/cloud"
           target="_blank"
@@ -237,10 +237,6 @@ export default function Sidebar() {
           <span>Gemini 2.5 Flash</span>
           <ExternalLink className="h-3 w-3 text-zinc-500" />
         </a>
-        <div className="flex items-center gap-2 px-2 py-1 text-[11px] text-zinc-400 font-medium">
-          <span className="h-1.5 w-1.5 rounded-full bg-[#4ade80] shadow-[0_0_6px_#4ade80]" />
-          <span>All systems operational</span>
-        </div>
       </div>
 
       {showModal && (
