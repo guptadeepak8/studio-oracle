@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Megaphone, Target, ChevronDown, ChevronUp, Layers, Send, Users, Sparkles } from "lucide-react";
+import { Megaphone, Target, ChevronDown, ChevronUp, Layers, Send, Users, Sparkles, Check, Copy } from "lucide-react";
 import { Movie } from "../utils/types";
 
 interface ThemeItem {
@@ -11,14 +11,14 @@ interface ThemeItem {
   negPercent?: number;
 }
 
-interface ExpandedDirective {
+interface ActionPlanItem {
   title: string;
-  status: "Recommended" | "Critical Adjustment" | "Tactical Shift" | "Nurturing" | "Pending";
-  context: string;
-  strategy: string;
+  priority: "High Priority" | "Recommended" | "Quick Win" | "Informational";
+  whyItMatters: string;
+  action: string;
   copyDraft: string;
   channels: string[];
-  demographics: string;
+  audience: string;
 }
 
 interface MarketingDirectivesProps {
@@ -28,20 +28,21 @@ interface MarketingDirectivesProps {
 
 export default function MarketingDirectives({ campaign, themeStats }: MarketingDirectivesProps) {
   const [expandedIndex, setExpandedIndex] = useState<number | null>(0);
+  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
 
-  const generateDirectives = (stats: ThemeItem[]): ExpandedDirective[] => {
-    const directives: ExpandedDirective[] = [];
+  const generateActionPlan = (stats: ThemeItem[]): ActionPlanItem[] => {
+    const plans: ActionPlanItem[] = [];
 
     if (stats.length === 0 || stats.every((s) => s.count === 0)) {
       return [
         {
-          title: "Awaiting Ingestion Telemetry",
-          status: "Pending",
-          context: `No audience feedback comments have been ingested for the "${campaign.title}" campaign yet.`,
-          strategy: "Ingest live feedback comments in the Overview tab to parse themes and compile customized marketing directives.",
+          title: "Waiting for Audience Comments",
+          priority: "Informational",
+          whyItMatters: `No comments have been imported for "${campaign.title}" yet.`,
+          action: "Import YouTube or Reddit comments in the section below to generate custom marketing actions.",
           copyDraft: "N/A",
-          channels: ["N/A"],
-          demographics: "General Moviegoing Audience",
+          channels: ["YouTube", "Reddit", "Social Media"],
+          audience: "General Moviegoers",
         },
       ];
     }
@@ -52,24 +53,24 @@ export default function MarketingDirectives({ campaign, themeStats }: MarketingD
         if (themeLower === "casting" || themeLower === "cast") {
           const posRatio = theme.posPercent ?? 0;
           if (posRatio >= 50) {
-            directives.push({
-              title: "Spotlight Leading Talents & Chemistry",
-              status: "Recommended",
-              context: `Triggered by Casting theme volume (${theme.count} mentions, ${posRatio}% positive). Audiences are reacting highly favorably to the main cast in "${campaign.title}".`,
-              strategy: "Deploy character-focused interview reels, talent spotlights, and behind-the-scenes actor chemistry clips. Leverage this high-sentiment anchor.",
+            plans.push({
+              title: "Spotlight Leading Actors & Chemistry",
+              priority: "Recommended",
+              whyItMatters: `Fans love the cast (${theme.count} mentions, ${posRatio}% positive). High excitement around the lead actors in "${campaign.title}".`,
+              action: "Release talent interviews, chemistry clips, and behind-the-scenes moments to maximize star power.",
               copyDraft: `\"A spectacular performance awaits. See the star-studded cast of ${campaign.title} in theaters this season.\"`,
-              channels: ["YouTube Shorts", "TikTok Ads", "Instagram Reels", "Late-Night Features"],
-              demographics: "Younger moviegoers (18-35), talent fandoms, and mainstream drama viewers.",
+              channels: ["YouTube Shorts", "TikTok", "Instagram Reels", "TV Interviews"],
+              audience: "Younger moviegoers (18-35) and talent fanbases",
             });
           } else {
-            directives.push({
-              title: "Highlight Performance Depth & Character Stakes",
-              status: "Tactical Shift",
-              context: `Triggered by Casting theme friction (${theme.count} mentions, ${100 - posRatio}% critical). Comments express skepticism regarding casting fit or comparisons with predecessor characters.`,
-              strategy: "Shift marketing focus away from quick-cut action clips to dialogue-heavy scene previews, showcasing dramatic depth and director testimonials.",
+            plans.push({
+              title: "Address Casting Doubts with Dramatic Previews",
+              priority: "High Priority",
+              whyItMatters: `Fans express skepticism around casting choices (${theme.count} mentions, ${100 - posRatio}% critical).`,
+              action: "Shift marketing focus away from quick-cut action clips to dialogue-heavy scene previews showcasing dramatic range and character depth.",
               copyDraft: `\"Built on drama, driven by passion. Witness powerful performances in ${campaign.title} that stand on their own merit.\"`,
-              channels: ["Cinematic Featurettes", "Press Junket Previews", "IMAX Pre-rolls"],
-              demographics: "Original franchise purists, sequel skeptics, and dramatic cinephiles.",
+              channels: ["Cinematic Featurettes", "Press Junkets", "IMAX Pre-rolls"],
+              audience: "Original franchise purists and dramatic cinephiles",
             });
           }
         }
@@ -78,24 +79,24 @@ export default function MarketingDirectives({ campaign, themeStats }: MarketingD
           const posRatio = theme.posPercent ?? 0;
 
           if (posRatio >= 50) {
-            directives.push({
-              title: "Scale Cinematic Spectacle & Large-Format Ads",
-              status: "Recommended",
-              context: `Triggered by Visuals theme volume (${theme.count} mentions, ${posRatio}% positive). Scale, set design, and cinematography are driving high excitement.`,
-              strategy: `Feature high-definition cinematography highlights, primary locations, and arena spectacle in global IMAX and premium format campaigns.`,
+            plans.push({
+              title: "Double Down on Large-Screen Spectacle",
+              priority: "Quick Win",
+              whyItMatters: `Scale and cinematography are driving massive excitement (${theme.count} mentions, ${posRatio}% positive).`,
+              action: `Highlight IMAX, Dolby Cinema, and big-screen visuals in all digital banners and TV spots.`,
               copyDraft: `\"Return to a grand spectacle. Experience the visual scale of ${campaign.title} on premium large screens and IMAX.\"`,
-              channels: ["IMAX Trailer Cuts", "Premium Display Banners", "Visual Carousel Ads"],
-              demographics: "Visual aesthetic fans, premium screen audiences, and general blockbuster viewers.",
+              channels: ["IMAX Trailer Cuts", "Digital Billboards", "Premium Format Ads"],
+              audience: "Blockbuster fans and premium screen ticket buyers",
             });
           } else {
-            directives.push({
-              title: "Behind-The-Scenes Practical Craft & Set Sincerity",
-              status: "Critical Adjustment",
-              context: `Triggered by Visuals theme complaints (${theme.count} mentions, ${100 - posRatio}% critical). Comments express concerns regarding CGI realism or lighting.`,
-              strategy: "Publish featurettes showing physical set construction, practical stunt work, real armor/props, and technical craftsmanship to reassure skeptics.",
+            plans.push({
+              title: "Show Practical Sets & Real Stunt Craftsmanship",
+              priority: "High Priority",
+              whyItMatters: `Comments express concern over CGI quality or visual realism (${theme.count} mentions, ${100 - posRatio}% critical).`,
+              action: "Release behind-the-scenes clips showing real physical sets, authentic props, and practical stunt choreography.",
               copyDraft: `\"Real stunts. Physical sets. Experience the authentic craft and scale behind the making of ${campaign.title}.\"`,
-              channels: ["Making-Of Featurettes", "Director Commentary Reels", "Technical Breakdown Logs"],
-              demographics: "CGI skeptics, tech-focused moviegoers, and cinematic craft purists.",
+              channels: ["Making-Of Videos", "Director Commentary", "Social Featurettes"],
+              audience: "CGI skeptics and cinematic craft purists",
             });
           }
         }
@@ -104,41 +105,41 @@ export default function MarketingDirectives({ campaign, themeStats }: MarketingD
           const posRatio = theme.posPercent ?? 0;
 
           if (posRatio >= 50) {
-            directives.push({
-              title: "Publish Official Score Teasers & Theme Tracks",
-              status: "Recommended",
-              context: `Triggered by Soundtrack theme volume (${theme.count} mentions, ${posRatio}% positive). The musical score and trailer tracks resonate strongly.`,
-              strategy: "Release audio-only teaser clips, composer spotlight videos, and Spotify audio partner playlists.",
+            plans.push({
+              title: "Release Official Soundtrack & Music Teasers",
+              priority: "Quick Win",
+              whyItMatters: `Trailer music is a major hit with audiences (${theme.count} mentions, ${posRatio}% positive).`,
+              action: "Release theme music audio visualizers and partner with Spotify/Apple Music playlists.",
               copyDraft: `\"The sound of an epic return. Stream the official theme music for ${campaign.title} today.\"`,
-              channels: ["Spotify Canvas Previews", "Apple Music Exclusives", "YouTube Audio Visualizers"],
-              demographics: "Soundtrack listeners, audio enthusiasts, and emotional connection seekers.",
+              channels: ["Spotify Playlists", "YouTube Music", "TikTok Sound Trends"],
+              audience: "Soundtrack listeners and music enthusiasts",
             });
           } else {
-            directives.push({
-              title: "Refocus Audio Narrative on Orchestral Roots",
-              status: "Tactical Shift",
-              context: `Triggered by Soundtrack theme friction (${theme.count} mentions, ${100 - posRatio}% critical). Feedback suggests trailer track choices alienated fans.`,
-              strategy: "Replace modern promotional soundtrack cuts with traditional orchestral themes in TV spots and digital pre-rolls.",
+            plans.push({
+              title: "Re-anchor Promotional Music on Classic Themes",
+              priority: "Recommended",
+              whyItMatters: `Trailer track choices felt out of place to fans (${theme.count} mentions, ${100 - posRatio}% critical).`,
+              action: "Shift upcoming TV spots to use traditional orchestral themes rather than modern licensed songs.",
               copyDraft: `\"Composed for the big screen. Immerse yourself in the sweeping orchestral score of ${campaign.title}.\"`,
-              channels: ["Orchestral Session Reels", "Composer Interviews", "Atmospheric TV Spots"],
-              demographics: "Traditional franchise enthusiasts and orchestral soundtrack listeners.",
+              channels: ["Orchestral Reels", "Composer Spotlight", "Atmospheric TV Spots"],
+              audience: "Traditional moviegoers and classical soundtrack fans",
             });
           }
         }
 
-        if (themeLower === "story" || themeLower === "plot" || themeLower === "lore" || themeLower === "plot_elements" || themeLower === "storytelling") {
-          directives.push({
-            title: "Explain Lore & Narrative Bridge",
-            status: "Nurturing",
-            context: `Triggered by Story theme questions (${theme.count} mentions). Audiences show questions regarding timeline continuity or sequel relations.`,
-            strategy: `Deploy explainer infographics, timeline charts, and character lineage reels to bridge narrative gaps and build expectation for "${campaign.title}".`,
+        if (themeLower === "story" || themeLower === "plot" || themeLower === "lore" || themeLower === "storytelling") {
+          plans.push({
+            title: "Clarify Storyline Timeline & Character Origins",
+            priority: "Recommended",
+            whyItMatters: `Fans have questions about how the story connects with previous installments (${theme.count} mentions).`,
+            action: `Deploy simple explainer infographics and character lineage videos to bridge narrative gaps.`,
             copyDraft: `\"The story continues. Explore the characters, motivations, and narrative paths in ${campaign.title}.\"`,
-            channels: ["Interactive Story Maps", "YouTube Lore Summaries", "Wiki Database Partnerships"],
-            demographics: "Narrative purists, general audiences, and sequel skeptics.",
+            channels: ["Social Infographics", "YouTube Lore Videos", "Wiki Partnerships"],
+            audience: "Story-focused moviegoers and sequel skeptics",
           });
         }
 
-        // Dynamic fallback for any other discovered topic
+        // Generic fallback for any other discovered topic
         const matchedKnown = (
           themeLower.includes("cast") ||
           themeLower.includes("visual") ||
@@ -154,60 +155,64 @@ export default function MarketingDirectives({ campaign, themeStats }: MarketingD
         if (!matchedKnown) {
           const posRatio = theme.posPercent ?? 0;
           const isFavorable = posRatio >= 50;
-          directives.push({
-            title: isFavorable ? `Amplify '${theme.name}' Messaging` : `Mitigate '${theme.name}' Friction`,
-            status: isFavorable ? "Recommended" : "Critical Adjustment",
-            context: `Triggered by active mentions of '${theme.name}' (${theme.count} mentions, ${posRatio}% positive). Discovered as an emerging audience talking point for "${campaign.title}".`,
-            strategy: isFavorable
-              ? `Leverage high audience resonance around '${theme.name}' to anchor promotional copy and creative teasers.`
-              : `Deploy clarifying interviews, narrative context, and creator testimonials directly addressing '${theme.name}' concerns.`,
+          plans.push({
+            title: isFavorable ? `Amplify Topic: ${theme.name}` : `Address Concerns: ${theme.name}`,
+            priority: isFavorable ? "Quick Win" : "High Priority",
+            whyItMatters: `Emerging topic with active fan discussion (${theme.count} mentions, ${posRatio}% positive).`,
+            action: isFavorable
+              ? `Highlight '${theme.name}' in promotional posts to leverage positive fan resonance.`
+              : `Address audience skepticism around '${theme.name}' through director interviews and social Q&As.`,
             copyDraft: isFavorable
               ? `\"Discover the unforgettable ${theme.name.toLowerCase()} that audiences are talking about in ${campaign.title}.\"`
               : `\"Experience the true vision and craft of ${campaign.title}. In theaters this season.\"`,
-            channels: ["Targeted Digital Pre-rolls", "Social Engagement Teasers", "Community Q&A Panels"],
-            demographics: "Engaged audience segments and online discussion participants.",
+            channels: ["Social Media Ads", "Digital Pre-rolls", "Community Q&A"],
+            audience: "Engaged moviegoers and online fan communities",
           });
         }
       }
     });
 
-    if (directives.length === 0) {
-      directives.push({
-        title: "Broad Audience Engagement",
-        status: "Recommended",
-        context: "Audience themes are balanced across multiple indicators without a single spike.",
-        strategy: `Promote general trailer hype, casting credits, and advance ticket booking options for ${campaign.title} as theme trends stabilize.`,
+    if (plans.length === 0) {
+      plans.push({
+        title: "Broad Campaign Promotion",
+        priority: "Recommended",
+        whyItMatters: "Audience reaction is balanced across key aspects.",
+        action: `Run general trailer awareness ads and advance ticket booking announcements for ${campaign.title}.`,
         copyDraft: `\"Experience the cinematic event of the year. See ${campaign.title} in theaters this season.\"`,
-        channels: ["Global TV Spots", "Digital Billboards", "Ticket Partner Ads"],
-        demographics: "General moviegoing public and weekend multiplex audiences.",
+        channels: ["TV Spots", "Digital Billboards", "Fandango Ads"],
+        audience: "General moviegoing public and weekend multiplex audiences",
       });
     }
 
-    return directives;
+    return plans;
   };
 
-  const directives = generateDirectives(themeStats);
+  const actionPlans = generateActionPlan(themeStats);
 
-  const toggleExpand = (index: number) => {
-    setExpandedIndex(expandedIndex === index ? null : index);
+  const handleCopyDraft = (text: string, index: number) => {
+    navigator.clipboard.writeText(text);
+    setCopiedIndex(index);
+    setTimeout(() => setCopiedIndex(null), 2000);
   };
 
   return (
     <div className="bg-[#121215] border border-[#27272a] rounded-2xl p-6 space-y-5 shadow-sm font-sans">
       <div className="flex items-center justify-between border-b border-[#27272a] pb-4">
-        <div className="flex items-center gap-2">
-          <Megaphone className="h-4.5 w-4.5 text-amber-400" />
-          <h2 className="font-bold text-xs uppercase tracking-widest text-zinc-300">
-            Actionable Marketing Strategy Directives
+        <div>
+          <h2 className="font-bold text-sm text-zinc-100 uppercase tracking-wider">
+            Marketing Action Plan
           </h2>
+          <p className="text-xs text-zinc-400">
+            Recommended next steps based on audience feedback and sentiment
+          </p>
         </div>
-        <span className="text-[11px] font-mono text-zinc-400">
-          {directives.length} telemetry-driven directives
+        <span className="text-xs font-mono text-zinc-400">
+          {actionPlans.length} recommended actions
         </span>
       </div>
 
       <div className="space-y-3.5">
-        {directives.map((dir, idx) => {
+        {actionPlans.map((plan, idx) => {
           const isExpanded = expandedIndex === idx;
           return (
             <div
@@ -215,7 +220,7 @@ export default function MarketingDirectives({ campaign, themeStats }: MarketingD
               className="bg-[#18181b] border border-[#27272a] rounded-xl overflow-hidden hover:border-zinc-700 transition"
             >
               <div
-                onClick={() => toggleExpand(idx)}
+                onClick={() => setExpandedIndex(isExpanded ? null : idx)}
                 className="p-4.5 flex items-center justify-between cursor-pointer select-none bg-[#18181b] hover:bg-[#1e1e24] transition"
               >
                 <div className="flex items-center gap-3">
@@ -223,22 +228,20 @@ export default function MarketingDirectives({ campaign, themeStats }: MarketingD
                     <Target className="h-4 w-4" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-sm text-zinc-100">{dir.title}</h3>
-                    <span className="text-[11px] text-zinc-400 font-medium">Click to inspect tactical strategy & copy draft</span>
+                    <h3 className="font-bold text-sm text-zinc-100">{plan.title}</h3>
+                    <span className="text-xs text-zinc-400 font-medium">Click to view recommended strategy & ready-to-use copy</span>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-3">
                   <span className={`text-[10px] px-2.5 py-1 rounded font-bold uppercase tracking-wider ${
-                    dir.status === "Critical Adjustment"
-                      ? "bg-rose-950/40 text-rose-400 border border-rose-500/40"
-                      : dir.status === "Recommended"
-                      ? "bg-emerald-950/40 text-emerald-400 border border-emerald-500/40"
-                      : dir.status === "Tactical Shift"
-                      ? "bg-blue-950/40 text-blue-400 border border-blue-500/40"
-                      : "bg-zinc-800 text-zinc-300 border border-zinc-700"
+                    plan.priority === "High Priority"
+                      ? "bg-rose-950/60 text-rose-400 border border-rose-500/40"
+                      : plan.priority === "Quick Win"
+                      ? "bg-emerald-950/60 text-emerald-400 border border-emerald-500/40"
+                      : "bg-blue-950/60 text-blue-400 border border-blue-500/40"
                   }`}>
-                    {dir.status}
+                    {plan.priority}
                   </span>
                   {isExpanded ? (
                     <ChevronUp className="h-4 w-4 text-zinc-400" />
@@ -252,26 +255,42 @@ export default function MarketingDirectives({ campaign, themeStats }: MarketingD
                 <div className="p-5 border-t border-[#27272a] bg-[#121215] space-y-4 text-xs">
                   <div className="space-y-1">
                     <span className="text-zinc-400 font-bold uppercase tracking-widest text-[10px] block">
-                      Audience Telemetry Context
+                      Why This Matters
                     </span>
-                    <p className="text-zinc-200 font-sans leading-relaxed">{dir.context}</p>
+                    <p className="text-zinc-200 font-sans leading-relaxed">{plan.whyItMatters}</p>
                   </div>
 
                   <div className="space-y-1">
                     <span className="text-amber-400 font-bold uppercase tracking-widest text-[10px] block flex items-center gap-1">
-                      <Sparkles className="h-3 w-3" /> Tactical Strategy Recommendation
+                      <Sparkles className="h-3 w-3" /> Recommended Action
                     </span>
-                    <p className="text-zinc-200 leading-relaxed font-sans font-medium">{dir.strategy}</p>
+                    <p className="text-zinc-100 leading-relaxed font-sans font-medium">{plan.action}</p>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4 pt-2 border-t border-[#27272a]">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-[#27272a]">
                     <div className="space-y-1.5">
-                      <span className="text-zinc-400 font-bold uppercase tracking-widest text-[10px] block flex items-center gap-1">
-                        <Send className="h-3 w-3 text-amber-400" />
-                        Messaging Copy Draft
-                      </span>
+                      <div className="flex items-center justify-between">
+                        <span className="text-zinc-400 font-bold uppercase tracking-widest text-[10px] block flex items-center gap-1">
+                          <Send className="h-3 w-3 text-amber-400" />
+                          Ready-to-Use Copy Draft
+                        </span>
+                        <button
+                          onClick={() => handleCopyDraft(plan.copyDraft, idx)}
+                          className="flex items-center gap-1 text-[10px] text-amber-400 hover:text-amber-300 transition cursor-pointer"
+                        >
+                          {copiedIndex === idx ? (
+                            <>
+                              <Check className="h-3 w-3 text-emerald-400" /> Copied
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="h-3 w-3" /> Copy Text
+                            </>
+                          )}
+                        </button>
+                      </div>
                       <p className="text-zinc-100 font-serif italic bg-[#18181b] border border-[#27272a] rounded-lg p-3 leading-relaxed">
-                        {dir.copyDraft}
+                        {plan.copyDraft}
                       </p>
                     </div>
 
@@ -279,21 +298,21 @@ export default function MarketingDirectives({ campaign, themeStats }: MarketingD
                       <div className="space-y-1">
                         <span className="text-zinc-400 font-bold uppercase tracking-widest text-[10px] block flex items-center gap-1">
                           <Users className="h-3 w-3 text-amber-400" />
-                          Target Demographic
+                          Target Audience
                         </span>
-                        <p className="text-zinc-200 font-sans font-semibold">{dir.demographics}</p>
+                        <p className="text-zinc-200 font-sans font-semibold">{plan.audience}</p>
                       </div>
 
                       <div className="space-y-1">
                         <span className="text-zinc-400 font-bold uppercase tracking-widest text-[10px] block flex items-center gap-1">
                           <Layers className="h-3 w-3 text-amber-400" />
-                          Suggested Execution Channels
+                          Recommended Channels
                         </span>
                         <div className="flex flex-wrap gap-1.5 pt-0.5">
-                          {dir.channels.map((chan, cIdx) => (
+                          {plan.channels.map((chan, cIdx) => (
                             <span
                               key={cIdx}
-                              className="bg-[#18181b] border border-[#27272a] px-2 py-0.5 rounded text-zinc-300 text-[10px] font-mono"
+                              className="bg-[#18181b] border border-[#27272a] px-2.5 py-1 rounded text-zinc-200 text-[10px] font-medium"
                             >
                               {chan}
                             </span>

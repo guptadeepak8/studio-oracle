@@ -151,9 +151,8 @@ export default function Sidebar() {
                   {isActive && (
                     <div className="pl-3 py-1 space-y-0.5 border-l-2 border-amber-500/40 ml-4 my-1">
                       {[
-                        { tabId: "overview", label: "Executive Overview", icon: LayoutDashboard },
-                        { tabId: "evidence", label: "Evidence Ledger", icon: Database },
-                        { tabId: "agent", label: "Research Agent", icon: Bot }
+                        { tabId: "overview", label: "Executive Dashboard", icon: LayoutDashboard },
+                        { tabId: "agent", label: "AI Research Assistant", icon: Bot }
                       ].map((subItem) => {
                         const isSubActive = currentTab === subItem.tabId;
                         const Icon = subItem.icon;

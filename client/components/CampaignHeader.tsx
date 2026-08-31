@@ -1,15 +1,15 @@
 "use client";
 
 import React from "react";
-import { Play, Square, MessageSquare, Database, ArrowUpRight } from "lucide-react";
+import { Play, Square, MessageSquare, Database } from "lucide-react";
 import { Movie } from "../utils/types";
 
 interface CampaignHeaderProps {
   campaign: Movie;
   onToggleStatus: () => void;
   isToggling: boolean;
-  activeTab: "overview" | "evidence" | "agent";
-  onTabChange: (tab: "overview" | "evidence" | "agent") => void;
+  activeTab: "overview" | "agent";
+  onTabChange: (tab: "overview" | "agent") => void;
   evidenceCount?: number;
 }
 
@@ -40,23 +40,23 @@ export default function CampaignHeader({
               <span className={`h-1.5 w-1.5 rounded-full ${
                 campaign.status === "active" ? "bg-emerald-400" : campaign.status === "collecting" ? "bg-amber-400" : "bg-rose-400"
               }`} />
-              {campaign.status}
+              {campaign.status === "active" ? "Tracking Active" : campaign.status === "collecting" ? "Importing" : "Paused"}
             </span>
           </div>
 
           <div className="flex items-center gap-3 text-xs text-zinc-400 font-medium">
-            <span className="capitalize text-zinc-300 font-semibold">{campaign.content_type}</span>
+            <span className="capitalize text-zinc-200 font-semibold">{campaign.content_type}</span>
             <span className="text-zinc-600">·</span>
             <span>Target Release: <strong className="text-zinc-200">{campaign.release_date || "TBD"}</strong></span>
             <span className="text-zinc-600">·</span>
             <span className="flex items-center gap-1 text-zinc-300">
               <Database className="h-3 w-3 text-amber-500" />
-              <strong>{evidenceCount}</strong> evidence rows
+              <strong>{evidenceCount}</strong> audience comments
             </span>
           </div>
         </div>
 
-        {/* Right Executive Control Buttons */}
+        {/* Right Action Buttons */}
         <div className="flex items-center gap-3">
           <button
             onClick={onToggleStatus}
@@ -69,22 +69,29 @@ export default function CampaignHeader({
           >
             {campaign.status === "stopped" ? (
               <>
-                <Play className="h-3.5 w-3.5 fill-emerald-400 text-emerald-400" /> Resume Telemetry
+                <Play className="h-3.5 w-3.5 fill-emerald-400 text-emerald-400" /> Resume Tracking
               </>
             ) : (
               <>
-                <Square className="h-3.5 w-3.5 fill-zinc-300 text-zinc-300" /> Pause Telemetry
+                <Square className="h-3.5 w-3.5 fill-zinc-300 text-zinc-300" /> Pause Tracking
               </>
             )}
           </button>
 
-          {activeTab !== "agent" && (
+          {activeTab !== "agent" ? (
             <button
               onClick={() => onTabChange("agent")}
               className="flex items-center gap-2 bg-amber-600 hover:bg-amber-500 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition cursor-pointer border border-amber-500/40 shadow-[0_0_12px_rgba(245,158,11,0.25)]"
             >
               <MessageSquare className="h-4 w-4" />
-              <span>Ask StudioOracle</span>
+              <span>Ask AI Assistant</span>
+            </button>
+          ) : (
+            <button
+              onClick={() => onTabChange("overview")}
+              className="flex items-center gap-2 bg-[#18181b] hover:bg-zinc-800 text-zinc-200 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition cursor-pointer border border-[#27272a]"
+            >
+              <span>Back to Dashboard</span>
             </button>
           )}
         </div>

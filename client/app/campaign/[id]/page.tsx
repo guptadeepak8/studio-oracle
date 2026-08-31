@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, Suspense } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { Loader2, AlertTriangle, PlayCircle, Film, Sparkles, Database, MessageSquare } from "lucide-react";
+import { Loader2, AlertTriangle, PlayCircle, Film, Sparkles, MessageSquare } from "lucide-react";
 import { API_ENDPOINTS, SESSION_CONFIG } from "../../../utils/constants";
 import { Movie, Comment, ChatMessage, IngestResponse } from "../../../utils/types";
 import {
@@ -12,13 +12,12 @@ import {
   ConflictItem,
 } from "../../../utils/analytics";
 
-import AudiencePulse from "../../../components/AudiencePulse";
-import WhatChanged from "../../../components/WhatChanged";
-import TopThemes from "../../../components/TopThemes";
-import ConflictingSignals from "../../../components/ConflictingSignals";
+import ExecutiveScorecard from "../../../components/ExecutiveScorecard";
+import WhatsWorking from "../../../components/WhatsWorking";
+import PlatformComparison from "../../../components/PlatformComparison";
+import LaunchTimeline from "../../../components/LaunchTimeline";
 import MarketingDirectives from "../../../components/MarketingDirectives";
 import AgentConsole from "../../../components/AgentConsole";
-import EvidenceLedger from "../../../components/EvidenceLedger";
 import CampaignHeader from "../../../components/CampaignHeader";
 import IngestConfig from "../../../components/IngestConfig";
 
@@ -27,7 +26,7 @@ function CampaignWorkspaceInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const campaignId = params.id as string;
-  const activeTab = (searchParams.get("tab") as "overview" | "evidence" | "agent") || "overview";
+  const activeTab = (searchParams.get("tab") as "overview" | "agent") || "overview";
 
   const [campaign, setCampaign] = useState<Movie | null>(null);
   const [isLoadingCampaign, setIsLoadingCampaign] = useState(true);
@@ -38,13 +37,6 @@ function CampaignWorkspaceInner() {
 
   const [comments, setComments] = useState<Comment[]>([]);
   const [isLoadingComments, setIsLoadingComments] = useState(false);
-  const [commentSearch, setCommentSearch] = useState("");
-  const [highlightedCommentId, setHighlightedCommentId] = useState<string | null>(null);
-
-  const handleSelectEvidence = (commentId: string) => {
-    setHighlightedCommentId(commentId);
-    router.push(`/campaign/${campaignId}?tab=evidence`);
-  };
 
   const [sentiment, setSentiment] = useState<SentimentStats>({
     positive: 0,
@@ -56,8 +48,7 @@ function CampaignWorkspaceInner() {
   const [themeStats, setThemeStats] = useState<ThemeItem[]>([]);
   const [timelineData, setTimelineData] = useState<TimelineNode[]>([]);
   const [conflictingSignals, setConflictingSignals] = useState<ConflictItem[]>([]);
-  const [pulseSummary, setPulseSummary] = useState("Loading audience telemetry...");
-  const [isLoadingAnalytics, setIsLoadingAnalytics] = useState(false);
+  const [pulseSummary, setPulseSummary] = useState("Loading audience summary...");
 
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [inputMessage, setInputMessage] = useState("");
@@ -97,7 +88,6 @@ function CampaignWorkspaceInner() {
   };
 
   const fetchAnalytics = async () => {
-    setIsLoadingAnalytics(true);
     try {
       const resAnalytics = await fetch(API_ENDPOINTS.ANALYTICS(campaignId));
       if (resAnalytics.ok) {
@@ -116,12 +106,10 @@ function CampaignWorkspaceInner() {
       const resPulse = await fetch(API_ENDPOINTS.PULSE(campaignId));
       if (resPulse.ok) {
         const data = await resPulse.json();
-        setPulseSummary(data.pulseSummary || "Audience metrics show mixed engagement across tracked thematic aspects.");
+        setPulseSummary(data.pulseSummary || "Audience metrics show healthy engagement across key themes.");
       }
     } catch (err) {
       console.error("Error fetching campaign analytics:", err);
-    } finally {
-      setIsLoadingAnalytics(false);
     }
   };
 
@@ -178,17 +166,17 @@ function CampaignWorkspaceInner() {
           const ingestNotice: ChatMessage = {
             id: Math.random().toString(),
             sender: "agent",
-            text: `### Ingestion Telemetry Complete\nObserved: Ingested ${data.ingested_comments} feedback comments from ${data.source} matching query "${ingestQuery}".`,
+            text: `### Ingestion Complete\nImported ${data.ingested_comments} comments from ${data.source} matching "${ingestQuery}".`,
           };
           setChatMessages((prev) => [...prev, ingestNotice]);
           refreshAll();
         } else {
-          alert(`Ingestion failed: ${data.message || "Unknown error"}`);
+          alert(`Import failed: ${data.message || "Unknown error"}`);
         }
       }
     } catch (err) {
       console.error(err);
-      alert("Error triggering data ingestion.");
+      alert("Error importing comments.");
     } finally {
       setIsIngesting(false);
     }
@@ -262,7 +250,7 @@ function CampaignWorkspaceInner() {
       console.error(err);
       setChatMessages((prev) =>
         prev.map((msg) =>
-          msg.id === agentMsgId ? { ...msg, text: "Error connecting to agent.", isStreaming: false } : msg
+          msg.id === agentMsgId ? { ...msg, text: "Error connecting to AI assistant.", isStreaming: false } : msg
         )
       );
     }
@@ -272,52 +260,36 @@ function CampaignWorkspaceInner() {
     return (
       <div className="flex-1 bg-[#09090b] flex flex-col items-center justify-center text-zinc-400 text-sm gap-3">
         <Loader2 className="h-7 w-7 animate-spin text-amber-500" />
-        Synchronizing campaign workspace...
+        Loading campaign dashboard...
       </div>
     );
   }
 
   if (!campaign) return null;
 
-  const filteredComments = comments.filter((c) =>
-    c.text.toLowerCase().includes(commentSearch.toLowerCase())
-  );
-
   return (
     <div className="flex-1 flex bg-[#09090b] overflow-hidden h-screen relative text-zinc-100 font-sans">
-      {campaign.status === "collecting" && (
-        <div className="absolute inset-0 bg-black/90 flex flex-col items-center justify-center text-center p-8 z-30">
-          <Loader2 className="h-10 w-10 animate-spin text-amber-500 mb-4" />
-          <h3 className="font-bold text-base text-zinc-100 uppercase tracking-widest mb-2">
-            Collecting Real-Time Telemetry
-          </h3>
-          <p className="text-sm text-zinc-300 max-w-md leading-relaxed font-sans">
-            Streaming live YouTube & Reddit discussion feeds into ClickHouse for "{campaign.title}"...
-          </p>
-        </div>
-      )}
-
       {campaign.status === "stopped" && activeTab !== "agent" && (
         <div className="absolute inset-0 bg-black/90 flex flex-col items-center justify-center text-center p-8 z-30">
           <AlertTriangle className="h-10 w-10 text-rose-400 mb-4" />
           <h3 className="font-bold text-base text-zinc-100 uppercase tracking-widest mb-2">
-            Telemetry Stream Paused
+            Campaign Monitoring Paused
           </h3>
           <p className="text-sm text-zinc-300 max-w-md leading-relaxed mb-5 font-sans">
-            Real-time audience monitoring is currently paused for this campaign.
+            Real-time comment tracking is currently paused for "{campaign.title}".
           </p>
           <button
             onClick={handleToggleStatus}
             disabled={isToggling}
             className="bg-emerald-600 hover:bg-emerald-500 text-xs uppercase tracking-wider font-bold text-white px-5 py-3 rounded-lg shadow-lg flex items-center gap-2 cursor-pointer"
           >
-            <PlayCircle className="h-4 w-4" /> Resume Monitoring
+            <PlayCircle className="h-4 w-4" /> Resume Tracking
           </button>
         </div>
       )}
 
       <div className="flex-1 flex flex-col h-full overflow-hidden w-full">
-        {/* Executive Control Header */}
+        {/* Campaign Header */}
         <CampaignHeader
           campaign={campaign}
           onToggleStatus={handleToggleStatus}
@@ -335,87 +307,46 @@ function CampaignWorkspaceInner() {
               setInputMessage={setInputMessage}
               onSendChat={handleSendChat}
               onRefreshMovies={fetchCampaignDetail}
-              onSelectEvidence={handleSelectEvidence}
-            />
-          </div>
-        ) : activeTab === "evidence" ? (
-          <div className="flex-1 overflow-hidden p-8">
-            <EvidenceLedger
-              filteredComments={filteredComments}
-              isLoadingComments={isLoadingComments}
-              commentSearch={commentSearch}
-              setCommentSearch={setCommentSearch}
-              highlightedCommentId={highlightedCommentId}
+              onSelectEvidence={() => {}}
             />
           </div>
         ) : (
-          /* Unified Executive Intelligence Dashboard */
+          /* Main Clean Executive Dashboard */
           <div className="flex-1 overflow-y-auto p-8 space-y-8 max-w-7xl mx-auto w-full">
-            {/* Top Row: Synopsis + Ingest Trigger */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Campaign Synopsis Card */}
-              <div className="bg-[#121215] border border-[#27272a] rounded-2xl p-6 space-y-4 shadow-sm">
-                <div className="flex items-center gap-2 border-b border-[#27272a] pb-3">
-                  <Film className="h-4 w-4 text-amber-400" />
-                  <h3 className="font-bold text-xs uppercase tracking-widest text-zinc-300">
-                    Campaign Dossier
-                  </h3>
-                </div>
-                <p className="text-xs text-zinc-300 leading-relaxed font-sans">
-                  {campaign.description}
-                </p>
-                <div className="space-y-2 pt-2 border-t border-[#27272a] text-xs">
-                  <div className="flex justify-between text-zinc-400">
-                    <span>Target Tracking Terms:</span>
-                  </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {campaign.target_terms?.map((term, idx) => (
-                      <span key={idx} className="bg-[#18181b] border border-[#27272a] px-2 py-0.5 rounded text-zinc-300 text-[10px] font-mono">
-                        {term}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Ingestion Stream Config */}
-              <div className="lg:col-span-2">
-                <IngestConfig
-                  campaignId={campaign.content_id}
-                  ingestQuery={ingestQuery}
-                  setIngestQuery={setIngestQuery}
-                  ingestLimit={ingestLimit}
-                  setIngestLimit={setIngestLimit}
-                  isIngesting={isIngesting}
-                  onTriggerIngest={handleTriggerIngest}
-                  onRefreshAll={refreshAll}
-                />
-              </div>
-            </div>
-
-            {/* Audience Signal Pulse */}
-            <AudiencePulse
-              comments={comments}
+            {/* 1. Executive Summary & Scorecard */}
+            <ExecutiveScorecard
               sentiment={sentiment}
+              totalComments={comments.length}
+              dominantTopic={themeStats.length > 0 ? themeStats[0].name : "General Tone"}
               pulseSummary={pulseSummary}
-              dominantTopic={themeStats.length > 0 ? themeStats[0].name : "Unknown"}
             />
 
-            {/* Mid Row: What Changed & Polarizing Conflicts */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <WhatChanged timelineData={timelineData} />
-              <ConflictingSignals conflictingSignals={conflictingSignals} />
-            </div>
+            {/* 2. What's Working vs What's Not (Bars) */}
+            <WhatsWorking themeStats={themeStats} />
 
-            {/* Bottom Row: Top Themes & Actionable Directives */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-1">
-                <TopThemes themeStats={themeStats} />
-              </div>
-              <div className="lg:col-span-2">
-                <MarketingDirectives campaign={campaign} themeStats={themeStats} />
-              </div>
-            </div>
+            {/* 3. Platform Comparison: YouTube vs Reddit */}
+            <PlatformComparison
+              conflicts={conflictingSignals}
+              dominantTopic={themeStats.length > 0 ? themeStats[0].name : "General"}
+            />
+
+            {/* 4. Audience Reaction Over Time */}
+            <LaunchTimeline timelineData={timelineData} />
+
+            {/* 5. Marketing Action Plan */}
+            <MarketingDirectives campaign={campaign} themeStats={themeStats} />
+
+            {/* 6. Import Comments Control */}
+            <IngestConfig
+              campaignId={campaign.content_id}
+              ingestQuery={ingestQuery}
+              setIngestQuery={setIngestQuery}
+              ingestLimit={ingestLimit}
+              setIngestLimit={setIngestLimit}
+              isIngesting={isIngesting}
+              onTriggerIngest={handleTriggerIngest}
+              onRefreshAll={refreshAll}
+            />
           </div>
         )}
       </div>
@@ -428,7 +359,7 @@ export default function CampaignWorkspace() {
     <Suspense fallback={
       <div className="flex-1 bg-[#09090b] flex flex-col items-center justify-center text-zinc-400 text-sm gap-3 h-screen">
         <Loader2 className="h-7 w-7 animate-spin text-amber-500" />
-        Synchronizing workspace details...
+        Loading workspace...
       </div>
     }>
       <CampaignWorkspaceInner />
