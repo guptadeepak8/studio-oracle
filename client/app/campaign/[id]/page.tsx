@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, Suspense } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { Loader2, AlertTriangle, PlayCircle, Film, Sparkles, MessageSquare } from "lucide-react";
+import { Loader2, AlertTriangle, PlayCircle, Film, Sparkles, MessageSquare, Trash2, X } from "lucide-react";
 import { API_ENDPOINTS, SESSION_CONFIG } from "../../../utils/constants";
 import { Movie, Comment, ChatMessage, IngestResponse } from "../../../utils/types";
 import {
@@ -54,7 +54,6 @@ function CampaignWorkspaceInner() {
 
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [inputMessage, setInputMessage] = useState("");
-  const [isToggling, setIsToggling] = useState(false);
 
   const fetchCampaignDetail = async () => {
     try {
@@ -127,6 +126,32 @@ function CampaignWorkspaceInner() {
       refreshAll();
     }
   }, [campaignId]);
+
+  const [isToggling, setIsToggling] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  const handleDeleteCampaign = async () => {
+    if (!campaign) return;
+    setIsDeleting(true);
+    try {
+      const res = await fetch(API_ENDPOINTS.DELETE_CAMPAIGN(campaign.content_id), {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        window.dispatchEvent(new Event("refresh-campaigns"));
+        router.push("/");
+      } else {
+        alert("Failed to delete campaign.");
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Error deleting campaign.");
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteConfirm(false);
+    }
+  };
 
   const handleToggleStatus = async () => {
     if (!campaign) return;
@@ -274,21 +299,79 @@ function CampaignWorkspaceInner() {
   return (
     <div className="flex-1 flex bg-[#0e0e10] overflow-hidden h-screen relative text-zinc-100 font-sans">
       {campaign.status === "stopped" && activeTab !== "agent" && (
-        <div className="absolute inset-0 bg-black/90 flex flex-col items-center justify-center text-center p-8 z-30">
-          <AlertTriangle className="h-8 w-8 text-rose-400 mb-3" />
-          <h3 className="font-bold text-sm text-zinc-100 uppercase tracking-wider mb-1">
+        <div className="absolute inset-0 bg-black/90 flex flex-col items-center justify-center text-center p-8 z-30 font-sans">
+          <AlertTriangle className="h-8 w-8 text-amber-400 mb-3" />
+          <h3 className="font-bold text-base text-zinc-100 uppercase tracking-wider mb-1">
             Campaign Monitoring Paused
           </h3>
-          <p className="text-xs text-zinc-400 max-w-md leading-relaxed mb-4">
-            Real-time comment tracking is currently paused for "{campaign.title}".
+          <p className="text-xs text-zinc-400 max-w-md leading-relaxed mb-6">
+            Real-time comment tracking is currently paused for <strong className="text-zinc-100">"{campaign.title}"</strong>. You can resume live tracking or permanently delete this campaign.
           </p>
-          <button
-            onClick={handleToggleStatus}
-            disabled={isToggling}
-            className="bg-[#e6fc4f] hover:bg-[#d8ed47] text-xs font-bold text-black px-4 py-2 rounded-md shadow-xs flex items-center gap-2 cursor-pointer"
-          >
-            <PlayCircle className="h-4 w-4" /> Resume Tracking
-          </button>
+
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleToggleStatus}
+              disabled={isToggling || isDeleting}
+              className="bg-[#e6fc4f] hover:bg-[#d8ed47] text-xs font-bold text-black px-5 py-2.5 rounded-lg shadow-xs flex items-center gap-2 cursor-pointer transition"
+            >
+              <PlayCircle className="h-4 w-4 fill-black" />
+              <span>Resume Live Tracking</span>
+            </button>
+
+            <button
+              onClick={() => setShowDeleteConfirm(true)}
+              disabled={isToggling || isDeleting}
+              className="bg-[#242428] hover:bg-rose-950/40 text-rose-400 hover:text-rose-300 border border-[#323238] hover:border-rose-800 text-xs font-bold px-4 py-2.5 rounded-lg shadow-xs flex items-center gap-2 cursor-pointer transition"
+            >
+              <Trash2 className="h-4 w-4" />
+              <span>Delete Campaign</span>
+            </button>
+          </div>
+
+          {showDeleteConfirm && (
+            <div className="fixed inset-0 bg-black/85 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+              <div className="bg-[#1c1c1f] border border-[#28282b] rounded-2xl w-full max-w-md p-6 space-y-4 text-left shadow-2xl">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-rose-400 font-bold text-sm">
+                    <AlertTriangle className="h-4 w-4" />
+                    <span>Confirm Campaign Deletion</span>
+                  </div>
+                  <button onClick={() => setShowDeleteConfirm(false)} className="text-zinc-500 hover:text-zinc-300 p-1">
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+                <p className="text-xs text-zinc-300 leading-relaxed">
+                  Are you sure you want to delete <strong className="text-white font-bold">{campaign.title}</strong>? This will permanently delete the campaign record and purge all collected audience comments from ClickHouse.
+                </p>
+                <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#28282b]">
+                  <button
+                    onClick={() => setShowDeleteConfirm(false)}
+                    disabled={isDeleting}
+                    className="px-3.5 py-2 rounded-lg text-xs font-semibold text-zinc-300 hover:bg-[#28282b] cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleDeleteCampaign}
+                    disabled={isDeleting}
+                    className="px-4 py-2 rounded-lg text-xs font-bold text-white bg-rose-600 hover:bg-rose-500 disabled:opacity-50 flex items-center gap-1.5 cursor-pointer shadow-xs"
+                  >
+                    {isDeleting ? (
+                      <>
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        <span>Deleting...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Trash2 className="h-3.5 w-3.5" />
+                        <span>Delete Permanently</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
