@@ -124,9 +124,9 @@ export default function Sidebar() {
           </span>
 
           {[
-            { tabId: "overview", label: "Executive Dashboard", icon: LayoutDashboard },
-            { tabId: "marketing", label: "Marketing Action Plan", icon: Megaphone },
-            { tabId: "agent", label: "AI Research Assistant", icon: Bot },
+            { tabId: "overview", label: "Dashboard", icon: LayoutDashboard },
+            { tabId: "marketing", label: "Marketing", icon: Megaphone },
+            { tabId: "agent", label: "Assistant", icon: Bot },
           ].map((item) => {
             const isTabActive = pathname.startsWith("/campaign/") && currentTab === item.tabId;
             const targetUrl = currentCampaign ? `/campaign/${currentCampaign.content_id}?tab=${item.tabId}` : "/";

@@ -83,13 +83,13 @@ export default function Page() {
   return (
     <div className="flex-1 bg-[#0e0e10] p-8 space-y-6 overflow-y-auto max-h-screen text-zinc-100 font-sans">
       {/* Top Header matching screenshot */}
-      <div className="flex items-center justify-between border-b border-[#202023] pb-5">
-        <div className="space-y-1">
-          <h1 className="font-bold text-xl text-zinc-100 tracking-tight">
-            Launchpad Overview
+      <div className="flex items-center justify-between border-b border-[#202023] pb-4">
+        <div className="space-y-0.5">
+          <h1 className="font-bold text-lg text-zinc-100 tracking-tight">
+            Campaigns / Overview
           </h1>
           <p className="text-xs text-zinc-400 font-sans">
-            Real-time audience intelligence and marketing directive engine for entertainment launches.
+            Real-time audience telemetry and active entertainment launches.
           </p>
         </div>
         <button
@@ -99,39 +99,6 @@ export default function Page() {
           <Plus className="h-3.5 w-3.5 stroke-[3]" />
           <span>Track New Campaign</span>
         </button>
-      </div>
-
-      {/* 3 Step Workflow Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-[#1c1c1f] border border-[#28282b] rounded-xl p-4.5 space-y-2 shadow-xs">
-          <div className="h-7 w-7 rounded-md bg-[#242428] flex items-center justify-center text-[#e6fc4f] font-mono font-bold text-xs">
-            01
-          </div>
-          <h3 className="font-bold text-xs text-zinc-100">Initialize Launch</h3>
-          <p className="text-xs text-zinc-400 leading-relaxed">
-            Register your movie, series, or trailer drop with target search terms and release dates.
-          </p>
-        </div>
-
-        <div className="bg-[#1c1c1f] border border-[#28282b] rounded-xl p-4.5 space-y-2 shadow-xs">
-          <div className="h-7 w-7 rounded-md bg-[#242428] flex items-center justify-center text-[#e6fc4f] font-mono font-bold text-xs">
-            02
-          </div>
-          <h3 className="font-bold text-xs text-zinc-100">Stream Feedback</h3>
-          <p className="text-xs text-zinc-400 leading-relaxed">
-            Stream YouTube comments and Reddit discussions into ClickHouse with Gemini sentiment analysis.
-          </p>
-        </div>
-
-        <div className="bg-[#1c1c1f] border border-[#28282b] rounded-xl p-4.5 space-y-2 shadow-xs">
-          <div className="h-7 w-7 rounded-md bg-[#242428] flex items-center justify-center text-[#e6fc4f] font-mono font-bold text-xs">
-            03
-          </div>
-          <h3 className="font-bold text-xs text-zinc-100">Direct & Mitigate</h3>
-          <p className="text-xs text-zinc-400 leading-relaxed">
-            Synthesize what fans love vs complaints, compare platforms, and generate ready-to-use ad copy.
-          </p>
-        </div>
       </div>
 
       {isLoading ? (

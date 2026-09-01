@@ -26,9 +26,9 @@ export default function CampaignHeader({
   const [showActionsMenu, setShowActionsMenu] = useState(false);
 
   const getPageTitle = () => {
-    if (activeTab === "marketing") return `${campaign.title} · Marketing Action Plan`;
-    if (activeTab === "agent") return `${campaign.title} · AI Research Assistant`;
-    return `${campaign.title} · Executive Dashboard`;
+    if (activeTab === "marketing") return `${campaign.title} / Marketing`;
+    if (activeTab === "agent") return `${campaign.title} / Assistant`;
+    return `${campaign.title} / Dashboard`;
   };
 
   return (
