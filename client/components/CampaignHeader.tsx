@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ChevronDown, Play, Square, MessageSquare, RefreshCw, Trash2, Loader2, AlertTriangle, X } from "lucide-react";
 import { Movie } from "../utils/types";
 import { API_ENDPOINTS } from "../utils/constants";
+import { toast } from "sonner";
 
 interface CampaignHeaderProps {
   campaign: Movie;
@@ -44,13 +45,14 @@ export default function CampaignHeader({
       });
       if (res.ok) {
         window.dispatchEvent(new Event("refresh-campaigns"));
+        toast.success(`"${campaign.title}" deleted and audience records purged.`);
         router.push("/");
       } else {
-        alert("Failed to delete campaign.");
+        toast.error("Failed to delete campaign.");
       }
     } catch (e) {
       console.error(e);
-      alert("Error deleting campaign.");
+      toast.error("Network error deleting campaign.");
     } finally {
       setIsDeleting(false);
       setShowDeleteModal(false);

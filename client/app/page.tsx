@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { Plus, Loader2, Film, Sparkles, Database, ArrowRight, ShieldCheck, PlayCircle, BarChart3, Star, ExternalLink } from "lucide-react";
+import { toast } from "sonner";
 
 import { API_ENDPOINTS } from "../utils/constants";
 import { Movie } from "../utils/types";
@@ -71,12 +72,13 @@ export default function Page() {
         
         window.dispatchEvent(new Event("refresh-campaigns"));
         loadCampaigns();
+        toast.success(`"${newTitle}" launch created! Streaming initial comments in background.`);
       } else {
-        alert("Failed to register campaign.");
+        toast.error("Failed to register campaign. Please check required fields.");
       }
     } catch (err) {
       console.error(err);
-      alert("Error connecting to campaign registration server.");
+      toast.error("Network error connecting to campaign server.");
     } finally {
       setIsRegistering(false);
     }

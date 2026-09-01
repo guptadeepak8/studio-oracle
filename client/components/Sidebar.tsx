@@ -21,6 +21,7 @@ import {
 import { API_ENDPOINTS } from "../utils/constants";
 import { Movie } from "../utils/types";
 import RegisterModal from "./RegisterModal";
+import { toast } from "sonner";
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -87,13 +88,14 @@ export default function Sidebar() {
         setShowModal(false);
         
         window.dispatchEvent(new Event("refresh-campaigns"));
+        toast.success(`"${result.title || newTitle}" launched! Initial comment ingestion started in background.`);
         router.push(`/campaign/${result.content_id}?tab=overview`);
       } else {
-        alert("Failed to register campaign.");
+        toast.error("Failed to register campaign. Please check required fields.");
       }
     } catch (err) {
       console.error(err);
-      alert("Error connecting to campaign registration server.");
+      toast.error("Network error connecting to campaign server.");
     } finally {
       setIsRegistering(false);
     }

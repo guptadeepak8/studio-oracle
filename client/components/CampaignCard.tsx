@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { MoreVertical, Database, Play, Square, Loader2, ArrowRight } from "lucide-react";
 import { API_ENDPOINTS } from "../utils/constants";
 import { Movie, Comment } from "../utils/types";
+import { toast } from "sonner";
 
 interface CampaignCardProps {
   campaign: Movie;
@@ -46,9 +47,17 @@ export default function CampaignCard({ campaign, onRefresh }: CampaignCardProps)
       if (res.ok) {
         window.dispatchEvent(new Event("refresh-campaigns"));
         onRefresh();
+        if (nextStatus === "active") {
+          toast.success(`"${campaign.title}" live tracking resumed.`);
+        } else {
+          toast.info(`"${campaign.title}" live tracking paused.`);
+        }
+      } else {
+        toast.error("Failed to update campaign tracking status.");
       }
     } catch (e) {
       console.error("Error toggling campaign status:", e);
+      toast.error("Network error toggling campaign status.");
     } finally {
       setIsToggling(false);
       setShowMenu(false);
@@ -63,11 +72,14 @@ export default function CampaignCard({ campaign, onRefresh }: CampaignCardProps)
       });
       if (res.ok) {
         window.dispatchEvent(new Event("refresh-campaigns"));
+        toast.success(`"${campaign.title}" deleted and audience records purged.`);
         onRefresh();
+      } else {
+        toast.error("Failed to delete campaign.");
       }
     } catch (e) {
       console.error(e);
-      alert("Failed to delete campaign.");
+      toast.error("Network error deleting campaign.");
     } finally {
       setIsDeleting(false);
       setShowDeleteConfirm(false);

@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { Loader2, RefreshCw, MessageCircle, ChevronDown, ChevronRight, Clock, CheckCircle2, ShieldCheck } from "lucide-react";
 import { API_BASE_URL } from "../utils/constants";
+import { toast } from "sonner";
 
 interface IngestConfigProps {
   campaignId: string;
@@ -42,13 +43,15 @@ export default function IngestConfig({
         body: JSON.stringify({ query: ingestQuery }),
       });
       if (res.ok) {
+        const data = await res.json();
         onRefreshAll();
+        toast.success(data.message || "Successfully synced Reddit community discussions!");
       } else {
-        alert("Failed to sync Reddit discussions.");
+        toast.error("Failed to sync Reddit discussions. Ensure tracking is active.");
       }
     } catch (e) {
       console.error(e);
-      alert("Error syncing Reddit discussions.");
+      toast.error("Network error syncing Reddit discussions.");
     } finally {
       setIsIngestingReddit(false);
     }

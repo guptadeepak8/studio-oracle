@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { ChevronDown, ChevronRight, Target, Send, Users, Layers, Sparkles, Check, Copy, AlertCircle, Zap, Megaphone, TrendingUp, Film, Play } from "lucide-react";
 import { Movie } from "../utils/types";
 import TrailerComparison, { DropItem } from "./TrailerComparison";
+import { toast } from "sonner";
 
 interface ThemeItem {
   name: string;
@@ -170,6 +171,7 @@ export default function MarketingDirectives({ campaign, themeStats, drops = [] }
   const handleCopyDraft = (text: string, index: number) => {
     navigator.clipboard.writeText(text);
     setCopiedIndex(index);
+    toast.success("Marketing copy draft copied to clipboard!");
     setTimeout(() => setCopiedIndex(null), 2000);
   };
 

@@ -5,6 +5,7 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Loader2, AlertTriangle, PlayCircle, Film, Sparkles, MessageSquare, Trash2, X } from "lucide-react";
 import { API_ENDPOINTS, SESSION_CONFIG } from "../../../utils/constants";
 import { Movie, Comment, ChatMessage, IngestResponse } from "../../../utils/types";
+import { toast } from "sonner";
 import {
   SentimentStats,
   ThemeItem,
@@ -140,13 +141,14 @@ function CampaignWorkspaceInner() {
       });
       if (res.ok) {
         window.dispatchEvent(new Event("refresh-campaigns"));
+        toast.success(`"${campaign.title}" deleted and audience logs purged.`);
         router.push("/");
       } else {
-        alert("Failed to delete campaign.");
+        toast.error("Failed to delete campaign.");
       }
     } catch (e) {
       console.error(e);
-      alert("Error deleting campaign.");
+      toast.error("Network error deleting campaign.");
     } finally {
       setIsDeleting(false);
       setShowDeleteConfirm(false);
@@ -167,9 +169,17 @@ function CampaignWorkspaceInner() {
       if (res.ok) {
         setCampaign({ ...campaign, status: nextStatus });
         window.dispatchEvent(new Event("refresh-campaigns"));
+        if (nextStatus === "active") {
+          toast.success(`Live tracking resumed for "${campaign.title}".`);
+        } else {
+          toast.info(`Live tracking paused for "${campaign.title}".`);
+        }
+      } else {
+        toast.error("Failed to update tracking status.");
       }
     } catch (err) {
       console.error("Error toggling campaign status:", err);
+      toast.error("Network error updating status.");
     } finally {
       setIsToggling(false);
     }
@@ -199,13 +209,16 @@ function CampaignWorkspaceInner() {
           };
           setChatMessages((prev) => [...prev, ingestNotice]);
           refreshAll();
+          toast.success(`Successfully synced ${data.ingested_comments} audience comments from YouTube!`);
         } else {
-          alert(`Import failed: ${data.message || "Unknown error"}`);
+          toast.error(`Comment sync failed: ${data.message || "Unknown error"}`);
         }
+      } else {
+        toast.error("Failed to sync comments. Ensure campaign tracking is active.");
       }
     } catch (err) {
       console.error(err);
-      alert("Error importing comments.");
+      toast.error("Network error syncing comments.");
     } finally {
       setIsIngesting(false);
     }

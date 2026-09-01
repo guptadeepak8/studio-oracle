@@ -19,6 +19,8 @@ export const metadata: Metadata = {
   description: "AI Audience Intelligence project manager console.",
 };
 
+import { Toaster } from "sonner";
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
@@ -32,6 +34,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <div className="flex-1 flex flex-col h-screen overflow-hidden">
           {children}
         </div>
+        <Toaster
+          position="bottom-right"
+          theme="dark"
+          richColors
+          closeButton
+          toastOptions={{
+            style: {
+              background: "#1c1c1f",
+              border: "1px solid #28282b",
+              color: "#f4f4f5",
+            },
+          }}
+        />
       </body>
     </html>
   );
