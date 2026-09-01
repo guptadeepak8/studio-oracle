@@ -35,14 +35,24 @@ def set_campaign_status(content_id: str, status: str):
     conn.close()
 
 def delete_campaign_records(content_id: str):
+    """
+    Immediate hard delete of a campaign and all its associated ClickHouse records
+    (posts, comments, sentiments, and metadata) and SQLite tracking records.
+    """
     client = get_clickhouse_client()
     
-    # 1. Safe cascading ClickHouse mutations
-    client.command(f"ALTER TABLE studio_oracle.content DELETE WHERE content_id = '{content_id}'")
-    client.command(f"ALTER TABLE studio_oracle.audience_posts DELETE WHERE content_id = '{content_id}'")
-    client.command(f"ALTER TABLE studio_oracle.audience_comments DELETE WHERE content_id = '{content_id}'")
+    # 1. Immediate Hard Delete in ClickHouse
+    try:
+        client.command(f"DELETE FROM studio_oracle.audience_comments WHERE content_id = '{content_id}'")
+        client.command(f"DELETE FROM studio_oracle.audience_posts WHERE content_id = '{content_id}'")
+        client.command(f"DELETE FROM studio_oracle.content WHERE content_id = '{content_id}'")
+    except Exception as del_err:
+        print(f"Executing fallback ALTER TABLE DELETE mutation: {del_err}")
+        client.command(f"ALTER TABLE studio_oracle.audience_comments DELETE WHERE content_id = '{content_id}'")
+        client.command(f"ALTER TABLE studio_oracle.audience_posts DELETE WHERE content_id = '{content_id}'")
+        client.command(f"ALTER TABLE studio_oracle.content DELETE WHERE content_id = '{content_id}'")
     
-    # 2. SQLite status deletion
+    # 2. Hard Delete SQLite status tracking
     init_sqlite_db()
     conn = sqlite3.connect("sessions.db")
     cursor = conn.cursor()

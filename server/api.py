@@ -225,6 +225,13 @@ def trigger_reddit_ingestion(content_id: str, query: str = None):
     """
     Trigger Reddit audience feedback ingestion for a campaign.
     """
+    status = db.get_campaign_status(content_id)
+    if status == "stopped":
+        raise HTTPException(
+            status_code=400,
+            detail="Campaign tracking is currently paused. Resume tracking before syncing comments."
+        )
+
     try:
         from ingestion.reddit import ingest_reddit_data
         search_query = query or "Gladiator II Reddit discussions"
@@ -342,6 +349,13 @@ def ingest(request: IngestRequest):
     """
     Manually trigger YouTube comment ingestion for a given content UUID.
     """
+    status = db.get_campaign_status(request.content_id)
+    if status == "stopped":
+        raise HTTPException(
+            status_code=400,
+            detail="Campaign tracking is currently paused. Resume tracking before syncing comments."
+        )
+
     try:
         res = ingest_youtube_data(
             request.content_id,
