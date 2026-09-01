@@ -1,7 +1,7 @@
 "use client";
 
 import React, { FormEvent } from "react";
-import { Loader2, Plus, Sparkles, X } from "lucide-react";
+import { Loader2, Plus, Sparkles, X, Video } from "lucide-react";
 
 interface RegisterModalProps {
   onClose: () => void;
@@ -14,6 +14,8 @@ interface RegisterModalProps {
   setNewType: (ty: string) => void;
   newReleaseDate: string;
   setNewReleaseDate: (d: string) => void;
+  newTrailerQuery: string;
+  setNewTrailerQuery: (q: string) => void;
   isRegistering: boolean;
 }
 
@@ -28,97 +30,128 @@ export default function RegisterModal({
   setNewType,
   newReleaseDate,
   setNewReleaseDate,
+  newTrailerQuery,
+  setNewTrailerQuery,
   isRegistering,
 }: RegisterModalProps) {
   return (
-    <div className="fixed inset-0 bg-black/85 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
-      <div className="bg-[#121215] border border-[#27272a] rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl">
-        <div className="p-5 border-b border-[#27272a] flex items-center justify-between bg-[#18181b]">
+    <div className="fixed inset-0 bg-black/85 backdrop-blur-xs flex items-center justify-center z-50 p-4 font-sans animate-fade-in">
+      <div className="bg-[#1c1c1f] border border-[#28282b] rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl">
+        <div className="p-5 border-b border-[#28282b] flex items-center justify-between bg-[#161618]">
           <div className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-amber-500" />
-            <h2 className="font-bold text-base tracking-wider uppercase text-zinc-100">
+            <div className="h-6 w-6 rounded bg-[#242428] flex items-center justify-center text-[#e6fc4f]">
+              <Sparkles className="h-3.5 w-3.5" />
+            </div>
+            <h2 className="font-bold text-sm tracking-wide uppercase text-zinc-100">
               Track New Campaign Launch
             </h2>
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 transition cursor-pointer"
+            className="p-1 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-[#242428] transition cursor-pointer"
           >
-            <X className="h-5 w-5" />
+            <X className="h-4 w-4" />
           </button>
         </div>
 
-        <form onSubmit={onSubmit} className="p-6 space-y-4 text-sm font-sans">
-          <div className="space-y-1.5">
-            <label className="font-semibold text-xs text-zinc-200 uppercase tracking-wider block">
+        <form onSubmit={onSubmit} className="p-6 space-y-4 text-xs font-sans">
+          <div className="space-y-1">
+            <label className="font-semibold text-zinc-300 uppercase tracking-wider text-[11px] block">
               Campaign / Film Title *
             </label>
             <input
               type="text"
               required
-              placeholder="e.g. Gladiator II"
+              placeholder="e.g. Wicked (2024)"
               value={newTitle}
-              onChange={(e) => setNewTitle(e.target.value)}
-              className="w-full bg-[#18181b] border border-[#27272a] rounded-lg p-3 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-amber-500 transition"
+              onChange={(e) => {
+                setNewTitle(e.target.value);
+                if (!newTrailerQuery) {
+                  setNewTrailerQuery(`${e.target.value} Official Trailer`);
+                }
+              }}
+              className="w-full bg-[#141416] border border-[#28282b] rounded-lg p-2.5 text-xs text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-[#e6fc4f] transition"
             />
           </div>
 
-          <div className="space-y-1.5">
-            <label className="font-semibold text-xs text-zinc-200 uppercase tracking-wider block">
+          {/* Mandatory YouTube Trailer Feed Requirement */}
+          <div className="space-y-1 bg-[#161618] border border-[#3b3a1a] rounded-xl p-3.5">
+            <div className="flex items-center justify-between">
+              <label className="font-bold text-[#e6fc4f] uppercase tracking-wider text-[11px] flex items-center gap-1.5">
+                <Video className="h-3.5 w-3.5 text-[#e6fc4f]" />
+                Required: YouTube Trailer Target or URL *
+              </label>
+              <span className="text-[10px] text-zinc-400 font-mono">Mandatory Feed</span>
+            </div>
+            <input
+              type="text"
+              required
+              placeholder="e.g. Wicked 2024 Official Trailer or https://www.youtube.com/watch?v=..."
+              value={newTrailerQuery}
+              onChange={(e) => setNewTrailerQuery(e.target.value)}
+              className="w-full bg-[#141416] border border-[#28282b] rounded-lg p-2.5 text-xs text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-[#e6fc4f] transition"
+            />
+            <p className="text-[10px] text-zinc-400 leading-tight pt-0.5">
+              Every campaign requires a verified YouTube trailer search target or URL to stream live telemetry.
+            </p>
+          </div>
+
+          <div className="space-y-1">
+            <label className="font-semibold text-zinc-300 uppercase tracking-wider text-[11px] block">
               Campaign Description / Logline *
             </label>
             <textarea
               required
-              placeholder="e.g. Paramount Pictures sequel following Lucius returning to the Colosseum..."
+              placeholder="e.g. Universal Pictures musical adaptation directed by Jon M. Chu..."
               value={newDesc}
               onChange={(e) => setNewDesc(e.target.value)}
-              className="w-full h-24 bg-[#18181b] border border-[#27272a] rounded-lg p-3 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none resize-none focus:border-amber-500 transition"
+              className="w-full h-20 bg-[#141416] border border-[#28282b] rounded-lg p-2.5 text-xs text-zinc-100 placeholder-zinc-500 focus:outline-none resize-none focus:border-[#e6fc4f] transition"
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <label className="font-semibold text-xs text-zinc-200 uppercase tracking-wider block">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <label className="font-semibold text-zinc-300 uppercase tracking-wider text-[11px] block">
                 Campaign Type
               </label>
               <select
                 value={newType}
                 onChange={(e) => setNewType(e.target.value)}
-                className="w-full bg-[#18181b] border border-[#27272a] rounded-lg p-3 text-sm text-zinc-100 focus:outline-none focus:border-amber-500 transition"
+                className="w-full bg-[#141416] border border-[#28282b] rounded-lg p-2 text-xs text-zinc-100 focus:outline-none focus:border-[#e6fc4f] transition"
               >
                 <option value="movie">Theatrical Movie</option>
                 <option value="series">Streaming Series</option>
-                <option value="campaign">Promotional Launch</option>
+                <option value="campaign">Promotional Drop</option>
               </select>
             </div>
-            <div className="space-y-1.5">
-              <label className="font-semibold text-xs text-zinc-200 uppercase tracking-wider block">
+            <div className="space-y-1">
+              <label className="font-semibold text-zinc-300 uppercase tracking-wider text-[11px] block">
                 Target Release Date
               </label>
               <input
                 type="date"
                 value={newReleaseDate}
                 onChange={(e) => setNewReleaseDate(e.target.value)}
-                className="w-full bg-[#18181b] border border-[#27272a] rounded-lg p-3 text-sm text-zinc-100 focus:outline-none focus:border-amber-500 transition"
+                className="w-full bg-[#141416] border border-[#28282b] rounded-lg p-2 text-xs text-zinc-100 focus:outline-none focus:border-[#e6fc4f] transition"
               />
             </div>
           </div>
 
-          <div className="pt-3 border-t border-[#27272a]">
+          <div className="pt-3 border-t border-[#28282b]">
             <button
               type="submit"
-              disabled={isRegistering}
-              className="w-full bg-amber-600 hover:bg-amber-500 disabled:opacity-50 py-3 rounded-lg text-xs uppercase tracking-wider font-bold text-white transition flex items-center justify-center gap-2 shadow cursor-pointer border border-amber-500/30"
+              disabled={isRegistering || !newTitle.trim() || !newTrailerQuery.trim()}
+              className="w-full bg-[#e6fc4f] hover:bg-[#d8ed47] disabled:opacity-50 py-2.5 rounded-lg text-xs uppercase tracking-wider font-bold text-black transition flex items-center justify-center gap-2 shadow-xs cursor-pointer"
             >
               {isRegistering ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  Initializing ClickHouse Tracking...
+                  Streaming Trailer Telemetry...
                 </>
               ) : (
                 <>
-                  <Plus className="h-4 w-4" />
-                  Initialize Campaign Workspace
+                  <Plus className="h-4 w-4 stroke-[3]" />
+                  Initialize Campaign & Stream Telemetry
                 </>
               )}
             </button>

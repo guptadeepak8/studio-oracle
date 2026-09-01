@@ -18,6 +18,7 @@ export default function Page() {
   const [newDesc, setNewDesc] = useState("");
   const [newType, setNewType] = useState("movie");
   const [newReleaseDate, setNewReleaseDate] = useState("");
+  const [newTrailerQuery, setNewTrailerQuery] = useState("");
   const [isRegistering, setIsRegistering] = useState(false);
 
   const loadCampaigns = async () => {
@@ -43,7 +44,7 @@ export default function Page() {
 
   const handleRegisterCampaign = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newTitle.trim()) return;
+    if (!newTitle.trim() || !newTrailerQuery.trim()) return;
 
     setIsRegistering(true);
     try {
@@ -55,6 +56,7 @@ export default function Page() {
           content_type: newType,
           description: newDesc,
           release_date: newReleaseDate || null,
+          target_terms: [newTrailerQuery],
         }),
       });
 
@@ -62,6 +64,7 @@ export default function Page() {
         setNewTitle("");
         setNewDesc("");
         setNewReleaseDate("");
+        setNewTrailerQuery("");
         setShowModal(false);
         
         window.dispatchEvent(new Event("refresh-campaigns"));
@@ -166,6 +169,8 @@ export default function Page() {
           setNewType={setNewType}
           newReleaseDate={newReleaseDate}
           setNewReleaseDate={setNewReleaseDate}
+          newTrailerQuery={newTrailerQuery}
+          setNewTrailerQuery={setNewTrailerQuery}
           isRegistering={isRegistering}
         />
       )}

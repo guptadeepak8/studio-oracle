@@ -138,7 +138,7 @@ def get_campaign_pulse(content_id: str):
 @app.post("/api/campaigns")
 def create_campaign(request: CampaignCreateRequest):
     """
-    Directly register a new campaign content record in ClickHouse.
+    Directly register a new campaign content record in ClickHouse and initialize trailer tracking.
     """
     try:
         content_id = create_content_record(
@@ -148,8 +148,17 @@ def create_campaign(request: CampaignCreateRequest):
             release_date=request.release_date,
             target_terms=request.target_terms
         )
-        # Initialize SQLite tracking status as active
+        # Initialize tracking status as active
         db.set_campaign_status(content_id, "active")
+        
+        # If target trailer query or URL is provided, automatically trigger initial ingestion
+        if request.target_terms and len(request.target_terms) > 0:
+            query = request.target_terms[0]
+            try:
+                ingest_youtube_comments(content_id, query, limit=3)
+            except Exception as ing_err:
+                print(f"Initial trailer ingestion notice: {ing_err}")
+                
         return {
             "status": "success",
             "content_id": content_id,
