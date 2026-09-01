@@ -93,14 +93,14 @@ export default function AgentConsole({
     return paragraphs.map((para, index) => {
       if (para.startsWith("### ")) {
         return (
-          <h4 key={index} className="font-bold text-sm text-zinc-100 my-2 tracking-tight">
+          <h4 key={index} className="font-bold text-base text-zinc-100 my-2 tracking-tight">
             {parseInlineMarkdown(para.replace("### ", ""))}
           </h4>
         );
       }
       if (para.startsWith("## ")) {
         return (
-          <h3 key={index} className="font-bold text-base text-zinc-100 my-3 tracking-tight border-b border-[#28282b] pb-1">
+          <h3 key={index} className="font-bold text-lg text-zinc-100 my-3 tracking-tight border-b border-[#28282b] pb-1">
             {parseInlineMarkdown(para.replace("## ", ""))}
           </h3>
         );
@@ -108,9 +108,9 @@ export default function AgentConsole({
       if (para.startsWith("- ") || para.startsWith("* ")) {
         const items = para.split("\n");
         return (
-          <ul key={index} className="space-y-1.5 my-2 pl-4 list-disc marker:text-[#e6fc4f]">
+          <ul key={index} className="space-y-2 my-2.5 pl-4 list-disc marker:text-[#e6fc4f]">
             {items.map((it, i) => (
-              <li key={i} className="text-xs text-zinc-300 leading-relaxed font-sans font-medium">
+              <li key={i} className="text-sm text-zinc-200 leading-relaxed font-sans">
                 {parseInlineMarkdown(it.replace(/^[-*]\s+/, ""))}
               </li>
             ))}
@@ -118,7 +118,7 @@ export default function AgentConsole({
         );
       }
       return (
-        <p key={index} className="text-xs text-zinc-300 leading-relaxed font-sans font-medium my-1.5">
+        <p key={index} className="text-sm text-zinc-200 leading-relaxed font-sans my-2">
           {parseInlineMarkdown(para)}
         </p>
       );
@@ -204,11 +204,11 @@ export default function AgentConsole({
         {chatMessages.map((msg) => {
           if (msg.sender === "user") {
             return (
-              <div key={msg.id} className="flex gap-3 max-w-3xl ml-auto flex-row-reverse">
-                <div className="h-7 w-7 rounded-full bg-[#1c1c1f] border border-[#28282b] flex items-center justify-center shrink-0 text-zinc-300">
-                  <User className="h-3.5 w-3.5" />
+              <div key={msg.id} className="flex gap-3.5 max-w-3xl ml-auto flex-row-reverse">
+                <div className="h-8 w-8 rounded-full bg-[#1c1c1f] border border-[#28282b] flex items-center justify-center shrink-0 text-zinc-300">
+                  <User className="h-4 w-4" />
                 </div>
-                <div className="bg-[#242428] border border-[#323238] rounded-xl px-4 py-3 text-xs text-zinc-100 font-medium font-sans">
+                <div className="bg-[#242428] border border-[#323238] rounded-xl px-4.5 py-3 text-sm text-zinc-100 font-medium font-sans">
                   {msg.text}
                 </div>
               </div>
@@ -216,17 +216,17 @@ export default function AgentConsole({
           }
 
           return (
-            <div key={msg.id} className="flex gap-3 max-w-3xl mr-auto pb-3">
-              <div className="h-7 w-7 rounded-full bg-[#1c1c1f] border border-[#3a3a20] flex items-center justify-center shrink-0 text-[#e6fc4f]">
-                <Bot className="h-3.5 w-3.5" />
+            <div key={msg.id} className="flex gap-3.5 max-w-3xl mr-auto pb-3">
+              <div className="h-8 w-8 rounded-full bg-[#1c1c1f] border border-[#3a3a20] flex items-center justify-center shrink-0 text-[#e6fc4f]">
+                <Bot className="h-4 w-4" />
               </div>
-              <div className="flex-1 bg-[#1c1c1f] border border-[#28282b] rounded-xl p-4.5 space-y-2 min-w-0 shadow-xs">
+              <div className="flex-1 bg-[#1c1c1f] border border-[#28282b] rounded-xl p-5 space-y-2 min-w-0 shadow-xs">
                 {renderMessageText(msg.text)}
                 {msg.isStreaming && (
                   <span className="inline-flex gap-1 ml-1 items-center pt-1">
-                    <span className="h-1.5 w-1.5 rounded-full bg-[#e6fc4f] animate-bounce [animation-delay:-0.3s]"></span>
-                    <span className="h-1.5 w-1.5 rounded-full bg-[#e6fc4f] animate-bounce [animation-delay:-0.15s]"></span>
-                    <span className="h-1.5 w-1.5 rounded-full bg-[#e6fc4f] animate-bounce"></span>
+                    <span className="h-2 w-2 rounded-full bg-[#e6fc4f] animate-bounce [animation-delay:-0.3s]"></span>
+                    <span className="h-2 w-2 rounded-full bg-[#e6fc4f] animate-bounce [animation-delay:-0.15s]"></span>
+                    <span className="h-2 w-2 rounded-full bg-[#e6fc4f] animate-bounce"></span>
                   </span>
                 )}
               </div>
@@ -239,7 +239,7 @@ export default function AgentConsole({
       {/* Suggested prompts in empty chat */}
       {chatMessages.length <= 1 && (
         <div className="max-w-2xl mx-auto w-full px-6 pb-4 space-y-2.5">
-          <span className="text-[10px] text-zinc-500 uppercase tracking-wider font-semibold block">
+          <span className="text-xs text-zinc-400 uppercase tracking-wider font-bold block">
             Suggested Investigations
           </span>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
@@ -247,7 +247,7 @@ export default function AgentConsole({
               <button
                 key={idx}
                 onClick={() => onSendChat(p)}
-                className="text-xs bg-[#1c1c1f] hover:bg-[#242428] text-zinc-300 hover:text-zinc-100 border border-[#28282b] px-3.5 py-2.5 rounded-lg text-left transition font-sans font-medium cursor-pointer"
+                className="text-sm bg-[#1c1c1f] hover:bg-[#242428] text-zinc-200 hover:text-white border border-[#28282b] px-4 py-3 rounded-xl text-left transition font-sans font-medium cursor-pointer"
               >
                 {p}
               </button>
@@ -264,14 +264,14 @@ export default function AgentConsole({
           onChange={(e) => setInputMessage(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && onSendChat()}
           placeholder="Ask AI Assistant about audience sentiment, anomalies, or messaging pivots..."
-          className="flex-1 bg-[#1c1c1f] border border-[#28282b] rounded-lg px-4 py-2.5 text-xs focus:outline-none focus:border-[#e6fc4f] transition text-zinc-100 placeholder-zinc-500 font-sans"
+          className="flex-1 bg-[#1c1c1f] border border-[#28282b] rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#e6fc4f] transition text-zinc-100 placeholder-zinc-500 font-sans"
         />
         <button
           onClick={() => onSendChat()}
           disabled={!inputMessage.trim()}
-          className="bg-[#e6fc4f] hover:bg-[#d8ed47] disabled:opacity-40 px-4 py-2.5 rounded-lg transition text-xs font-bold text-black flex items-center gap-1.5 cursor-pointer shadow-xs"
+          className="bg-[#e6fc4f] hover:bg-[#d8ed47] disabled:opacity-40 px-5 py-3 rounded-lg transition text-sm font-bold text-black flex items-center gap-2 cursor-pointer shadow-xs"
         >
-          <Send className="h-3.5 w-3.5 stroke-[2.5]" />
+          <Send className="h-4 w-4 stroke-[2.5]" />
           <span>Send</span>
         </button>
       </div>

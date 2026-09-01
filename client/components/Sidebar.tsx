@@ -143,13 +143,13 @@ export default function Sidebar() {
               <Link
                 key={item.tabId}
                 href={targetUrl}
-                className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition ${
+                className={`flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium transition ${
                   isTabActive
                     ? "bg-[#242428] text-white font-semibold shadow-xs"
-                    : "text-zinc-400 hover:text-zinc-200 hover:bg-[#1a1a1d]"
+                    : "text-zinc-300 hover:text-white hover:bg-[#1a1a1d]"
                 }`}
               >
-                <Icon className="h-4 w-4 shrink-0" />
+                <Icon className="h-4.5 w-4.5 shrink-0" />
                 <span className="truncate">{item.label}</span>
               </Link>
             );
@@ -157,9 +157,9 @@ export default function Sidebar() {
         </div>
 
         {/* Section: Campaigns List */}
-        <div className="space-y-1">
-          <div className="flex items-center justify-between px-3 mb-1">
-            <span className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider block">
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between px-3.5 mb-1">
+            <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider block">
               Campaigns
             </span>
             <button
