@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { ChevronDown, ChevronRight, Target, Send, Users, Layers, Sparkles, Check, Copy, AlertCircle, Zap, Megaphone, TrendingUp, Film, Play } from "lucide-react";
 import { Movie } from "../utils/types";
-import TrailerComparison from "./TrailerComparison";
+import TrailerComparison, { DropItem } from "./TrailerComparison";
 
 interface ThemeItem {
   name: string;
@@ -25,9 +25,10 @@ interface ActionPlanItem {
 interface MarketingDirectivesProps {
   campaign: Movie;
   themeStats: ThemeItem[];
+  drops?: DropItem[];
 }
 
-export default function MarketingDirectives({ campaign, themeStats }: MarketingDirectivesProps) {
+export default function MarketingDirectives({ campaign, themeStats, drops = [] }: MarketingDirectivesProps) {
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
 
   const generateActionPlan = (stats: ThemeItem[]): ActionPlanItem[] => {
@@ -174,8 +175,8 @@ export default function MarketingDirectives({ campaign, themeStats }: MarketingD
 
   return (
     <div className="w-full space-y-8 font-sans">
-      {/* 1. What Changed: Trailer 1 Drop vs Trailer 2 Drop */}
-      <TrailerComparison campaign={campaign} themeStats={themeStats} />
+      {/* 1. What Changed: Real Drops from ClickHouse */}
+      <TrailerComparison campaign={campaign} drops={drops} />
 
       {/* 2. Marketing Action Directives List */}
       <div className="space-y-4">

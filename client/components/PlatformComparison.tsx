@@ -2,19 +2,42 @@
 
 import React, { useState } from "react";
 import { ChevronDown, ChevronRight, Video, MessageCircle } from "lucide-react";
-import { ConflictItem } from "../utils/analytics";
+
+export interface PlatformStats {
+  total: number;
+  posPercent: number;
+  negPercent: number;
+  topPositive: string;
+  topNegative: string;
+}
 
 interface PlatformComparisonProps {
-  conflicts: ConflictItem[];
+  platforms?: Record<string, PlatformStats>;
   dominantTopic: string;
 }
 
-export default function PlatformComparison({ conflicts, dominantTopic }: PlatformComparisonProps) {
+export default function PlatformComparison({ platforms = {}, dominantTopic }: PlatformComparisonProps) {
   const [isOpen, setIsOpen] = useState(true);
+
+  const yt = platforms["youtube"] || {
+    total: 0,
+    posPercent: 0,
+    negPercent: 0,
+    topPositive: "",
+    topNegative: "",
+  };
+
+  const reddit = platforms["reddit"] || {
+    total: 0,
+    posPercent: 0,
+    negPercent: 0,
+    topPositive: "",
+    topNegative: "",
+  };
 
   return (
     <div className="space-y-3 font-sans">
-      {/* Section Header with Chevron matching screenshot */}
+      {/* Section Header with Chevron matching ClickHouse Cloud */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-1.5 text-sm font-bold text-zinc-100 hover:text-[#e6fc4f] transition cursor-pointer select-none"
@@ -37,23 +60,33 @@ export default function PlatformComparison({ conflicts, dominantTopic }: Platfor
                   <Video className="h-3.5 w-3.5" />
                 </div>
                 <span className="font-bold text-xs text-zinc-100 uppercase tracking-wider">
-                  YouTube (Mainstream Viewers)
+                  YouTube Telemetry
                 </span>
               </div>
-              <span className="text-[10px] font-bold text-[#4ade80] bg-[#183424] border border-[#234e35] px-2.5 py-0.5 rounded-full">
-                Mostly Excited
+              <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${
+                yt.posPercent >= 50
+                  ? "text-[#4ade80] bg-[#183424] border border-[#234e35]"
+                  : "text-zinc-400 bg-[#242428]"
+              }`}>
+                {yt.total > 0 ? (yt.posPercent >= 50 ? "Mostly Excited" : "Mixed Reception") : "Awaiting Data"}
               </span>
             </div>
 
-            <p className="text-xs text-zinc-300 leading-relaxed italic border-l-2 border-[#4ade80]/60 pl-3">
-              {conflicts.length > 0 && conflicts[0].positive.text
-                ? `"${conflicts[0].positive.text}"`
-                : `"The trailer scale and battle cinematography look absolutely incredible on the big screen."`}
-            </p>
+            {yt.total > 0 && yt.topPositive ? (
+              <p className="text-xs text-zinc-300 leading-relaxed italic border-l-2 border-[#4ade80]/60 pl-3">
+                "{yt.topPositive}"
+              </p>
+            ) : (
+              <p className="text-xs text-zinc-500 italic py-2">
+                No YouTube comments tracked for this campaign yet.
+              </p>
+            )}
 
             <div className="pt-2 border-t border-[#28282b]/60 flex items-center justify-between text-[11px] text-zinc-400">
-              <span>Primary Driver: Arena Spectacle & Scale</span>
-              <span className="text-[#e6fc4f] font-mono font-semibold">78% Positive</span>
+              <span>{yt.total} Comments Analyzed</span>
+              <span className="text-[#4ade80] font-mono font-semibold">
+                {yt.total > 0 ? `+${yt.posPercent}% Positive` : "0%"}
+              </span>
             </div>
           </div>
 
@@ -65,23 +98,33 @@ export default function PlatformComparison({ conflicts, dominantTopic }: Platfor
                   <MessageCircle className="h-3.5 w-3.5" />
                 </div>
                 <span className="font-bold text-xs text-zinc-100 uppercase tracking-wider">
-                  Reddit (Cinephiles & Core Fandom)
+                  Reddit Discussions
                 </span>
               </div>
-              <span className="text-[10px] font-bold text-[#f87171] bg-[#331b20] border border-[#4c242a] px-2.5 py-0.5 rounded-full">
-                Vocal Debate
+              <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${
+                reddit.total > 0
+                  ? "text-[#f87171] bg-[#331b20] border border-[#4c242a]"
+                  : "text-zinc-400 bg-[#242428]"
+              }`}>
+                {reddit.total > 0 ? "Community Debate" : "Awaiting Data"}
               </span>
             </div>
 
-            <p className="text-xs text-zinc-300 leading-relaxed italic border-l-2 border-[#f87171]/60 pl-3">
-              {conflicts.length > 0 && conflicts[0].negative.text
-                ? `"${conflicts[0].negative.text}"`
-                : `"Debating whether the storyline continuity and character motivations will match the original."`}
-            </p>
+            {reddit.total > 0 && (reddit.topNegative || reddit.topPositive) ? (
+              <p className="text-xs text-zinc-300 leading-relaxed italic border-l-2 border-[#f87171]/60 pl-3">
+                "{reddit.topNegative || reddit.topPositive}"
+              </p>
+            ) : (
+              <p className="text-xs text-zinc-500 italic py-2">
+                No Reddit discussion comments ingested yet.
+              </p>
+            )}
 
             <div className="pt-2 border-t border-[#28282b]/60 flex items-center justify-between text-[11px] text-zinc-400">
-              <span>Friction Point: Lore & Casting Doubts</span>
-              <span className="text-[#f87171] font-mono font-semibold">54% Critical</span>
+              <span>{reddit.total} Discussions Ingested</span>
+              <span className="text-[#f87171] font-mono font-semibold">
+                {reddit.total > 0 ? `-${reddit.negPercent}% Critical` : "0%"}
+              </span>
             </div>
           </div>
         </div>

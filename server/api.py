@@ -71,10 +71,22 @@ def get_comments(content_id: str):
 @app.get("/api/campaigns/{content_id}/analytics")
 def get_campaign_analytics(content_id: str):
     """
-    Retrieve aggregated campaign audience metrics (sentiment, aspects, conflicts) from ClickHouse.
+    Retrieve aggregated campaign audience metrics (sentiment, aspects, conflicts, platforms) from ClickHouse.
     """
     try:
-        return db.fetch_campaign_analytics(content_id)
+        analytics = db.fetch_campaign_analytics(content_id)
+        analytics["platforms"] = db.fetch_platform_breakdown(content_id)
+        return analytics
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
+@app.get("/api/campaigns/{content_id}/drops")
+def get_campaign_drops(content_id: str):
+    """
+    Retrieve distinct teaser/trailer drop milestones and sentiment shifts from ClickHouse.
+    """
+    try:
+        return db.fetch_campaign_drops(content_id)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 

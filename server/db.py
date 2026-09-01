@@ -265,3 +265,78 @@ def fetch_campaign_timeline(content_id: str) -> list[dict]:
             "representativeComment": top_text
         })
     return timeline
+
+def fetch_campaign_drops(content_id: str) -> list[dict]:
+    client = get_clickhouse_client()
+    query = (
+        f"SELECT p.post_id, p.title, p.url, p.published_at, "
+        f"       count(c.comment_id) as total_comments, "
+        f"       countIf(c.sentiment = 'positive') as pos_c, "
+        f"       countIf(c.sentiment = 'negative') as neg_c, "
+        f"       argMax(c.text, c.like_count) as top_comment "
+        f"FROM studio_oracle.audience_posts p "
+        f"LEFT JOIN studio_oracle.audience_comments c ON p.post_id = c.post_id "
+        f"WHERE p.content_id = '{content_id}' "
+        f"GROUP BY p.post_id, p.title, p.url, p.published_at "
+        f"HAVING total_comments > 0 "
+        f"ORDER BY p.published_at ASC"
+    )
+    rows = client.query(query).result_rows
+    drops = []
+    for r in rows:
+        post_id = str(r[0])
+        title = str(r[1])
+        url = str(r[2])
+        pub_date = r[3]
+        pub_str = pub_date.strftime("%b %d, %Y") if hasattr(pub_date, "strftime") else str(pub_date)
+        total = int(r[4])
+        pos_c = int(r[5])
+        neg_c = int(r[6])
+        top_comment = str(r[7] or "")
+        pos_pct = round((pos_c / total) * 100) if total > 0 else 0
+        neg_pct = round((neg_c / total) * 100) if total > 0 else 0
+        
+        drops.append({
+            "id": post_id,
+            "title": title,
+            "url": url,
+            "published_at": pub_str,
+            "total_comments": total,
+            "posPercent": pos_pct,
+            "negPercent": neg_pct,
+            "topComment": top_comment
+        })
+    return drops
+
+def fetch_platform_breakdown(content_id: str) -> dict:
+    client = get_clickhouse_client()
+    query = (
+        f"SELECT source, count() as total, "
+        f"       countIf(sentiment = 'positive') as pos, "
+        f"       countIf(sentiment = 'negative') as neg, "
+        f"       argMax(text, like_count) FILTER (WHERE sentiment = 'positive') as top_pos, "
+        f"       argMax(text, like_count) FILTER (WHERE sentiment = 'negative') as top_neg "
+        f"FROM studio_oracle.audience_comments "
+        f"WHERE content_id = '{content_id}' "
+        f"GROUP BY source"
+    )
+    rows = client.query(query).result_rows
+    breakdown = {}
+    for r in rows:
+        src = str(r[0]).lower()
+        total = int(r[1])
+        pos = int(r[2])
+        neg = int(r[3])
+        pos_pct = round((pos / total) * 100) if total > 0 else 0
+        neg_pct = round((neg / total) * 100) if total > 0 else 0
+        top_pos = str(r[4] or "")
+        top_neg = str(r[5] or "")
+        breakdown[src] = {
+            "total": total,
+            "posPercent": pos_pct,
+            "negPercent": neg_pct,
+            "topPositive": top_pos,
+            "topNegative": top_neg
+        }
+    return breakdown
+

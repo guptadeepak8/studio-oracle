@@ -12,6 +12,7 @@ export const API_ENDPOINTS = {
   DELETE_CAMPAIGN: (contentId: string) => `${API_BASE_URL}/api/campaigns/${contentId}`,
   ANALYTICS: (contentId: string) => `${API_BASE_URL}/api/campaigns/${contentId}/analytics`,
   TIMELINE: (contentId: string) => `${API_BASE_URL}/api/campaigns/${contentId}/timeline`,
+  DROPS: (contentId: string) => `${API_BASE_URL}/api/campaigns/${contentId}/drops`,
   PULSE: (contentId: string) => `${API_BASE_URL}/api/campaigns/${contentId}/pulse`,
 } as const;
 

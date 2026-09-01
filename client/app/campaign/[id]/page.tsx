@@ -47,6 +47,8 @@ function CampaignWorkspaceInner() {
   });
   const [themeStats, setThemeStats] = useState<ThemeItem[]>([]);
   const [conflictingSignals, setConflictingSignals] = useState<ConflictItem[]>([]);
+  const [platforms, setPlatforms] = useState<Record<string, any>>({});
+  const [drops, setDrops] = useState<any[]>([]);
   const [pulseSummary, setPulseSummary] = useState("Loading audience summary...");
 
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
@@ -94,6 +96,13 @@ function CampaignWorkspaceInner() {
         setSentiment(data.sentiment || { positive: 0, negative: 0, neutral: 0, posPercent: 0, negPercent: 0 });
         setThemeStats(data.themes || []);
         setConflictingSignals(data.conflicts || []);
+        setPlatforms(data.platforms || {});
+      }
+      
+      const resDrops = await fetch(API_ENDPOINTS.DROPS(campaignId));
+      if (resDrops.ok) {
+        const dropData = await resDrops.json();
+        setDrops(dropData || []);
       }
       
       const resPulse = await fetch(API_ENDPOINTS.PULSE(campaignId));
@@ -307,7 +316,7 @@ function CampaignWorkspaceInner() {
         ) : activeTab === "marketing" ? (
           /* Full-Width Dedicated Marketing Action Plan Tab */
           <div className="flex-1 overflow-y-auto p-8 max-w-7xl mx-auto w-full space-y-8">
-            <MarketingDirectives campaign={campaign} themeStats={themeStats} />
+            <MarketingDirectives campaign={campaign} themeStats={themeStats} drops={drops} />
           </div>
         ) : (
           /* Main ClickHouse Cloud Style Executive Dashboard */
@@ -326,15 +335,15 @@ function CampaignWorkspaceInner() {
               }}
             />
 
-            {/* 2. What Changed: Trailer 1 Drop vs Trailer 2 Drop */}
-            <TrailerComparison campaign={campaign} themeStats={themeStats} />
+            {/* 2. What Changed: Real Drops from ClickHouse */}
+            <TrailerComparison campaign={campaign} drops={drops} />
 
             {/* 3. Expandable Section: What Fans Love vs What's Not (Table) */}
             <WhatsWorking themeStats={themeStats} />
 
             {/* 4. Expandable Section: YouTube vs Reddit Reaction */}
             <PlatformComparison
-              conflicts={conflictingSignals}
+              platforms={platforms}
               dominantTopic={themeStats.length > 0 ? themeStats[0].name : "General"}
             />
 
