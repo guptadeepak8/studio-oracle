@@ -87,7 +87,7 @@ export default function CampaignHeader({
                     }}
                     className="w-full text-left px-3.5 py-2 hover:bg-[#242428] hover:text-zinc-100 transition font-medium flex items-center gap-2 cursor-pointer"
                   >
-                    <RefreshCw className="h-3 w-3 text-zinc-400" /> Refresh Telemetry
+                    <RefreshCw className="h-3 w-3 text-zinc-400" /> Refresh Live Data
                   </button>
                   <div className="border-t border-[#28282b] my-1" />
                   <button
@@ -100,11 +100,11 @@ export default function CampaignHeader({
                   >
                     {campaign.status === "stopped" ? (
                       <>
-                        <Play className="h-3 w-3 text-[#4ade80] fill-[#4ade80]" /> Resume Telemetry
+                        <Play className="h-3 w-3 text-[#4ade80] fill-[#4ade80]" /> Resume Live Tracking
                       </>
                     ) : (
                       <>
-                        <Square className="h-3 w-3 text-zinc-400 fill-zinc-400" /> Pause Telemetry
+                        <Square className="h-3 w-3 text-zinc-400 fill-zinc-400" /> Pause Live Tracking
                       </>
                     )}
                   </button>

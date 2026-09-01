@@ -33,6 +33,7 @@ function CampaignWorkspaceInner() {
 
   const [ingestQuery, setIngestQuery] = useState("");
   const [ingestLimit, setIngestLimit] = useState(3);
+  const [maxComments, setMaxComments] = useState(1000);
   const [isIngesting, setIsIngesting] = useState(false);
 
   const [comments, setComments] = useState<Comment[]>([]);
@@ -160,6 +161,7 @@ function CampaignWorkspaceInner() {
           content_id: campaign.content_id,
           query: ingestQuery || campaign.title,
           limit: ingestLimit,
+          max_comments: maxComments,
         }),
       });
       if (res.ok) {
@@ -347,7 +349,7 @@ function CampaignWorkspaceInner() {
               dominantTopic={themeStats.length > 0 ? themeStats[0].name : "General"}
             />
 
-            {/* 5. Ingestion Control Section */}
+            {/* 5. Audience Feedback Sync Section */}
             <div id="ingest-section">
               <IngestConfig
                 campaignId={campaign.content_id}
@@ -355,6 +357,8 @@ function CampaignWorkspaceInner() {
                 setIngestQuery={setIngestQuery}
                 ingestLimit={ingestLimit}
                 setIngestLimit={setIngestLimit}
+                maxComments={maxComments}
+                setMaxComments={setMaxComments}
                 isIngesting={isIngesting}
                 onTriggerIngest={handleTriggerIngest}
                 onRefreshAll={refreshAll}

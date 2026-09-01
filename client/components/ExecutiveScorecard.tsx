@@ -68,21 +68,21 @@ export default function ExecutiveScorecard({
         {/* Card 4: Action Button with Lime/Yellow styling matching screenshot */}
         <div className="bg-[#1c1c1f] border border-[#28282b] rounded-xl p-4 space-y-1.5 flex flex-col justify-between shadow-xs">
           <span className="text-[11px] text-zinc-400 font-medium block">
-            Telemetry Action
+            Sync Action
           </span>
           <button
             onClick={onTriggerImport}
             className="w-full flex items-center justify-center gap-1.5 bg-[#e6fc4f] hover:bg-[#d8ed47] text-black font-bold text-xs py-1.5 px-3 rounded-md transition cursor-pointer shadow-xs"
           >
             <Plus className="h-3.5 w-3.5 stroke-[3]" />
-            <span>Import Comments</span>
+            <span>Sync Comments</span>
           </button>
         </div>
 
         {/* Card 5: Ingestion Feeds */}
         <div className="bg-[#1c1c1f] border border-[#28282b] rounded-xl p-4 space-y-1.5 shadow-xs">
           <span className="text-[11px] text-zinc-400 font-medium block">
-            Telemetry Channels
+            Active Sources
           </span>
           <div className="flex items-center gap-1.5 text-xs text-zinc-100 font-medium truncate">
             <span className="h-2 w-2 rounded-full bg-[#4ade80]" />

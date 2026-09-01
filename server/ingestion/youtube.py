@@ -1,4 +1,5 @@
 import os
+import re
 import requests
 import uuid
 from datetime import datetime
@@ -30,7 +31,7 @@ class IngestionAnalysisBatch(BaseModel):
 def analyze_comments(comments: list) -> list:
     """
     Given a list of comment tuples (comment_id, post_id, content_id, source, text, author, published_at, like_count, collected_at),
-    calls Gemini to classify them in batches of 20 and returns the expanded tuples containing analysis columns.
+    calls Gemini to classify them in batches of 25 and returns the expanded tuples containing analysis columns.
     """
     if not comments:
         return []
@@ -42,7 +43,7 @@ def analyze_comments(comments: list) -> list:
         return [c + ("neutral", "General", "", "neutral", 0.0, [], {}, "failed") for c in comments]
 
     analyzed = []
-    batch_size = 20
+    batch_size = 25
     
     for i in range(0, len(comments), batch_size):
         batch = comments[i:i+batch_size]
@@ -51,7 +52,9 @@ def analyze_comments(comments: list) -> list:
         prompt = "Analyze the sentiment, topics, claim, evidence type, and confidence score for the following audience comments:\n\n"
         for idx, c in enumerate(batch):
             comment_id, _, _, _, text, _, _, _, _ = c
-            prompt += f"ID: {comment_id}\nText: {text}\n---\n"
+            # Clean text to prevent prompt injection or broken formatting
+            clean_text = str(text).replace("\n", " ")[:300]
+            prompt += f"ID: {comment_id}\nText: {clean_text}\n---\n"
             
         try:
             res = client.models.generate_content(
@@ -94,7 +97,6 @@ def analyze_comments(comments: list) -> list:
                 if not isinstance(topic_sentiments, dict):
                     topic_sentiments = {}
                     
-                # Append: sentiment, aspect (temp: 'General'), claim, evidence_type, confidence, topics, topic_sentiments, analysis_status
                 analyzed.append(c + (sentiment, "General", claim, evidence_type, confidence, topics, topic_sentiments, "success"))
                 
         except Exception as batch_err:
@@ -120,11 +122,23 @@ def get_clickhouse_client():
         verify=True
     )
 
-def ingest_youtube_data(content_id: str, query: str, limit: int = 3) -> dict:
+def extract_youtube_video_id(url_or_query: str) -> str | None:
+    """Extract YouTube video ID if string is a direct YouTube link."""
+    patterns = [
+        r'(?:v=|\/)([0-9A-Za-z_-]{11}).*',
+        r'youtu\.be\/([0-9A-Za-z_-]{11})',
+        r'youtube\.com\/embed\/([0-9A-Za-z_-]{11})'
+    ]
+    for pattern in patterns:
+        match = re.search(pattern, url_or_query)
+        if match:
+            return match.group(1)
+    return None
+
+def ingest_youtube_data(content_id: str, query: str, limit: int = 3, max_comments_per_video: int = 500) -> dict:
     """
-    Search YouTube videos matching `query` and fetch comments using the YouTube API.
-    Saves results to ClickHouse `audience_posts` and `audience_comments` tables.
-    Returns an error if YOUTUBE_API_KEY is not available or if the API call fails.
+    Search YouTube videos or direct URL matching `query`, paginate comments up to `max_comments_per_video`,
+    and stream results to ClickHouse `audience_posts` and `audience_comments` tables.
     """
     try:
         target_uuid = uuid.UUID(content_id) if isinstance(content_id, str) else content_id
@@ -138,7 +152,7 @@ def ingest_youtube_data(content_id: str, query: str, limit: int = 3) -> dict:
     if not api_key:
         return {
             "status": "error",
-            "message": "YOUTUBE_API_KEY is not configured in the environment (.env) file. Cannot run real ingestion."
+            "message": "YOUTUBE_API_KEY is not configured in the environment (.env) file."
         }
 
     client = get_clickhouse_client()
@@ -146,69 +160,105 @@ def ingest_youtube_data(content_id: str, query: str, limit: int = 3) -> dict:
     comments_data = []
 
     try:
-        print(f"Executing live YouTube API fetch for query: '{query}'...")
+        print(f"Executing YouTube ingestion for target '{query}' (limit: {limit}, max_comments: {max_comments_per_video})...")
         
-        # 1. Search Videos
-        search_url = "https://www.googleapis.com/youtube/v3/search"
-        search_params = {
-            "part": "snippet",
-            "q": query,
-            "type": "video",
-            "maxResults": limit,
-            "key": api_key
-        }
-        search_res = requests.get(search_url, params=search_params, timeout=15)
-        if search_res.status_code != 200:
-            return {
-                "status": "error",
-                "message": f"YouTube API search error ({search_res.status_code}): {search_res.text}"
-            }
+        target_video_ids = []
+        direct_vid = extract_youtube_video_id(query)
 
-        items = search_res.json().get("items", [])
-        if not items:
-            return {
-                "status": "success",
-                "ingested_posts": 0,
-                "ingested_comments": 0,
-                "message": f"No YouTube videos found matching search query: '{query}'."
-            }
-
-        for item in items:
-            # Handle search results that might be channel items instead of videos
-            if "videoId" not in item["id"]:
-                continue
-            video_id = item["id"]["videoId"]
-            snippet = item["snippet"]
-            published_at_raw = snippet["publishedAt"]
-            published_at = datetime.strptime(published_at_raw, "%Y-%m-%dT%H:%M:%SZ")
-            
-            posts_data.append((
-                video_id,
-                target_uuid,
-                "youtube",
-                snippet["title"],
-                snippet["channelTitle"],
-                "video",
-                published_at,
-                f"https://www.youtube.com/watch?v={video_id}",
-                datetime.now()
-            ))
-            
-            # 2. Fetch Comments for this Video
-            comment_url = "https://www.googleapis.com/youtube/v3/commentThreads"
-            comment_params = {
+        if direct_vid:
+            # Fetch snippet directly for this specific video
+            video_url = "https://www.googleapis.com/youtube/v3/videos"
+            video_params = {
                 "part": "snippet",
-                "videoId": video_id,
-                "maxResults": 25,
+                "id": direct_vid,
                 "key": api_key
             }
-            comment_res = requests.get(comment_url, params=comment_params, timeout=15)
-            if comment_res.status_code == 200:
-                comment_items = comment_res.json().get("items", [])
+            v_res = requests.get(video_url, params=video_params, timeout=15)
+            if v_res.status_code == 200:
+                v_items = v_res.json().get("items", [])
+                for it in v_items:
+                    snippet = it["snippet"]
+                    pub_at = datetime.strptime(snippet["publishedAt"], "%Y-%m-%dT%H:%M:%SZ")
+                    posts_data.append((
+                        direct_vid,
+                        target_uuid,
+                        "youtube",
+                        snippet["title"],
+                        snippet["channelTitle"],
+                        "video",
+                        pub_at,
+                        f"https://www.youtube.com/watch?v={direct_vid}",
+                        datetime.now()
+                    ))
+                    target_video_ids.append(direct_vid)
+        else:
+            # 1. Search Videos matching query
+            search_url = "https://www.googleapis.com/youtube/v3/search"
+            search_params = {
+                "part": "snippet",
+                "q": query,
+                "type": "video",
+                "maxResults": limit,
+                "key": api_key
+            }
+            search_res = requests.get(search_url, params=search_params, timeout=15)
+            if search_res.status_code != 200:
+                return {
+                    "status": "error",
+                    "message": f"YouTube API search error ({search_res.status_code}): {search_res.text}"
+                }
+
+            items = search_res.json().get("items", [])
+            for item in items:
+                if "videoId" not in item.get("id", {}):
+                    continue
+                video_id = item["id"]["videoId"]
+                snippet = item["snippet"]
+                published_at = datetime.strptime(snippet["publishedAt"], "%Y-%m-%dT%H:%M:%SZ")
+                
+                posts_data.append((
+                    video_id,
+                    target_uuid,
+                    "youtube",
+                    snippet["title"],
+                    snippet["channelTitle"],
+                    "video",
+                    published_at,
+                    f"https://www.youtube.com/watch?v={video_id}",
+                    datetime.now()
+                ))
+                target_video_ids.append(video_id)
+
+        # 2. Paginated Deep Comment Fetching for each video (up to max_comments_per_video)
+        comment_url = "https://www.googleapis.com/youtube/v3/commentThreads"
+
+        for video_id in target_video_ids:
+            next_page_token = None
+            fetched_for_video = 0
+            
+            while fetched_for_video < max_comments_per_video:
+                comment_params = {
+                    "part": "snippet",
+                    "videoId": video_id,
+                    "maxResults": min(100, max_comments_per_video - fetched_for_video),
+                    "key": api_key
+                }
+                if next_page_token:
+                    comment_params["pageToken"] = next_page_token
+
+                comment_res = requests.get(comment_url, params=comment_params, timeout=15)
+                if comment_res.status_code != 200:
+                    print(f"Comment fetch stop for video {video_id} ({comment_res.status_code})")
+                    break
+
+                res_json = comment_res.json()
+                comment_items = res_json.get("items", [])
+                if not comment_items:
+                    break
+
                 for c_item in comment_items:
                     c_snippet = c_item["snippet"]["topLevelComment"]["snippet"]
-                    c_pub_raw = c_snippet["publishedAt"]
-                    c_pub = datetime.strptime(c_pub_raw, "%Y-%m-%dT%H:%M:%SZ")
+                    c_pub = datetime.strptime(c_snippet["publishedAt"], "%Y-%m-%dT%H:%M:%SZ")
                     
                     comments_data.append((
                         c_item["id"],
@@ -218,16 +268,19 @@ def ingest_youtube_data(content_id: str, query: str, limit: int = 3) -> dict:
                         c_snippet["textDisplay"],
                         c_snippet["authorDisplayName"],
                         c_pub,
-                        c_snippet["likeCount"],
+                        c_snippet.get("likeCount", 0),
                         datetime.now()
                     ))
-            else:
-                print(f"Could not fetch comments for video {video_id} ({comment_res.status_code}): {comment_res.text}")
+                    fetched_for_video += 1
+
+                next_page_token = res_json.get("nextPageToken")
+                if not next_page_token:
+                    break
 
     except Exception as e:
         return {
             "status": "error",
-            "message": f"Network or execution error during YouTube ingestion: {str(e)}"
+            "message": f"Network error during YouTube ingestion: {str(e)}"
         }
 
     # Insert into ClickHouse (with deduplication)
@@ -239,7 +292,7 @@ def ingest_youtube_data(content_id: str, query: str, limit: int = 3) -> dict:
             print(f"Database error querying existing posts: {db_err}")
             
         if posts_data:
-            print(f"Writing {len(posts_data)} live posts to ClickHouse...")
+            print(f"Writing {len(posts_data)} posts to ClickHouse...")
             client.insert(
                 "studio_oracle.audience_posts",
                 posts_data,
@@ -257,9 +310,9 @@ def ingest_youtube_data(content_id: str, query: str, limit: int = 3) -> dict:
             print(f"Database error querying existing comments: {db_err}")
             
         if comments_data:
-            print(f"Analyzing {len(comments_data)} live comments via Gemini...")
+            print(f"Analyzing {len(comments_data)} audience comments via Gemini...")
             analyzed_comments = analyze_comments(comments_data)
-            print(f"Writing {len(analyzed_comments)} live analyzed comments to ClickHouse...")
+            print(f"Writing {len(analyzed_comments)} analyzed comments to ClickHouse...")
             client.insert(
                 "studio_oracle.audience_comments",
                 analyzed_comments,
@@ -283,5 +336,5 @@ if __name__ == "__main__":
     if len(sys.argv) < 3:
         print("Usage: python youtube.py <content_id> <search_query>")
         sys.exit(1)
-    res = ingest_youtube_data(sys.argv[1], sys.argv[2])
+    res = ingest_youtube_data(sys.argv[1], sys.argv[2], limit=3, max_comments_per_video=500)
     print("Ingestion Result:", res)

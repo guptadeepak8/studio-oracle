@@ -1,4 +1,5 @@
-from fastapi import FastAPI, HTTPException
+import asyncio
+from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 import os
@@ -135,10 +136,33 @@ def get_campaign_pulse(content_id: str):
         print(f"Error generating pulse summary: {e}")
         return {"pulseSummary": "Audience metrics show mixed engagement across tracked thematic aspects."}
 
-@app.post("/api/campaigns")
-def create_campaign(request: CampaignCreateRequest):
+async def periodic_campaign_sync():
     """
-    Directly register a new campaign content record in ClickHouse and initialize trailer tracking.
+    Background worker that runs every 1 hour (3600s) to automatically
+    fetch and sync the latest audience feedback for all active campaigns.
+    """
+    while True:
+        try:
+            await asyncio.sleep(3600)  # Wait 1 hour between periodic syncs
+            print("Executing scheduled 1-hour active campaign audience feedback sync...")
+            movies = db.fetch_movies()
+            for m in movies:
+                if m.get("status") == "active" and m.get("target_terms"):
+                    query = m["target_terms"][0]
+                    print(f"Auto-syncing feedback for '{m['title']}'...")
+                    ingest_youtube_data(m["content_id"], query, limit=2, max_comments_per_video=300)
+        except Exception as loop_err:
+            print(f"Periodic sync notice: {loop_err}")
+
+@app.on_event("startup")
+async def startup_event():
+    asyncio.create_task(periodic_campaign_sync())
+
+@app.post("/api/campaigns")
+def create_campaign(request: CampaignCreateRequest, background_tasks: BackgroundTasks):
+    """
+    Directly register a new campaign content record in ClickHouse and immediately
+    trigger background audience comment ingestion.
     """
     try:
         content_id = create_content_record(
@@ -151,13 +175,10 @@ def create_campaign(request: CampaignCreateRequest):
         # Initialize tracking status as active
         db.set_campaign_status(content_id, "active")
         
-        # If target trailer query or URL is provided, automatically trigger initial ingestion
+        # Automatically trigger background audience comment ingestion on campaign start
         if request.target_terms and len(request.target_terms) > 0:
             query = request.target_terms[0]
-            try:
-                ingest_youtube_comments(content_id, query, limit=3)
-            except Exception as ing_err:
-                print(f"Initial trailer ingestion notice: {ing_err}")
+            background_tasks.add_task(ingest_youtube_data, content_id, query, limit=3, max_comments_per_video=500)
                 
         return {
             "status": "success",
@@ -322,7 +343,12 @@ def ingest(request: IngestRequest):
     Manually trigger YouTube comment ingestion for a given content UUID.
     """
     try:
-        res = ingest_youtube_data(request.content_id, request.query, request.limit)
+        res = ingest_youtube_data(
+            request.content_id,
+            request.query,
+            limit=request.limit,
+            max_comments_per_video=request.max_comments
+        )
         return res
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

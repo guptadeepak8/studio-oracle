@@ -11,6 +11,7 @@ class IngestRequest(BaseModel):
     content_id: str
     query: str
     limit: int = 3
+    max_comments: int = 500
 
 class CampaignCreateRequest(BaseModel):
     title: str
