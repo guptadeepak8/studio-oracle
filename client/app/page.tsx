@@ -19,6 +19,8 @@ export default function Page() {
   const [newType, setNewType] = useState("movie");
   const [newReleaseDate, setNewReleaseDate] = useState("");
   const [newTrailerQuery, setNewTrailerQuery] = useState("");
+  const [syncMode, setSyncMode] = useState("1hr");
+  const [initialVolume, setInitialVolume] = useState(1000);
   const [isRegistering, setIsRegistering] = useState(false);
 
   const loadCampaigns = async () => {
@@ -171,6 +173,10 @@ export default function Page() {
           setNewReleaseDate={setNewReleaseDate}
           newTrailerQuery={newTrailerQuery}
           setNewTrailerQuery={setNewTrailerQuery}
+          syncMode={syncMode}
+          setSyncMode={setSyncMode}
+          initialVolume={initialVolume}
+          setInitialVolume={setInitialVolume}
           isRegistering={isRegistering}
         />
       )}

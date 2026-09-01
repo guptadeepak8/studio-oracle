@@ -65,18 +65,24 @@ export default function ExecutiveScorecard({
           </div>
         </div>
 
-        {/* Card 4: Action Button with Lime/Yellow styling matching screenshot */}
+        {/* Card 4: Tracking Engine & Auto-Sync Status */}
         <div className="bg-[#1c1c1f] border border-[#28282b] rounded-xl p-4 space-y-1.5 flex flex-col justify-between shadow-xs">
           <span className="text-[11px] text-zinc-400 font-medium block">
-            Sync Action
+            Tracking Engine
           </span>
-          <button
-            onClick={onTriggerImport}
-            className="w-full flex items-center justify-center gap-1.5 bg-[#e6fc4f] hover:bg-[#d8ed47] text-black font-bold text-xs py-1.5 px-3 rounded-md transition cursor-pointer shadow-xs"
-          >
-            <Plus className="h-3.5 w-3.5 stroke-[3]" />
-            <span>Sync Comments</span>
-          </button>
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold font-mono text-[#4ade80] bg-[#183424] border border-[#234e35] px-2.5 py-1 rounded-md flex items-center gap-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#4ade80] animate-pulse" />
+              Auto-Sync (1 hr)
+            </span>
+            <button
+              onClick={onTriggerImport}
+              className="text-[10px] text-zinc-400 hover:text-[#e6fc4f] transition underline cursor-pointer"
+              title="Configure Sync Settings"
+            >
+              Settings
+            </button>
+          </div>
         </div>
 
         {/* Card 5: Ingestion Feeds */}

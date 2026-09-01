@@ -1,7 +1,7 @@
 "use client";
 
-import React, { FormEvent } from "react";
-import { Loader2, Plus, Sparkles, X, Video } from "lucide-react";
+import React, { FormEvent, useState } from "react";
+import { Loader2, Plus, Sparkles, X, Video, Clock, Zap } from "lucide-react";
 
 interface RegisterModalProps {
   onClose: () => void;
@@ -16,6 +16,10 @@ interface RegisterModalProps {
   setNewReleaseDate: (d: string) => void;
   newTrailerQuery: string;
   setNewTrailerQuery: (q: string) => void;
+  syncMode: string;
+  setSyncMode: (m: string) => void;
+  initialVolume: number;
+  setInitialVolume: (v: number) => void;
   isRegistering: boolean;
 }
 
@@ -32,11 +36,16 @@ export default function RegisterModal({
   setNewReleaseDate,
   newTrailerQuery,
   setNewTrailerQuery,
+  syncMode,
+  setSyncMode,
+  initialVolume,
+  setInitialVolume,
   isRegistering,
 }: RegisterModalProps) {
   return (
     <div className="fixed inset-0 bg-black/85 backdrop-blur-xs flex items-center justify-center z-50 p-4 font-sans animate-fade-in">
       <div className="bg-[#1c1c1f] border border-[#28282b] rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl">
+        {/* Header */}
         <div className="p-5 border-b border-[#28282b] flex items-center justify-between bg-[#161618]">
           <div className="flex items-center gap-2">
             <div className="h-6 w-6 rounded bg-[#242428] flex items-center justify-center text-[#e6fc4f]">
@@ -54,7 +63,9 @@ export default function RegisterModal({
           </button>
         </div>
 
+        {/* Form */}
         <form onSubmit={onSubmit} className="p-6 space-y-4 text-xs font-sans">
+          {/* Campaign Title */}
           <div className="space-y-1">
             <label className="font-semibold text-zinc-300 uppercase tracking-wider text-[11px] block">
               Campaign / Film Title *
@@ -70,7 +81,7 @@ export default function RegisterModal({
                   setNewTrailerQuery(`${e.target.value} Official Trailer`);
                 }
               }}
-              className="w-full bg-[#141416] border border-[#28282b] rounded-lg p-2.5 text-xs text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-[#e6fc4f] transition"
+              className="w-full bg-[#141416] border border-[#28282b] rounded-lg p-2.5 text-xs text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-[#e6fc4f] transition font-sans"
             />
           </div>
 
@@ -79,9 +90,9 @@ export default function RegisterModal({
             <div className="flex items-center justify-between">
               <label className="font-bold text-[#e6fc4f] uppercase tracking-wider text-[11px] flex items-center gap-1.5">
                 <Video className="h-3.5 w-3.5 text-[#e6fc4f]" />
-                Required: YouTube Trailer Target or URL *
+                YouTube Trailer Target or URL *
               </label>
-              <span className="text-[10px] text-zinc-400 font-mono">Mandatory Feed</span>
+              <span className="text-[10px] text-zinc-400 font-mono">Auto-Fetched</span>
             </div>
             <input
               type="text"
@@ -89,13 +100,50 @@ export default function RegisterModal({
               placeholder="e.g. Wicked 2024 Official Trailer or https://www.youtube.com/watch?v=..."
               value={newTrailerQuery}
               onChange={(e) => setNewTrailerQuery(e.target.value)}
-              className="w-full bg-[#141416] border border-[#28282b] rounded-lg p-2.5 text-xs text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-[#e6fc4f] transition"
+              className="w-full bg-[#141416] border border-[#28282b] rounded-lg p-2.5 text-xs text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-[#e6fc4f] transition font-sans"
             />
             <p className="text-[10px] text-zinc-400 leading-tight pt-0.5">
-              Every campaign requires a verified YouTube trailer search target or URL to stream live telemetry.
+              Comments will automatically start streaming on launch without requiring manual sync.
             </p>
           </div>
 
+          {/* Sync Automation & Ingestion Volume Options */}
+          <div className="grid grid-cols-2 gap-3 bg-[#161618] border border-[#28282b] rounded-xl p-3">
+            <div className="space-y-1">
+              <label className="font-semibold text-zinc-300 uppercase tracking-wider text-[11px] flex items-center gap-1">
+                <Clock className="h-3 w-3 text-zinc-400" />
+                Sync Mode
+              </label>
+              <select
+                value={syncMode}
+                onChange={(e) => setSyncMode(e.target.value)}
+                className="w-full bg-[#141416] border border-[#28282b] rounded-lg p-2 text-xs text-zinc-100 focus:outline-none focus:border-[#e6fc4f] transition cursor-pointer font-sans"
+              >
+                <option value="1hr">Automatic (Every 1 Hour)</option>
+                <option value="6hr">Automatic (Every 6 Hours)</option>
+                <option value="24hr">Automatic (Every 24 Hours)</option>
+                <option value="manual">Manual Sync Only</option>
+              </select>
+            </div>
+
+            <div className="space-y-1">
+              <label className="font-semibold text-zinc-300 uppercase tracking-wider text-[11px] flex items-center gap-1">
+                <Zap className="h-3 w-3 text-[#e6fc4f]" />
+                Initial Volume
+              </label>
+              <select
+                value={initialVolume}
+                onChange={(e) => setInitialVolume(parseInt(e.target.value))}
+                className="w-full bg-[#141416] border border-[#28282b] rounded-lg p-2 text-xs text-zinc-100 focus:outline-none focus:border-[#e6fc4f] transition cursor-pointer font-sans"
+              >
+                <option value={1000}>1,000 Comments (Recommended)</option>
+                <option value={500}>500 Comments</option>
+                <option value={250}>250 Comments</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Description */}
           <div className="space-y-1">
             <label className="font-semibold text-zinc-300 uppercase tracking-wider text-[11px] block">
               Campaign Description / Logline *
@@ -105,7 +153,7 @@ export default function RegisterModal({
               placeholder="e.g. Universal Pictures musical adaptation directed by Jon M. Chu..."
               value={newDesc}
               onChange={(e) => setNewDesc(e.target.value)}
-              className="w-full h-20 bg-[#141416] border border-[#28282b] rounded-lg p-2.5 text-xs text-zinc-100 placeholder-zinc-500 focus:outline-none resize-none focus:border-[#e6fc4f] transition"
+              className="w-full h-16 bg-[#141416] border border-[#28282b] rounded-lg p-2.5 text-xs text-zinc-100 placeholder-zinc-500 focus:outline-none resize-none focus:border-[#e6fc4f] transition font-sans"
             />
           </div>
 
@@ -117,7 +165,7 @@ export default function RegisterModal({
               <select
                 value={newType}
                 onChange={(e) => setNewType(e.target.value)}
-                className="w-full bg-[#141416] border border-[#28282b] rounded-lg p-2 text-xs text-zinc-100 focus:outline-none focus:border-[#e6fc4f] transition"
+                className="w-full bg-[#141416] border border-[#28282b] rounded-lg p-2 text-xs text-zinc-100 focus:outline-none focus:border-[#e6fc4f] transition cursor-pointer"
               >
                 <option value="movie">Theatrical Movie</option>
                 <option value="series">Streaming Series</option>
@@ -132,7 +180,7 @@ export default function RegisterModal({
                 type="date"
                 value={newReleaseDate}
                 onChange={(e) => setNewReleaseDate(e.target.value)}
-                className="w-full bg-[#141416] border border-[#28282b] rounded-lg p-2 text-xs text-zinc-100 focus:outline-none focus:border-[#e6fc4f] transition"
+                className="w-full bg-[#141416] border border-[#28282b] rounded-lg p-2 text-xs text-zinc-100 focus:outline-none focus:border-[#e6fc4f] transition font-sans"
               />
             </div>
           </div>
@@ -146,12 +194,12 @@ export default function RegisterModal({
               {isRegistering ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  Streaming Trailer Telemetry...
+                  Initializing & Streaming Comments...
                 </>
               ) : (
                 <>
                   <Plus className="h-4 w-4 stroke-[3]" />
-                  Initialize Campaign & Stream Telemetry
+                  Launch Campaign & Auto-Stream Feedback
                 </>
               )}
             </button>
