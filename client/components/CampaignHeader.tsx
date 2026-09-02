@@ -83,58 +83,63 @@ export default function CampaignHeader({
             {showActionsMenu && (
               <>
                 <div className="fixed inset-0 z-10" onClick={() => setShowActionsMenu(false)} />
-                <div className="absolute right-0 mt-2 bg-[#1c1c1f] border border-[#28282b] rounded-xl py-2 w-52 shadow-2xl z-20 text-sm text-zinc-300 font-sans">
-                  <button
+                <div className="absolute right-0 mt-2 bg-[#1c1c1f] border border-[#28282b] rounded-xl p-1.5 w-52 shadow-2xl z-20 text-sm text-zinc-300 font-sans space-y-0.5">
+                  <Button
+                    variant="menu-item"
+                    size="sm"
                     onClick={() => {
                       onTabChange("marketing");
                       setShowActionsMenu(false);
                     }}
-                    className="w-full text-left px-4 py-2 hover:bg-[#242428] hover:text-zinc-100 transition font-medium cursor-pointer"
                   >
                     View Marketing Plan
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    variant="menu-item"
+                    size="sm"
                     onClick={() => {
                       if (onRefreshData) onRefreshData();
                       setShowActionsMenu(false);
                     }}
-                    className="w-full text-left px-4 py-2 hover:bg-[#242428] hover:text-zinc-100 transition font-medium flex items-center gap-2 cursor-pointer"
+                    leftIcon={<RefreshCw className="h-3.5 w-3.5 text-zinc-400" />}
                   >
-                    <RefreshCw className="h-3.5 w-3.5 text-zinc-400" /> Refresh Live Data
-                  </button>
+                    Refresh Live Data
+                  </Button>
                   
                   <div className="border-t border-[#28282b] my-1" />
 
-                  <button
+                  <Button
+                    variant="menu-item"
+                    size="sm"
                     onClick={() => {
                       onToggleStatus();
                       setShowActionsMenu(false);
                     }}
                     disabled={isToggling}
-                    className="w-full text-left px-4 py-2 hover:bg-[#242428] transition font-medium flex items-center gap-2 cursor-pointer"
+                    leftIcon={
+                      campaign.status === "stopped" ? (
+                        <Play className="h-3.5 w-3.5 text-[#4ade80] fill-[#4ade80]" />
+                      ) : (
+                        <Square className="h-3.5 w-3.5 text-zinc-400 fill-zinc-400" />
+                      )
+                    }
                   >
-                    {campaign.status === "stopped" ? (
-                      <>
-                        <Play className="h-3.5 w-3.5 text-[#4ade80] fill-[#4ade80]" /> Resume Live Tracking
-                      </>
-                    ) : (
-                      <>
-                        <Square className="h-3.5 w-3.5 text-zinc-400 fill-zinc-400" /> Pause Live Tracking
-                      </>
-                    )}
-                  </button>
+                    {campaign.status === "stopped" ? "Resume Live Tracking" : "Pause Live Tracking"}
+                  </Button>
 
                   <div className="border-t border-[#28282b] my-1" />
 
-                  <button
+                  <Button
+                    variant="menu-item-danger"
+                    size="sm"
                     onClick={() => {
                       setShowActionsMenu(false);
                       setShowDeleteModal(true);
                     }}
-                    className="w-full text-left px-4 py-2 hover:bg-rose-950/40 text-rose-400 hover:text-rose-300 transition font-medium flex items-center gap-2 cursor-pointer"
+                    leftIcon={<Trash2 className="h-3.5 w-3.5 text-rose-400" />}
                   >
-                    <Trash2 className="h-3.5 w-3.5 text-rose-400" /> Delete Campaign
-                  </button>
+                    Delete Campaign
+                  </Button>
                 </div>
               </>
             )}

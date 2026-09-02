@@ -71,47 +71,52 @@ export default function CampaignCard({ campaign, onRefresh }: CampaignCardProps)
           </div>
 
           <div className="relative">
-            <button
+            <Button
+              variant="ghost"
+              size="icon-sm"
               onClick={() => setShowMenu(!showMenu)}
-              className="p-1.5 hover:bg-[#28282d] rounded-lg text-zinc-400 hover:text-zinc-200 transition cursor-pointer"
+              className="text-zinc-400 hover:text-zinc-200"
             >
               <MoreVertical className="h-4.5 w-4.5" />
-            </button>
+            </Button>
 
             {showMenu && (
               <>
                 <div className="fixed inset-0 z-10" onClick={() => setShowMenu(false)} />
-                <div className="absolute right-0 mt-1 bg-[#1c1c1f] border border-[#28282b] rounded-xl py-2 w-48 shadow-2xl z-20 text-sm text-zinc-300 font-sans">
-                  <button
+                <div className="absolute right-0 mt-1 bg-[#1c1c1f] border border-[#28282b] rounded-xl p-1.5 w-48 shadow-2xl z-20 text-sm text-zinc-300 font-sans space-y-0.5">
+                  <Button
+                    variant="menu-item"
+                    size="sm"
                     onClick={() => router.push(`/campaign/${campaign.content_id}?tab=overview`)}
-                    className="w-full text-left px-4 py-2 hover:bg-[#242428] hover:text-zinc-100 transition font-medium cursor-pointer"
                   >
                     Open Dashboard
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    variant="menu-item"
+                    size="sm"
                     onClick={handleToggleStatus}
                     disabled={isUpdatingStatus}
-                    className="w-full text-left px-4 py-2 hover:bg-[#242428] hover:text-zinc-100 transition font-medium flex items-center gap-2 cursor-pointer"
+                    leftIcon={
+                      campaign.status === "stopped" ? (
+                        <Play className="h-3.5 w-3.5 text-[#4ade80] fill-[#4ade80]" />
+                      ) : (
+                        <Square className="h-3.5 w-3.5 text-zinc-400 fill-zinc-400" />
+                      )
+                    }
                   >
-                    {campaign.status === "stopped" ? (
-                      <>
-                        <Play className="h-3.5 w-3.5 text-[#4ade80] fill-[#4ade80]" /> Resume Tracking
-                      </>
-                    ) : (
-                      <>
-                        <Square className="h-3.5 w-3.5 text-zinc-400 fill-zinc-400" /> Pause Tracking
-                      </>
-                    )}
-                  </button>
-                  <button
+                    {campaign.status === "stopped" ? "Resume Tracking" : "Pause Tracking"}
+                  </Button>
+                  <div className="border-t border-[#28282b] my-1" />
+                  <Button
+                    variant="menu-item-danger"
+                    size="sm"
                     onClick={() => {
                       setShowMenu(false);
                       setShowDeleteConfirm(true);
                     }}
-                    className="w-full text-left px-4 py-2 hover:bg-rose-950/40 text-rose-400 hover:text-rose-300 transition font-medium border-t border-[#28282b] mt-1 pt-2 flex items-center gap-2 cursor-pointer"
                   >
                     Delete Campaign
-                  </button>
+                  </Button>
                 </div>
               </>
             )}
@@ -130,13 +135,15 @@ export default function CampaignCard({ campaign, onRefresh }: CampaignCardProps)
           <span className="text-zinc-400 font-normal">comments</span>
         </div>
 
-        <button
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={() => router.push(`/campaign/${campaign.content_id}?tab=overview`)}
-          className="flex items-center gap-1.5 text-sm font-bold text-[#e6fc4f] hover:text-[#d8ed47] hover:underline cursor-pointer group"
+          rightIcon={<ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition" />}
+          className="text-[#e6fc4f] hover:text-[#d8ed47] font-bold"
         >
-          <span>Dashboard</span>
-          <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition" />
-        </button>
+          Dashboard
+        </Button>
       </CardFooter>
 
       <DeleteConfirmModal

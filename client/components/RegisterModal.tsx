@@ -59,12 +59,14 @@ export default function RegisterModal({
               Track New Campaign Launch
             </h2>
           </div>
-          <button
+          <Button
+            variant="ghost"
+            size="icon-sm"
             onClick={onClose}
-            className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-[#242428] transition cursor-pointer"
+            className="text-zinc-400 hover:text-zinc-100"
           >
             <X className="h-5 w-5" />
-          </button>
+          </Button>
         </div>
 
         {/* Form */}
@@ -96,14 +98,16 @@ export default function RegisterModal({
 
             {/* Quick Auto-fill Suggestion */}
             {newTitle.trim() && !newTrailerQuery.trim() && (
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="xs"
                 onClick={() => setNewTrailerQuery(`${newTitle.trim()} Official Trailer`)}
-                className="flex items-center gap-1.5 text-xs text-[#e6fc4f] hover:underline cursor-pointer pt-0.5"
+                leftIcon={<Wand2 className="h-3 w-3 text-[#e6fc4f]" />}
+                className="text-xs text-[#e6fc4f] hover:underline p-0 h-auto"
               >
-                <Wand2 className="h-3 w-3" />
-                <span>Auto-fill: <strong>"{newTitle.trim()} Official Trailer"</strong></span>
-              </button>
+                Auto-fill: <strong className="ml-1">"{newTitle.trim()} Official Trailer"</strong>
+              </Button>
             )}
 
             <p className="text-xs text-zinc-400 leading-tight pt-0.5">

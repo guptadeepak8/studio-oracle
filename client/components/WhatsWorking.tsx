@@ -4,7 +4,7 @@ import React from "react";
 import { ThemeItem } from "../utils/analytics";
 import { useAppDispatch, useAppSelector } from "../store";
 import { setThemeFilter, ThemeFilterType } from "../store/slices/dashboardSlice";
-import { Card, Badge } from "./ui";
+import { Card, Badge, Button } from "./ui";
 import CollapsibleSection from "./common/CollapsibleSection";
 
 interface WhatsWorkingProps {
@@ -40,17 +40,14 @@ export default function WhatsWorking({ themeStats }: WhatsWorkingProps) {
       headerAction={
         <div className="flex items-center gap-1.5 bg-[#161618] border border-[#28282b] rounded-lg p-1 text-xs">
           {filterOptions.map((opt) => (
-            <button
+            <Button
               key={opt.id}
+              variant={themeFilter === opt.id ? "chip-active" : "chip"}
+              size="xs"
               onClick={() => dispatch(setThemeFilter(opt.id))}
-              className={`px-3 py-1 rounded-md text-xs font-semibold transition cursor-pointer ${
-                themeFilter === opt.id
-                  ? "bg-[#242428] text-[#e6fc4f] border border-[#3b3a1a] shadow-xs"
-                  : "text-zinc-400 hover:text-zinc-200"
-              }`}
             >
               {opt.label}
-            </button>
+            </Button>
           ))}
         </div>
       }

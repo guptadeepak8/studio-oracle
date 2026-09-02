@@ -29,13 +29,15 @@ export default function DeleteConfirmModal({
             <AlertTriangle className="h-4.5 w-4.5" />
             <span>Confirm Campaign Deletion</span>
           </div>
-          <button
+          <Button
+            variant="ghost"
+            size="icon-sm"
             onClick={onClose}
             disabled={isDeleting}
-            className="text-zinc-500 hover:text-zinc-300 p-1 rounded-md transition cursor-pointer"
+            className="text-zinc-500 hover:text-zinc-300"
           >
             <X className="h-4.5 w-4.5" />
-          </button>
+          </Button>
         </div>
 
         <p className="text-sm text-zinc-300 leading-relaxed font-sans">

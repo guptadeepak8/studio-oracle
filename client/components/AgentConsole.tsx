@@ -70,15 +70,17 @@ export default function AgentConsole({
       } else if (matchText.toLowerCase().startsWith("[ref:")) {
         const commentId = matchText.slice(5, -1).trim();
         parts.push(
-          <button
+          <Button
             key={key++}
+            variant="chip"
+            size="xs"
             onClick={() => onSelectEvidence && onSelectEvidence(commentId)}
-            className="inline-flex items-center gap-1 font-mono text-[10px] bg-[#1c1c1f] hover:bg-[#28282d] text-[#e6fc4f] border border-[#3a3a20] px-1.5 py-0.5 rounded mx-1 cursor-pointer font-bold"
+            leftIcon={<Database className="h-2.5 w-2.5 text-[#e6fc4f]" />}
             title={`Evidence comment: ${commentId}`}
+            className="font-mono text-[10px] text-[#e6fc4f] border-[#3a3a20] px-1.5 py-0.5 mx-1"
           >
-            <Database className="h-2.5 w-2.5" />
             ref:{commentId.slice(0, 8)}
-          </button>
+          </Button>
         );
       }
 
@@ -253,13 +255,15 @@ export default function AgentConsole({
           </span>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
             {SUGGESTED_PROMPTS.map((p, idx) => (
-              <button
+              <Button
                 key={idx}
+                variant="outline"
+                size="md"
                 onClick={() => onSendChat(p)}
-                className="text-sm bg-[#1c1c1f] hover:bg-[#242428] text-zinc-200 hover:text-white border border-[#28282b] px-4 py-3 rounded-xl text-left transition font-sans font-medium cursor-pointer"
+                className="justify-start text-left bg-[#1c1c1f] hover:bg-[#242428] font-medium p-3.5 h-auto text-sm"
               >
                 {p}
-              </button>
+              </Button>
             ))}
           </div>
         </div>

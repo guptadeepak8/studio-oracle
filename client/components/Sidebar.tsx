@@ -15,6 +15,7 @@ import {
 import { useCampaigns } from "../hooks/useCampaigns";
 import RegisterModal from "./RegisterModal";
 import Skeleton from "./common/Skeleton";
+import { Button } from "./ui";
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -84,13 +85,15 @@ export default function Sidebar() {
             <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider block">
               Campaigns
             </span>
-            <button
+            <Button
+              variant="ghost"
+              size="icon-sm"
               onClick={() => setShowModal(true)}
-              className="text-zinc-400 hover:text-zinc-100 p-1 rounded-md hover:bg-zinc-800 transition cursor-pointer"
               title="Add Campaign"
+              className="text-zinc-400 hover:text-zinc-100"
             >
               <Plus className="h-4 w-4" />
-            </button>
+            </Button>
           </div>
 
           <div className="space-y-1">

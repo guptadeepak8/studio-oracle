@@ -75,14 +75,16 @@ export default function ExecutiveScorecard({
             <Badge variant="active" pulsing>
               Auto-Sync (1 hr)
             </Badge>
-            <button
+            <Button
+              variant="ghost"
+              size="xs"
               onClick={onTriggerImport}
-              className="text-xs text-zinc-400 hover:text-[#e6fc4f] transition underline cursor-pointer font-medium flex items-center gap-1"
+              leftIcon={<Settings className="h-3 w-3" />}
               title="Configure Sync Settings"
+              className="text-zinc-400 hover:text-[#e6fc4f] px-2 py-0.5"
             >
-              <Settings className="h-3 w-3" />
-              <span>Settings</span>
-            </button>
+              Settings
+            </Button>
           </div>
         </Card>
 
