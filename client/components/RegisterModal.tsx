@@ -1,7 +1,7 @@
 "use client";
 
-import React, { FormEvent, useState } from "react";
-import { Plus, Sparkles, X, Video, ShieldAlert, Database, Lock, CheckCircle2, Link2 } from "lucide-react";
+import React, { FormEvent, useState, useRef, useEffect } from "react";
+import { Plus, Sparkles, X, Video, ShieldAlert, Database, Lock, CheckCircle2, Link2, Film, Calendar, Clapperboard } from "lucide-react";
 import { toast } from "sonner";
 import { useCampaigns } from "../hooks/useCampaigns";
 import { Button, Input, Textarea, Select } from "./ui";
@@ -12,42 +12,127 @@ interface RegisterModalProps {
   onSuccess?: (contentId: string) => void;
 }
 
-interface CampaignPreset {
+interface MovieCatalogItem {
   title: string;
   trailerUrl: string;
   desc: string;
   type: string;
   releaseDate: string;
+  studio: string;
 }
 
-const PRESET_CAMPAIGNS: CampaignPreset[] = [
+const MOVIE_CATALOG: MovieCatalogItem[] = [
   {
     title: "Wicked (2024)",
     trailerUrl: "https://www.youtube.com/watch?v=6COmYeLsz4c",
-    desc: "Universal Pictures musical adaptation directed by Jon M. Chu, starring Cynthia Erivo and Ariana Grande.",
+    desc: "Universal Pictures musical adaptation directed by Jon M. Chu, starring Cynthia Erivo as Elphaba and Ariana Grande as Glinda.",
     type: "movie",
     releaseDate: "2024-11-22",
+    studio: "Universal Pictures",
   },
   {
     title: "Gladiator II",
     trailerUrl: "https://www.youtube.com/watch?v=4rgYUipGJNo",
-    desc: "Paramount Pictures historical epic directed by Ridley Scott, following Lucius entering the Colosseum.",
+    desc: "Paramount Pictures historical epic directed by Ridley Scott, following Lucius entering the Colosseum decades after Maximus.",
     type: "movie",
     releaseDate: "2024-11-22",
+    studio: "Paramount Pictures",
   },
   {
     title: "Deadpool & Wolverine",
     trailerUrl: "https://www.youtube.com/watch?v=73_1biulkYk",
-    desc: "Marvel Studios multiverse team-up featuring Ryan Reynolds and Hugh Jackman.",
+    desc: "Marvel Studios multiverse superhero team-up featuring Ryan Reynolds as Deadpool and Hugh Jackman returning as Wolverine.",
     type: "movie",
     releaseDate: "2024-07-26",
+    studio: "Marvel Studios / Disney",
   },
   {
     title: "Moana 2",
     trailerUrl: "https://www.youtube.com/watch?v=hDZ7y8RP5HE",
-    desc: "Walt Disney Animation Studios animated musical voyage starring Auli'i Cravalho and Dwayne Johnson.",
+    desc: "Walt Disney Animation Studios animated musical voyage starring Auli'i Cravalho and Dwayne Johnson exploring Oceania.",
     type: "movie",
     releaseDate: "2024-11-27",
+    studio: "Walt Disney Animation",
+  },
+  {
+    title: "Nosferatu (2024)",
+    trailerUrl: "https://www.youtube.com/watch?v=nulvWqYUM8k",
+    desc: "Focus Features gothic horror masterpiece directed by Robert Eggers, starring Bill Skarsgård, Nicholas Hoult, and Lily-Rose Depp.",
+    type: "movie",
+    releaseDate: "2024-12-25",
+    studio: "Focus Features",
+  },
+  {
+    title: "Superman (2025)",
+    trailerUrl: "https://www.youtube.com/watch?v=uhUht6vAsMY",
+    desc: "DC Studios superhero film written and directed by James Gunn, starring David Corenswet as the Man of Steel.",
+    type: "movie",
+    releaseDate: "2025-07-11",
+    studio: "DC Studios / Warner Bros.",
+  },
+  {
+    title: "Avatar: Fire and Ash",
+    trailerUrl: "https://www.youtube.com/watch?v=d9MyW72ELq0",
+    desc: "20th Century Studios sci-fi epic directed by James Cameron, introducing the aggressive Ash People Na'vi clan on Pandora.",
+    type: "movie",
+    releaseDate: "2025-12-19",
+    studio: "20th Century Studios / Disney",
+  },
+  {
+    title: "Dune: Part Two",
+    trailerUrl: "https://www.youtube.com/watch?v=Way9Dexny3w",
+    desc: "Warner Bros. Pictures sci-fi adaptation directed by Denis Villeneuve, following Paul Atreides uniting with the Fremen.",
+    type: "movie",
+    releaseDate: "2024-03-01",
+    studio: "Warner Bros. / Legendary",
+  },
+  {
+    title: "Joker: Folie à Deux",
+    trailerUrl: "https://www.youtube.com/watch?v=_OKAwz2NiJs",
+    desc: "Warner Bros. Pictures musical psychological thriller directed by Todd Phillips, starring Joaquin Phoenix and Lady Gaga.",
+    type: "movie",
+    releaseDate: "2024-10-04",
+    studio: "Warner Bros. Pictures",
+  },
+  {
+    title: "Mufasa: The Lion King",
+    trailerUrl: "https://www.youtube.com/watch?v=o17MF9vnabg",
+    desc: "Walt Disney Studios photorealistic musical drama directed by Barry Jenkins, chronicling the rise of King Mufasa.",
+    type: "movie",
+    releaseDate: "2024-12-20",
+    studio: "Walt Disney Pictures",
+  },
+  {
+    title: "Sonic the Hedgehog 3",
+    trailerUrl: "https://www.youtube.com/watch?v=qSu6i2iFMO0",
+    desc: "Paramount Pictures action adventure starring Ben Schwartz as Sonic, Jim Carrey as Dr. Robotnik, and Keanu Reeves as Shadow.",
+    type: "movie",
+    releaseDate: "2024-12-20",
+    studio: "Paramount Pictures",
+  },
+  {
+    title: "Captain America: Brave New World",
+    trailerUrl: "https://www.youtube.com/watch?v=1pHDWnXmK7Y",
+    desc: "Marvel Studios espionage superhero film starring Anthony Mackie as Sam Wilson and Harrison Ford as Thaddeus Ross / Red Hulk.",
+    type: "movie",
+    releaseDate: "2025-02-14",
+    studio: "Marvel Studios",
+  },
+  {
+    title: "The Fantastic Four: First Steps",
+    trailerUrl: "https://www.youtube.com/watch?v=7h3e9iM9wE0",
+    desc: "Marvel Studios retro-futuristic 1960s superhero epic starring Pedro Pascal, Vanessa Kirby, Joseph Quinn, and Ebon Moss-Bachrach.",
+    type: "movie",
+    releaseDate: "2025-07-25",
+    studio: "Marvel Studios",
+  },
+  {
+    title: "Thunderbolts*",
+    trailerUrl: "https://www.youtube.com/watch?v=v-bL8vW6p78",
+    desc: "Marvel Studios antihero ensemble directed by Jake Schreier, starring Florence Pugh, Sebastian Stan, and David Harbour.",
+    type: "movie",
+    releaseDate: "2025-05-02",
+    studio: "Marvel Studios",
   },
 ];
 
@@ -65,17 +150,58 @@ export default function RegisterModal({
   const [syncMode, setSyncMode] = useState("1hr");
   const [initialVolume, setInitialVolume] = useState(1000);
 
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(-1);
+  const suggestionsRef = useRef<HTMLDivElement>(null);
+
   const [createdId, setCreatedId] = useState<string | null>(null);
   const [showProgress, setShowProgress] = useState(false);
 
-  // Preset selector
-  const handleApplyPreset = (preset: CampaignPreset) => {
-    setNewTitle(preset.title);
-    setNewTrailerUrl(preset.trailerUrl);
-    setNewDesc(preset.desc);
-    setNewType(preset.type);
-    setNewReleaseDate(preset.releaseDate);
-    toast.success(`Loaded "${preset.title}" template!`);
+  // Filter autocomplete suggestions based on user input
+  const suggestions = newTitle.trim().length > 0
+    ? MOVIE_CATALOG.filter((movie) =>
+        movie.title.toLowerCase().includes(newTitle.toLowerCase()) ||
+        movie.studio.toLowerCase().includes(newTitle.toLowerCase())
+      )
+    : [];
+
+  const handleSelectMovie = (movie: MovieCatalogItem) => {
+    setNewTitle(movie.title);
+    setNewTrailerUrl(movie.trailerUrl);
+    setNewDesc(movie.desc);
+    setNewType(movie.type);
+    setNewReleaseDate(movie.releaseDate);
+    setShowSuggestions(false);
+    setSelectedIndex(-1);
+    toast.success(`Selected "${movie.title}" · Official trailer URL loaded!`);
+  };
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (suggestionsRef.current && !suggestionsRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!showSuggestions || suggestions.length === 0) return;
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setSelectedIndex((prev) => (prev < suggestions.length - 1 ? prev + 1 : 0));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setSelectedIndex((prev) => (prev > 0 ? prev - 1 : suggestions.length - 1));
+    } else if (e.key === "Enter" && selectedIndex >= 0) {
+      e.preventDefault();
+      handleSelectMovie(suggestions[selectedIndex]);
+    } else if (e.key === "Escape") {
+      setShowSuggestions(false);
+    }
   };
 
   const isHttpInsecure = newTrailerUrl.trim().toLowerCase().startsWith("http://");
@@ -157,7 +283,7 @@ export default function RegisterModal({
                 Track New Campaign Launch
               </h2>
               <span className="text-[11px] text-zinc-400 font-mono">
-                Telemetry & Audience Intelligence Ingestion
+                Smart Movie Autocomplete & Verified Trailer Ingestion
               </span>
             </div>
           </div>
@@ -174,14 +300,14 @@ export default function RegisterModal({
         {/* 1-Click Quick Template Bar */}
         <div className="px-6 py-2.5 bg-[#141416] border-b border-[#242428] flex items-center gap-2 flex-wrap text-xs text-zinc-400">
           <span className="font-semibold text-zinc-300 flex items-center gap-1">
-            <Video className="h-3 w-3 text-indigo-400" />
-            Sample Campaigns:
+            <Clapperboard className="h-3 w-3 text-indigo-400" />
+            Popular Campaigns:
           </span>
-          {PRESET_CAMPAIGNS.map((preset) => (
+          {MOVIE_CATALOG.slice(0, 4).map((preset) => (
             <button
               key={preset.title}
               type="button"
-              onClick={() => handleApplyPreset(preset)}
+              onClick={() => handleSelectMovie(preset)}
               className="bg-[#1f1f23] hover:bg-[#28282d] hover:text-white text-zinc-300 px-2.5 py-1 rounded-md border border-[#2e2e33] transition cursor-pointer font-medium text-[11px]"
             >
               {preset.title}
@@ -194,18 +320,59 @@ export default function RegisterModal({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
             {/* Left Column: Primary Details */}
             <div className="space-y-4">
-              {/* Field 1: Campaign / Film Title */}
-              <div>
+              {/* Field 1: Campaign / Film Title with Autocomplete */}
+              <div className="relative" ref={suggestionsRef}>
                 <Input
                   label="Campaign / Film Title *"
                   required
-                  placeholder="e.g. Wicked (2024) or Gladiator II"
+                  placeholder="e.g. Gladiator II, Wicked, Superman..."
                   value={newTitle}
-                  onChange={(e) => setNewTitle(e.target.value)}
+                  onChange={(e) => {
+                    setNewTitle(e.target.value);
+                    setShowSuggestions(true);
+                    setSelectedIndex(-1);
+                  }}
+                  onFocus={() => setShowSuggestions(true)}
+                  onKeyDown={handleKeyDown}
+                  autoComplete="off"
                 />
+
+                {/* Smart Autocomplete Suggestions Dropdown */}
+                {showSuggestions && suggestions.length > 0 && (
+                  <div className="absolute left-0 right-0 top-[68px] bg-[#1a1a1d] border border-indigo-500/40 rounded-xl shadow-2xl z-30 max-h-56 overflow-y-auto divide-y divide-[#28282b] font-sans animate-fade-in">
+                    <div className="px-3 py-1.5 bg-[#141416] text-[10px] font-bold uppercase tracking-wider text-indigo-400 flex items-center justify-between">
+                      <span>Matching Movies in Catalog</span>
+                      <span className="text-zinc-500 lowercase">Click to auto-populate details</span>
+                    </div>
+                    {suggestions.map((movie, index) => (
+                      <div
+                        key={movie.title}
+                        onClick={() => handleSelectMovie(movie)}
+                        className={`p-3 flex items-center justify-between gap-3 cursor-pointer transition ${
+                          selectedIndex === index
+                            ? "bg-indigo-600/20 text-white"
+                            : "hover:bg-[#242428] text-zinc-200"
+                        }`}
+                      >
+                        <div className="space-y-0.5 min-w-0">
+                          <div className="font-bold text-xs text-zinc-100 flex items-center gap-1.5 truncate">
+                            <Film className="h-3 w-3 text-indigo-400 shrink-0" />
+                            <span>{movie.title}</span>
+                          </div>
+                          <p className="text-[11px] text-zinc-400 line-clamp-1">
+                            {movie.studio} · {movie.desc}
+                          </p>
+                        </div>
+                        <span className="font-mono text-[10px] text-zinc-400 shrink-0 bg-[#141416] px-2 py-0.5 rounded border border-[#28282b]">
+                          {movie.releaseDate}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
-              {/* Field 2: Distinct YouTube Trailer URL or Search Query */}
+              {/* Field 2: Distinct YouTube Trailer URL */}
               <div>
                 <Input
                   label="YouTube Trailer Video URL *"
@@ -219,7 +386,7 @@ export default function RegisterModal({
                       <Video className="h-4 w-4 text-zinc-400" />
                     )
                   }
-                  placeholder="https://www.youtube.com/watch?v=... or Trailer Title"
+                  placeholder="https://www.youtube.com/watch?v=..."
                   value={newTrailerUrl}
                   onChange={(e) => setNewTrailerUrl(e.target.value)}
                 />
@@ -232,7 +399,7 @@ export default function RegisterModal({
                 )}
               </div>
 
-              {/* Field 3: Description (Mandatory) */}
+              {/* Field 3: Description */}
               <div>
                 <Textarea
                   label="Campaign Description / Logline *"
