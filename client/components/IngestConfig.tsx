@@ -37,14 +37,31 @@ export default function IngestConfig({
   const [syncSchedule, setSyncSchedule] = useState("1hr");
   const [showProgressModal, setShowProgressModal] = useState(false);
   const [progressSource, setProgressSource] = useState<"youtube" | "google_search">("youtube");
+  const isHttpInsecure = ingestQuery.trim().toLowerCase().startsWith("http://");
 
   const handleTriggerYouTube = () => {
+    if (isHttpInsecure) {
+      toast.error("Insecure HTTP URL detected. Only HTTPS (https://) URLs or keywords are permitted.");
+      return;
+    }
+    if (!ingestQuery.trim()) {
+      toast.error("Please provide a search keyword or YouTube trailer URL.");
+      return;
+    }
     setProgressSource("youtube");
     setShowProgressModal(true);
     onTriggerIngest();
   };
 
   const handleTriggerGoogleSearch = async () => {
+    if (isHttpInsecure) {
+      toast.error("Insecure HTTP URL detected. Only HTTPS (https://) URLs or keywords are permitted.");
+      return;
+    }
+    if (!ingestQuery.trim()) {
+      toast.error("Please provide a search keyword or topic.");
+      return;
+    }
     setIsGroundingSearch(true);
     setProgressSource("google_search");
     setShowProgressModal(true);

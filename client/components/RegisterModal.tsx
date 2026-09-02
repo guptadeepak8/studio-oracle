@@ -1,7 +1,8 @@
 "use client";
 
 import React, { FormEvent, useState } from "react";
-import { Plus, Sparkles, X, Video, Clock, Zap, Wand2, Database } from "lucide-react";
+import { Plus, Sparkles, X, Video, ShieldAlert, Wand2, Database, Lock } from "lucide-react";
+import { toast } from "sonner";
 import { useCampaigns } from "../hooks/useCampaigns";
 import { Button, Input, Textarea, Select } from "./ui";
 import IngestProgressModal from "./IngestProgressModal";
@@ -28,9 +29,35 @@ export default function RegisterModal({
   const [createdId, setCreatedId] = useState<string | null>(null);
   const [showProgress, setShowProgress] = useState(false);
 
+  // Safety & Validation checks
+  const isHttpInsecure = newTrailerQuery.trim().toLowerCase().startsWith("http://");
+  const isTitleValid = newTitle.trim().length >= 2;
+  const isDescValid = newDesc.trim().length >= 5;
+  const isTrailerQueryValid = newTrailerQuery.trim().length >= 2 && !isHttpInsecure;
+  const isFormValid = isTitleValid && isDescValid && isTrailerQueryValid;
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!newTitle.trim() || !newTrailerQuery.trim()) return;
+
+    if (isHttpInsecure) {
+      toast.error("Insecure HTTP URL detected. Please use https:// or enter search keywords.");
+      return;
+    }
+
+    if (!isTitleValid) {
+      toast.error("Campaign title must be at least 2 characters long.");
+      return;
+    }
+
+    if (!isTrailerQueryValid) {
+      toast.error("Please provide a valid search query or HTTPS YouTube URL.");
+      return;
+    }
+
+    if (!isDescValid) {
+      toast.error("Campaign description must be at least 5 characters long.");
+      return;
+    }
 
     const contentId = await createCampaign({
       title: newTitle.trim(),
@@ -76,9 +103,14 @@ export default function RegisterModal({
             <div className="h-7 w-7 rounded-lg bg-[#242428] flex items-center justify-center text-[#e6fc4f]">
               <Sparkles className="h-4 w-4" />
             </div>
-            <h2 className="font-bold text-base tracking-wide uppercase text-zinc-100">
-              Track New Campaign Launch
-            </h2>
+            <div>
+              <h2 className="font-bold text-base tracking-wide uppercase text-zinc-100">
+                Track New Campaign Launch
+              </h2>
+              <span className="text-[11px] text-zinc-400 font-mono">
+                Mandatory Fields & HTTPS Security Enforced
+              </span>
+            </div>
           </div>
           <Button
             variant="ghost"
@@ -95,45 +127,82 @@ export default function RegisterModal({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
             {/* Left Column: Primary Details */}
             <div className="space-y-4">
-              <Input
-                label="Campaign / Film Title"
-                required
-                placeholder="e.g. Wicked (2024)"
-                value={newTitle}
-                onChange={(e) => setNewTitle(e.target.value)}
-              />
+              {/* Campaign Title (Mandatory) */}
+              <div>
+                <Input
+                  label="Campaign / Film Title *"
+                  required
+                  placeholder="e.g. Wicked (2024)"
+                  value={newTitle}
+                  onChange={(e) => setNewTitle(e.target.value)}
+                />
+                {!isTitleValid && newTitle.length > 0 && (
+                  <p className="text-[11px] text-amber-400 pt-1">
+                    Title must contain at least 2 characters.
+                  </p>
+                )}
+              </div>
 
-              <Input
-                label="YouTube Trailer Target or URL"
-                required
-                leftIcon={<Video className="h-4 w-4 text-[#e6fc4f]" />}
-                placeholder="e.g. Wicked Official Trailer or https://..."
-                value={newTrailerQuery}
-                onChange={(e) => setNewTrailerQuery(e.target.value)}
-                rightElement={
-                  newTitle.trim() && !newTrailerQuery.trim() ? (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="xs"
-                      onClick={() => setNewTrailerQuery(`${newTitle.trim()} Official Trailer`)}
-                      leftIcon={<Wand2 className="h-3 w-3 text-[#e6fc4f]" />}
-                      className="text-xs text-[#e6fc4f] hover:underline p-0 h-auto font-medium"
-                    >
-                      Auto-fill: <span className="underline ml-1 font-bold">"{newTitle.trim()} Trailer"</span>
-                    </Button>
-                  ) : undefined
-                }
-              />
+              {/* YouTube Trailer Target or URL (Mandatory, HTTPS Only) */}
+              <div>
+                <Input
+                  label="YouTube Trailer Target or HTTPS URL *"
+                  required
+                  leftIcon={
+                    isHttpInsecure ? (
+                      <ShieldAlert className="h-4 w-4 text-rose-400" />
+                    ) : (
+                      <Video className="h-4 w-4 text-[#e6fc4f]" />
+                    )
+                  }
+                  placeholder="e.g. Wicked Official Trailer or https://www.youtube.com/watch?v=..."
+                  value={newTrailerQuery}
+                  onChange={(e) => setNewTrailerQuery(e.target.value)}
+                  rightElement={
+                    newTitle.trim() && !newTrailerQuery.trim() ? (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="xs"
+                        onClick={() => setNewTrailerQuery(`${newTitle.trim()} Official Trailer`)}
+                        leftIcon={<Wand2 className="h-3 w-3 text-[#e6fc4f]" />}
+                        className="text-xs text-[#e6fc4f] hover:underline p-0 h-auto font-medium"
+                      >
+                        Auto-fill: <span className="underline ml-1 font-bold">"{newTitle.trim()} Trailer"</span>
+                      </Button>
+                    ) : undefined
+                  }
+                />
 
-              <Textarea
-                label="Campaign Description / Logline"
-                required
-                rows={3}
-                placeholder="e.g. Universal Pictures musical adaptation directed by Jon M. Chu..."
-                value={newDesc}
-                onChange={(e) => setNewDesc(e.target.value)}
-              />
+                {isHttpInsecure ? (
+                  <div className="flex items-center gap-1.5 text-[11px] text-rose-400 pt-1 font-medium">
+                    <ShieldAlert className="h-3.5 w-3.5 shrink-0" />
+                    <span>Insecure URL detected. Only HTTPS URLs (https://...) are permitted.</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1 text-[11px] text-zinc-500 pt-1">
+                    <Lock className="h-3 w-3 text-emerald-400 inline" />
+                    <span>HTTPS & keyword search query safety verified.</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Description (Mandatory) */}
+              <div>
+                <Textarea
+                  label="Campaign Description / Logline *"
+                  required
+                  rows={3}
+                  placeholder="e.g. Universal Pictures musical adaptation directed by Jon M. Chu..."
+                  value={newDesc}
+                  onChange={(e) => setNewDesc(e.target.value)}
+                />
+                {!isDescValid && newDesc.length > 0 && (
+                  <p className="text-[11px] text-amber-400 pt-1">
+                    Description must be at least 5 characters long.
+                  </p>
+                )}
+              </div>
             </div>
 
             {/* Right Column: Telemetry & Ingestion Strategy */}
@@ -185,7 +254,7 @@ export default function RegisterModal({
                 />
               </div>
 
-              {/* Engine Spec Banner */}
+              {/* Security & Engine Spec Banner */}
               <div className="bg-[#141416] border border-[#28282b] rounded-xl p-3.5 space-y-1.5 text-xs text-zinc-300">
                 <div className="flex items-center gap-1.5 font-bold text-zinc-100">
                   <Database className="h-3.5 w-3.5 text-[#e6fc4f]" />
@@ -201,7 +270,7 @@ export default function RegisterModal({
           {/* Footer Actions */}
           <div className="pt-4 border-t border-[#28282b] flex items-center justify-between">
             <span className="text-xs text-zinc-400">
-              Auto-syncs YouTube trailers & Google Search intelligence.
+              * Required fields. Ingestion targets YouTube trailers & Google Search intelligence.
             </span>
 
             <div className="flex items-center gap-3">
@@ -217,7 +286,7 @@ export default function RegisterModal({
                 type="submit"
                 variant="primary"
                 size="md"
-                disabled={isCreating || !newTitle.trim() || !newTrailerQuery.trim()}
+                disabled={isCreating || !isFormValid}
                 isLoading={isCreating}
                 leftIcon={<Plus className="h-4 w-4" />}
               >
