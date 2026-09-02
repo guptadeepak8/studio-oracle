@@ -1,7 +1,9 @@
-"""
-Schemas shim (points to models.decisions).
-Preserved for backwards compatibility.
-"""
+from models.requests import (
+    ChatRequest,
+    IngestRequest,
+    CampaignCreateRequest,
+    CampaignStatusRequest
+)
 from models.decisions import (
     DecisionStatus,
     ConfidenceRating,

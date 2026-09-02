@@ -202,3 +202,4 @@ def seed_100k_benchmark(target_count: int = 100000):
 
 if __name__ == "__main__":
     seed_100k_benchmark(100000)
+
