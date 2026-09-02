@@ -14,3 +14,4 @@ export default function Skeleton({ className = "", ...props }: SkeletonProps) {
     />
   );
 }
+

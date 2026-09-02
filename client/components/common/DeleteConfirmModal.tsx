@@ -1,7 +1,8 @@
 "use client";
 
 import React from "react";
-import { AlertTriangle, Loader2, Trash2, X } from "lucide-react";
+import { AlertTriangle, Trash2, X } from "lucide-react";
+import { Button } from "../ui";
 
 interface DeleteConfirmModalProps {
   isOpen: boolean;
@@ -42,33 +43,25 @@ export default function DeleteConfirmModal({
         </p>
 
         <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#28282b]">
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={onClose}
             disabled={isDeleting}
-            className="px-4 py-2 rounded-lg text-xs font-semibold text-zinc-300 hover:bg-[#28282b] transition cursor-pointer"
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="danger"
+            size="sm"
             onClick={onConfirm}
-            disabled={isDeleting}
-            className="px-4.5 py-2 rounded-lg text-xs font-bold text-white bg-rose-600 hover:bg-rose-500 disabled:opacity-50 flex items-center gap-2 cursor-pointer shadow-xs transition"
+            isLoading={isDeleting}
+            leftIcon={<Trash2 className="h-4 w-4" />}
           >
-            {isDeleting ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                <span>Deleting...</span>
-              </>
-            ) : (
-              <>
-                <Trash2 className="h-4 w-4" />
-                <span>Delete Permanently</span>
-              </>
-            )}
-          </button>
+            Delete Permanently
+          </Button>
         </div>
       </div>
     </div>
   );
 }
-

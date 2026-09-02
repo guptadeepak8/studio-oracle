@@ -6,7 +6,7 @@ import { ChevronDown, Play, Square, MessageSquare, RefreshCw, Trash2 } from "luc
 import { Movie } from "../utils/types";
 import { useCampaigns } from "../hooks/useCampaigns";
 import DeleteConfirmModal from "./common/DeleteConfirmModal";
-import StatusBadge from "./common/StatusBadge";
+import { Badge, Button } from "./ui";
 
 interface CampaignHeaderProps {
   campaign: Movie;
@@ -54,27 +54,31 @@ export default function CampaignHeader({
           <h1 className="font-bold text-lg text-zinc-100 tracking-tight">
             {getPageTitle()}
           </h1>
-          <StatusBadge status={campaign.status} label={campaign.status === "active" ? "Active" : "Paused"} />
+          <Badge variant={campaign.status === "active" ? "active" : "stopped"}>
+            {campaign.status === "active" ? "Active" : "Paused"}
+          </Badge>
         </div>
 
         {/* Right Actions Dropdown */}
         <div className="flex items-center gap-3 relative">
-          <button
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={() => onTabChange(activeTab === "agent" ? "overview" : "agent")}
-            className="flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold bg-[#1f1f23] hover:bg-[#28282d] text-zinc-200 border border-[#2d2d32] transition cursor-pointer shadow-xs"
+            leftIcon={<MessageSquare className="h-4 w-4 text-[#e6fc4f]" />}
           >
-            <MessageSquare className="h-4 w-4 text-[#e6fc4f]" />
-            <span>{activeTab === "agent" ? "Back to Dashboard" : "Ask AI Assistant"}</span>
-          </button>
+            {activeTab === "agent" ? "Back to Dashboard" : "Ask AI Assistant"}
+          </Button>
 
           <div className="relative">
-            <button
+            <Button
+              variant="secondary"
+              size="sm"
               onClick={() => setShowActionsMenu(!showActionsMenu)}
-              className="flex items-center gap-2 bg-[#1f1f23] hover:bg-[#28282d] text-zinc-100 font-semibold px-3.5 py-2 rounded-lg text-xs border border-[#2d2d32] transition cursor-pointer shadow-xs"
+              rightIcon={<ChevronDown className="h-4 w-4 text-zinc-400" />}
             >
-              <span>Actions</span>
-              <ChevronDown className="h-4 w-4 text-zinc-400" />
-            </button>
+              Actions
+            </Button>
 
             {showActionsMenu && (
               <>

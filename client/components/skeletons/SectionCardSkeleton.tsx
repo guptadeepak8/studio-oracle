@@ -50,3 +50,4 @@ export default function SectionCardSkeleton({ type = "cards" }: SectionCardSkele
     </div>
   );
 }
+

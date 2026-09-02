@@ -1,11 +1,12 @@
 "use client";
 
 import React, { useState } from "react";
-import { Plus, Loader2, Film } from "lucide-react";
+import { Plus, Film } from "lucide-react";
 import { useCampaigns } from "../hooks/useCampaigns";
 import RegisterModal from "../components/RegisterModal";
 import CampaignCard from "../components/CampaignCard";
 import CampaignCardSkeleton from "../components/skeletons/CampaignCardSkeleton";
+import { Button, PageHeader } from "../components/ui";
 
 export default function Page() {
   const { campaigns, isLoading, refreshCampaigns } = useCampaigns();
@@ -16,24 +17,21 @@ export default function Page() {
 
   return (
     <div className="flex-1 bg-[#0e0e10] p-8 space-y-6 overflow-y-auto max-h-screen text-zinc-100 font-sans">
-      {/* Top Header */}
-      <div className="flex items-center justify-between border-b border-[#202023] pb-4">
-        <div className="space-y-0.5">
-          <h1 className="font-bold text-xl text-zinc-100 tracking-tight">
-            Campaigns / Overview
-          </h1>
-          <p className="text-sm text-zinc-400 font-sans">
-            Real-time audience feedback and active entertainment launches.
-          </p>
-        </div>
-        <button
-          onClick={() => setShowModal(true)}
-          className="flex items-center gap-2 bg-[#e6fc4f] hover:bg-[#d8ed47] text-sm font-bold px-4.5 py-2.5 rounded-lg transition text-black shadow-xs cursor-pointer"
-        >
-          <Plus className="h-4 w-4 stroke-[3]" />
-          <span>Track New Campaign</span>
-        </button>
-      </div>
+      {/* Reusable PageHeader */}
+      <PageHeader
+        title="Campaigns / Overview"
+        description="Real-time audience feedback and active entertainment launches."
+        action={
+          <Button
+            onClick={() => setShowModal(true)}
+            variant="primary"
+            size="md"
+            leftIcon={<Plus className="h-4 w-4 stroke-[3]" />}
+          >
+            Track New Campaign
+          </Button>
+        }
+      />
 
       {isLoading ? (
         <div className="space-y-3">
@@ -55,12 +53,13 @@ export default function Page() {
           <p className="text-sm text-zinc-400 leading-relaxed mb-5 max-w-sm">
             You are not currently tracking any entertainment launches. Click below to initialize your first campaign.
           </p>
-          <button
+          <Button
             onClick={() => setShowModal(true)}
-            className="bg-[#e6fc4f] hover:bg-[#d8ed47] text-black font-bold px-5 py-2.5 rounded-lg text-sm transition cursor-pointer shadow-xs"
+            variant="primary"
+            size="md"
           >
             Create First Campaign
-          </button>
+          </Button>
         </div>
       ) : (
         <div className="space-y-6">

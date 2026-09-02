@@ -1,8 +1,9 @@
 "use client";
 
 import React, { FormEvent, useState } from "react";
-import { Loader2, Plus, Sparkles, X, Video, Clock, Zap, Wand2 } from "lucide-react";
+import { Plus, Sparkles, X, Video, Clock, Zap, Wand2 } from "lucide-react";
 import { useCampaigns } from "../hooks/useCampaigns";
+import { Button, Input, Textarea, Select } from "./ui";
 
 interface RegisterModalProps {
   onClose: () => void;
@@ -69,19 +70,13 @@ export default function RegisterModal({
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4 text-sm font-sans">
           {/* Campaign Title */}
-          <div className="space-y-1.5">
-            <label className="font-semibold text-zinc-300 uppercase tracking-wider text-xs block">
-              Campaign / Film Title *
-            </label>
-            <input
-              type="text"
-              required
-              placeholder="e.g. Wicked (2024)"
-              value={newTitle}
-              onChange={(e) => setNewTitle(e.target.value)}
-              className="w-full bg-[#141416] border border-[#28282b] rounded-lg p-3 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-[#e6fc4f] transition font-sans"
-            />
-          </div>
+          <Input
+            label="Campaign / Film Title"
+            required
+            placeholder="e.g. Wicked (2024)"
+            value={newTitle}
+            onChange={(e) => setNewTitle(e.target.value)}
+          />
 
           {/* YouTube Trailer Feed Requirement */}
           <div className="space-y-2 bg-[#161618] border border-[#3b3a1a] rounded-xl p-4">
@@ -92,13 +87,11 @@ export default function RegisterModal({
               </label>
               <span className="text-xs text-zinc-400 font-mono">Auto-Streamed</span>
             </div>
-            <input
-              type="text"
+            <Input
               required
               placeholder="e.g. https://www.youtube.com/watch?v=... or Wicked Official Trailer"
               value={newTrailerQuery}
               onChange={(e) => setNewTrailerQuery(e.target.value)}
-              className="w-full bg-[#141416] border border-[#28282b] rounded-lg p-3 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-[#e6fc4f] transition font-sans"
             />
 
             {/* Quick Auto-fill Suggestion */}
@@ -120,100 +113,74 @@ export default function RegisterModal({
 
           {/* Sync Automation & Ingestion Volume Options */}
           <div className="grid grid-cols-2 gap-3.5 bg-[#161618] border border-[#28282b] rounded-xl p-3.5">
-            <div className="space-y-1.5">
-              <label className="font-semibold text-zinc-300 uppercase tracking-wider text-xs flex items-center gap-1.5">
-                <Clock className="h-3.5 w-3.5 text-zinc-400" />
-                Sync Mode
-              </label>
-              <select
-                value={syncMode}
-                onChange={(e) => setSyncMode(e.target.value)}
-                className="w-full bg-[#141416] border border-[#28282b] rounded-lg p-2.5 text-sm text-zinc-100 focus:outline-none focus:border-[#e6fc4f] transition cursor-pointer font-sans"
-              >
-                <option value="1hr">Automatic (Every 1 Hour)</option>
-                <option value="6hr">Automatic (Every 6 Hours)</option>
-                <option value="24hr">Automatic (Every 24 Hours)</option>
-                <option value="manual">Manual Sync Only</option>
-              </select>
-            </div>
+            <Select
+              label="Sync Mode"
+              leftIcon={<Clock className="h-3.5 w-3.5" />}
+              value={syncMode}
+              onChange={(e) => setSyncMode(e.target.value)}
+              options={[
+                { value: "1hr", label: "Automatic (Every 1 Hour)" },
+                { value: "6hr", label: "Automatic (Every 6 Hours)" },
+                { value: "24hr", label: "Automatic (Every 24 Hours)" },
+                { value: "manual", label: "Manual Sync Only" },
+              ]}
+            />
 
-            <div className="space-y-1.5">
-              <label className="font-semibold text-zinc-300 uppercase tracking-wider text-xs flex items-center gap-1.5">
-                <Zap className="h-3.5 w-3.5 text-[#e6fc4f]" />
-                Initial Volume
-              </label>
-              <select
-                value={initialVolume}
-                onChange={(e) => setInitialVolume(parseInt(e.target.value))}
-                className="w-full bg-[#141416] border border-[#28282b] rounded-lg p-2.5 text-sm text-zinc-100 focus:outline-none focus:border-[#e6fc4f] transition cursor-pointer font-sans"
-              >
-                <option value={1000}>1,000 Comments (Recommended)</option>
-                <option value={500}>500 Comments</option>
-                <option value={250}>250 Comments</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Description */}
-          <div className="space-y-1.5">
-            <label className="font-semibold text-zinc-300 uppercase tracking-wider text-xs block">
-              Campaign Description / Logline *
-            </label>
-            <textarea
-              required
-              placeholder="e.g. Universal Pictures musical adaptation directed by Jon M. Chu..."
-              value={newDesc}
-              onChange={(e) => setNewDesc(e.target.value)}
-              className="w-full h-20 bg-[#141416] border border-[#28282b] rounded-lg p-3 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none resize-none focus:border-[#e6fc4f] transition font-sans"
+            <Select
+              label="Initial Volume"
+              leftIcon={<Zap className="h-3.5 w-3.5 text-[#e6fc4f]" />}
+              value={initialVolume}
+              onChange={(e) => setInitialVolume(parseInt(e.target.value))}
+              options={[
+                { value: 1000, label: "1,000 Comments (Recommended)" },
+                { value: 500, label: "500 Comments" },
+                { value: 250, label: "250 Comments" },
+              ]}
             />
           </div>
 
+          {/* Description */}
+          <Textarea
+            label="Campaign Description / Logline"
+            required
+            rows={3}
+            placeholder="e.g. Universal Pictures musical adaptation directed by Jon M. Chu..."
+            value={newDesc}
+            onChange={(e) => setNewDesc(e.target.value)}
+          />
+
           <div className="grid grid-cols-2 gap-3.5">
-            <div className="space-y-1.5">
-              <label className="font-semibold text-zinc-300 uppercase tracking-wider text-xs block">
-                Campaign Type
-              </label>
-              <select
-                value={newType}
-                onChange={(e) => setNewType(e.target.value)}
-                className="w-full bg-[#141416] border border-[#28282b] rounded-lg p-2.5 text-sm text-zinc-100 focus:outline-none focus:border-[#e6fc4f] transition cursor-pointer"
-              >
-                <option value="movie">Theatrical Movie</option>
-                <option value="series">Streaming Series</option>
-                <option value="campaign">Promotional Drop</option>
-              </select>
-            </div>
-            <div className="space-y-1.5">
-              <label className="font-semibold text-zinc-300 uppercase tracking-wider text-xs block">
-                Target Release Date
-              </label>
-              <input
-                type="date"
-                value={newReleaseDate}
-                onChange={(e) => setNewReleaseDate(e.target.value)}
-                className="w-full bg-[#141416] border border-[#28282b] rounded-lg p-2.5 text-sm text-zinc-100 focus:outline-none focus:border-[#e6fc4f] transition font-sans"
-              />
-            </div>
+            <Select
+              label="Campaign Type"
+              value={newType}
+              onChange={(e) => setNewType(e.target.value)}
+              options={[
+                { value: "movie", label: "Theatrical Movie" },
+                { value: "series", label: "Streaming Series" },
+                { value: "campaign", label: "Promotional Drop" },
+              ]}
+            />
+
+            <Input
+              label="Target Release Date"
+              type="date"
+              value={newReleaseDate}
+              onChange={(e) => setNewReleaseDate(e.target.value)}
+            />
           </div>
 
           <div className="pt-3 border-t border-[#28282b]">
-            <button
+            <Button
               type="submit"
+              variant="primary"
+              size="lg"
+              className="w-full"
+              isLoading={isCreating}
               disabled={isCreating || !newTitle.trim() || !newTrailerQuery.trim()}
-              className="w-full bg-[#e6fc4f] hover:bg-[#d8ed47] disabled:opacity-50 py-3 rounded-lg text-sm uppercase tracking-wider font-bold text-black transition flex items-center justify-center gap-2 shadow-xs cursor-pointer"
+              leftIcon={<Plus className="h-4.5 w-4.5 stroke-[3]" />}
             >
-              {isCreating ? (
-                <>
-                  <Loader2 className="h-4.5 w-4.5 animate-spin" />
-                  <span>Initializing & Streaming Comments...</span>
-                </>
-              ) : (
-                <>
-                  <Plus className="h-4.5 w-4.5 stroke-[3]" />
-                  <span>Launch Campaign & Auto-Stream Feedback</span>
-                </>
-              )}
-            </button>
+              {isCreating ? "Initializing & Streaming Comments..." : "Launch Campaign & Auto-Stream Feedback"}
+            </Button>
           </div>
         </form>
       </div>

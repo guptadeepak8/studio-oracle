@@ -7,7 +7,7 @@ import { API_ENDPOINTS } from "../utils/constants";
 import { Movie, Comment } from "../utils/types";
 import { useCampaigns } from "../hooks/useCampaigns";
 import DeleteConfirmModal from "./common/DeleteConfirmModal";
-import StatusBadge from "./common/StatusBadge";
+import { Card, CardTitle, CardDescription, CardFooter, Badge, Button } from "./ui";
 import { apiRequest } from "../utils/apiClient";
 
 interface CampaignCardProps {
@@ -54,17 +54,19 @@ export default function CampaignCard({ campaign, onRefresh }: CampaignCardProps)
   };
 
   return (
-    <div className="bg-[#1c1c1f] border border-[#28282b] hover:border-zinc-700 rounded-xl p-6 transition flex flex-col justify-between gap-5 relative shadow-xs">
+    <Card className="flex flex-col justify-between gap-5 relative font-sans">
       <div className="space-y-3">
         <div className="flex items-start justify-between">
           <div className="space-y-1.5">
-            <h3 className="font-bold text-lg text-zinc-100 tracking-tight leading-snug truncate max-w-[230px]" title={campaign.title}>
+            <CardTitle className="truncate max-w-[230px]" title={campaign.title}>
               {campaign.title}
-            </h3>
+            </CardTitle>
             <div className="flex items-center gap-2 text-xs text-zinc-400 font-semibold uppercase">
               <span>{campaign.content_type}</span>
               <span className="text-zinc-600">·</span>
-              <StatusBadge status={campaign.status} label={campaign.status === "active" ? "Active" : "Paused"} />
+              <Badge variant={campaign.status === "active" ? "active" : "stopped"}>
+                {campaign.status === "active" ? "Active" : "Paused"}
+              </Badge>
             </div>
           </div>
 
@@ -116,12 +118,12 @@ export default function CampaignCard({ campaign, onRefresh }: CampaignCardProps)
           </div>
         </div>
 
-        <p className="text-sm text-zinc-300 line-clamp-2 leading-relaxed font-sans">
+        <CardDescription className="line-clamp-2">
           {campaign.description}
-        </p>
+        </CardDescription>
       </div>
 
-      <div className="pt-3 border-t border-[#28282b]/80 flex items-center justify-between">
+      <CardFooter className="pt-3">
         <div className="flex items-center gap-2 text-sm text-zinc-300">
           <Database className="h-4 w-4 text-[#e6fc4f]" />
           <span className="font-semibold">{evidenceCount !== null ? evidenceCount.toLocaleString() : "..."}</span>
@@ -135,7 +137,7 @@ export default function CampaignCard({ campaign, onRefresh }: CampaignCardProps)
           <span>Dashboard</span>
           <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition" />
         </button>
-      </div>
+      </CardFooter>
 
       <DeleteConfirmModal
         isOpen={showDeleteConfirm}
@@ -144,6 +146,6 @@ export default function CampaignCard({ campaign, onRefresh }: CampaignCardProps)
         title={campaign.title}
         isDeleting={isDeleting}
       />
-    </div>
+    </Card>
   );
 }
