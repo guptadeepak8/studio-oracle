@@ -37,9 +37,13 @@ function CampaignWorkspaceInner() {
     platforms,
     drops,
     pulseSummary,
+    decisionsData,
+    isLoadingDecisions,
+    isInvestigating,
     isIngesting,
     refreshAll,
     triggerIngest,
+    triggerInvestigation,
   } = useCampaignDetail(campaignId);
 
   const { updateStatus, deleteCampaign, isUpdatingStatus, isDeleting } = useCampaigns();
@@ -206,6 +210,7 @@ function CampaignWorkspaceInner() {
           onTabChange={(tab) => router.push(`/campaign/${campaignId}?tab=${tab}`)}
           evidenceCount={comments.length}
           onRefreshData={refreshAll}
+          agentStatus={decisionsData?.agent_status}
         />
 
         {activeTab === "agent" ? (
@@ -222,7 +227,15 @@ function CampaignWorkspaceInner() {
         ) : activeTab === "marketing" ? (
           /* Dedicated Marketing Action Plan Tab */
           <div className="flex-1 overflow-y-auto p-8 max-w-7xl mx-auto w-full space-y-8">
-            <MarketingDirectives campaign={campaign} themeStats={themeStats} drops={drops} />
+            <MarketingDirectives
+              campaign={campaign}
+              themeStats={themeStats}
+              drops={drops}
+              decisionsResponse={decisionsData}
+              isLoadingDecisions={isLoadingDecisions}
+              isInvestigating={isInvestigating}
+              onTriggerInvestigation={triggerInvestigation}
+            />
           </div>
         ) : (
           /* Main Executive Dashboard */

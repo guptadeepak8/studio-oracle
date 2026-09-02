@@ -2,9 +2,8 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Movie, Comment, IngestResponse } from "../../utils/types";
+import { Movie, Comment, IngestResponse, CampaignDecisionsResponse } from "../../utils/types";
 import { API_ENDPOINTS, API_BASE_URL } from "../../utils/constants";
-import { SentimentStats, ThemeItem, ConflictItem } from "../../utils/analytics";
 import { DropItem } from "../../components/TrailerComparison";
 import { apiRequest } from "../../utils/apiClient";
 import { CAMPAIGNS_QUERY_KEY } from "./useCampaignsQueries";
@@ -16,6 +15,7 @@ export const campaignDetailKeys = {
   analytics: (id: string) => ["campaign", id, "analytics"] as const,
   drops: (id: string) => ["campaign", id, "drops"] as const,
   pulse: (id: string) => ["campaign", id, "pulse"] as const,
+  decisions: (id: string) => ["campaign", id, "decisions"] as const,
 };
 
 export function useCampaignQuery(campaignId: string) {
@@ -66,6 +66,36 @@ export function usePulseQuery(campaignId: string) {
   });
 }
 
+export function useDecisionsQuery(campaignId: string) {
+  return useQuery({
+    queryKey: campaignDetailKeys.decisions(campaignId),
+    queryFn: () =>
+      apiRequest<CampaignDecisionsResponse>(`${API_BASE_URL}/api/campaigns/${campaignId}/decisions`, {
+        suppressErrorToast: true,
+      }),
+    enabled: Boolean(campaignId),
+    staleTime: 1000 * 30, // 30s
+  });
+}
+
+export function useInvestigateDecisionsMutation(campaignId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      return apiRequest<{ status: string; message: string; data: CampaignDecisionsResponse }>(
+        `${API_BASE_URL}/api/campaigns/${campaignId}/decisions/investigate`,
+        { method: "POST" }
+      );
+    },
+    onSuccess: () => {
+      toast.success("Autonomous campaign investigation completed!");
+      queryClient.invalidateQueries({ queryKey: campaignDetailKeys.decisions(campaignId) });
+      queryClient.invalidateQueries({ queryKey: campaignDetailKeys.all(campaignId) });
+    },
+  });
+}
+
 export function useIngestYouTubeMutation(campaignId: string) {
   const queryClient = useQueryClient();
 
@@ -92,7 +122,6 @@ export function useIngestYouTubeMutation(campaignId: string) {
     onSuccess: (data) => {
       if (data.status === "success") {
         toast.success(`Successfully synced ${data.ingested_comments} comments from YouTube!`);
-        // Automatically invalidate all related campaign queries
         queryClient.invalidateQueries({ queryKey: campaignDetailKeys.all(campaignId) });
         queryClient.invalidateQueries({ queryKey: CAMPAIGNS_QUERY_KEY });
       } else {
@@ -121,4 +150,3 @@ export function useIngestRedditMutation(campaignId: string) {
     },
   });
 }
-

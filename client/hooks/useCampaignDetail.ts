@@ -8,11 +8,13 @@ import {
   useAnalyticsQuery,
   useDropsQuery,
   usePulseQuery,
+  useDecisionsQuery,
+  useInvestigateDecisionsMutation,
   useIngestYouTubeMutation,
   useIngestRedditMutation,
 } from "./queries/useCampaignDetailQueries";
 import { CAMPAIGNS_QUERY_KEY } from "./queries/useCampaignsQueries";
-import { IngestResponse } from "../utils/types";
+import { IngestResponse, CampaignDecisionsResponse } from "../utils/types";
 
 export function useCampaignDetail(campaignId: string) {
   const queryClient = useQueryClient();
@@ -22,7 +24,9 @@ export function useCampaignDetail(campaignId: string) {
   const { data: analyticsData } = useAnalyticsQuery(campaignId);
   const { data: drops = [] } = useDropsQuery(campaignId);
   const { data: pulseData } = usePulseQuery(campaignId);
+  const { data: decisionsData = null, isLoading: isLoadingDecisions } = useDecisionsQuery(campaignId);
 
+  const investigateMutation = useInvestigateDecisionsMutation(campaignId);
   const ingestYouTubeMutation = useIngestYouTubeMutation(campaignId);
   const ingestRedditMutation = useIngestRedditMutation(campaignId);
 
@@ -66,6 +70,15 @@ export function useCampaignDetail(campaignId: string) {
     }
   };
 
+  const triggerInvestigation = async (): Promise<boolean> => {
+    try {
+      await investigateMutation.mutateAsync();
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
   return {
     campaign,
     isLoadingCampaign,
@@ -77,10 +90,14 @@ export function useCampaignDetail(campaignId: string) {
     platforms,
     drops,
     pulseSummary,
+    decisionsData,
+    isLoadingDecisions,
+    isInvestigating: investigateMutation.isPending,
     isIngesting: ingestYouTubeMutation.isPending,
     isIngestingReddit: ingestRedditMutation.isPending,
     refreshAll,
     triggerIngest,
     triggerReddit,
+    triggerInvestigation,
   };
 }

@@ -94,18 +94,22 @@ def fetch_movie_by_id(content_id: str) -> dict | None:
         f"SELECT content_id, content_type, title, description, release_date, target_terms "
         f"FROM studio_oracle.content WHERE content_id = '{content_id}' LIMIT 1"
     )
-    rows = client.query(query).result_rows
-    if not rows:
+    try:
+        rows = client.query(query).result_rows
+        if not rows:
+            return None
+        r = rows[0]
+        return {
+            "content_id": str(r[0]),
+            "content_type": r[1],
+            "title": r[2],
+            "description": r[3],
+            "release_date": str(r[4]) if r[4] else None,
+            "target_terms": r[5]
+        }
+    except Exception as e:
+        print(f"Notice: Movie query for {content_id}: {e}")
         return None
-    r = rows[0]
-    return {
-        "content_id": str(r[0]),
-        "content_type": r[1],
-        "title": r[2],
-        "description": r[3],
-        "release_date": str(r[4]) if r[4] else None,
-        "target_terms": r[5]
-    }
 
 def fetch_comments(content_id: str) -> list[dict]:
     """
@@ -349,4 +353,38 @@ def fetch_platform_breakdown(content_id: str) -> dict:
             "topNegative": top_neg
         }
     return breakdown
+
+def fetch_comment_detail(comment_id: str) -> dict | None:
+    """
+    Retrieve single comment metadata and raw verbatim text from ClickHouse for evidence inspection.
+    """
+    client = get_clickhouse_client()
+    query = f"""
+    SELECT comment_id, post_id, content_id, source, text, author, published_at, like_count, sentiment, topics, confidence
+    FROM studio_oracle.audience_comments
+    WHERE comment_id = '{comment_id}'
+    LIMIT 1
+    """
+    try:
+        rows = client.query(query).result_rows
+        if not rows:
+            return None
+        r = rows[0]
+        return {
+            "comment_id": str(r[0]),
+            "post_id": str(r[1]),
+            "content_id": str(r[2]),
+            "source": str(r[3]),
+            "text": str(r[4]),
+            "author": str(r[5]) if r[5] else "Audience Member",
+            "published_at": str(r[6]),
+            "like_count": int(r[7]),
+            "sentiment": str(r[8]),
+            "topics": list(r[9]) if r[9] else [],
+            "confidence": float(r[10]) if r[10] else 0.85
+        }
+    except Exception as e:
+        print(f"Error fetching comment detail for {comment_id}: {e}")
+        return None
+
 

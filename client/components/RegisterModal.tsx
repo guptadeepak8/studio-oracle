@@ -168,13 +168,6 @@ export default function RegisterModal({
                   onChange={(e) => setNewReleaseDate(e.target.value)}
                 />
               </div>
-
-              {/* Telemetry Specs Box */}
-              <div className="bg-[#161618] border border-[#28282b] rounded-xl p-4 flex items-start gap-3.5 mt-2">
-                <div className="h-8 w-8 rounded-lg bg-[#242428] flex items-center justify-center text-[#4ade80] shrink-0 mt-0.5">
-                  <Database className="h-4 w-4" />
-                </div>
-              </div>
             </div>
           </div>
 
