@@ -1,9 +1,9 @@
 "use client";
 
 import React, { FormEvent, useState } from "react";
-import { Plus, Sparkles, X, Video, Clock, Zap, Wand2 } from "lucide-react";
+import { Plus, Sparkles, X, Video, Clock, Zap, Wand2, Database, ShieldCheck } from "lucide-react";
 import { useCampaigns } from "../hooks/useCampaigns";
-import { Button, Input, Textarea, Select } from "./ui";
+import { Button, Input, Textarea, Select, Badge } from "./ui";
 
 interface RegisterModalProps {
   onClose: () => void;
@@ -48,9 +48,9 @@ export default function RegisterModal({
 
   return (
     <div className="fixed inset-0 bg-black/85 backdrop-blur-xs flex items-center justify-center z-50 p-4 font-sans animate-fade-in">
-      <div className="bg-[#1c1c1f] border border-[#28282b] rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl">
+      <div className="bg-[#1c1c1f] border border-[#28282b] rounded-2xl w-full max-w-4xl overflow-hidden shadow-2xl">
         {/* Header */}
-        <div className="p-5 border-b border-[#28282b] flex items-center justify-between bg-[#161618]">
+        <div className="px-6 py-4.5 border-b border-[#28282b] flex items-center justify-between bg-[#161618]">
           <div className="flex items-center gap-2.5">
             <div className="h-7 w-7 rounded-lg bg-[#242428] flex items-center justify-center text-[#e6fc4f]">
               <Sparkles className="h-4 w-4" />
@@ -69,121 +69,155 @@ export default function RegisterModal({
           </Button>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4 text-sm font-sans">
-          {/* Campaign Title */}
-          <Input
-            label="Campaign / Film Title"
-            required
-            placeholder="e.g. Wicked (2024)"
-            value={newTitle}
-            onChange={(e) => setNewTitle(e.target.value)}
-          />
+        {/* Form - 2-Column Horizontal Layout */}
+        <form onSubmit={handleSubmit} className="p-6 text-sm font-sans space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Left Column: Title, Trailer Target & Description */}
+            <div className="space-y-4">
+              {/* Campaign Title */}
+              <Input
+                label="Campaign / Film Title"
+                required
+                placeholder="e.g. Wicked (2024)"
+                value={newTitle}
+                onChange={(e) => setNewTitle(e.target.value)}
+              />
 
-          {/* YouTube Trailer Feed Requirement */}
-          <div className="space-y-2 bg-[#161618] border border-[#3b3a1a] rounded-xl p-4">
-            <div className="flex items-center justify-between">
-              <label className="font-bold text-[#e6fc4f] uppercase tracking-wider text-xs flex items-center gap-1.5">
-                <Video className="h-4 w-4 text-[#e6fc4f]" />
-                YouTube Trailer Target or URL *
-              </label>
-              <span className="text-xs text-zinc-400 font-mono">Auto-Streamed</span>
+              {/* YouTube Trailer Feed Requirement */}
+              <div className="space-y-2 bg-[#161618] border border-[#3b3a1a] rounded-xl p-3.5">
+                <div className="flex items-center justify-between">
+                  <label className="font-bold text-[#e6fc4f] uppercase tracking-wider text-xs flex items-center gap-1.5">
+                    <Video className="h-4 w-4 text-[#e6fc4f]" />
+                    YouTube Trailer Target or URL *
+                  </label>
+                  <span className="text-[11px] text-zinc-400 font-mono">Auto-Streamed</span>
+                </div>
+                <Input
+                  required
+                  placeholder="e.g. Wicked Official Trailer or https://..."
+                  value={newTrailerQuery}
+                  onChange={(e) => setNewTrailerQuery(e.target.value)}
+                />
+
+                {/* Quick Auto-fill Suggestion */}
+                {newTitle.trim() && !newTrailerQuery.trim() && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="xs"
+                    onClick={() => setNewTrailerQuery(`${newTitle.trim()} Official Trailer`)}
+                    leftIcon={<Wand2 className="h-3 w-3 text-[#e6fc4f]" />}
+                    className="text-xs text-[#e6fc4f] hover:underline p-0 h-auto"
+                  >
+                    Auto-fill: <strong className="ml-1">"{newTitle.trim()} Official Trailer"</strong>
+                  </Button>
+                )}
+              </div>
+
+              {/* Description */}
+              <Textarea
+                label="Campaign Description / Logline"
+                required
+                rows={3}
+                placeholder="e.g. Universal Pictures musical adaptation directed by Jon M. Chu..."
+                value={newDesc}
+                onChange={(e) => setNewDesc(e.target.value)}
+              />
             </div>
-            <Input
-              required
-              placeholder="e.g. https://www.youtube.com/watch?v=... or Wicked Official Trailer"
-              value={newTrailerQuery}
-              onChange={(e) => setNewTrailerQuery(e.target.value)}
-            />
 
-            {/* Quick Auto-fill Suggestion */}
-            {newTitle.trim() && !newTrailerQuery.trim() && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="xs"
-                onClick={() => setNewTrailerQuery(`${newTitle.trim()} Official Trailer`)}
-                leftIcon={<Wand2 className="h-3 w-3 text-[#e6fc4f]" />}
-                className="text-xs text-[#e6fc4f] hover:underline p-0 h-auto"
-              >
-                Auto-fill: <strong className="ml-1">"{newTitle.trim()} Official Trailer"</strong>
-              </Button>
-            )}
+            {/* Right Column: Sync Engine Settings, Metadata & Telemetry Preview */}
+            <div className="space-y-4 flex flex-col justify-between">
+              {/* Sync Automation & Ingestion Volume */}
+              <div className="bg-[#161618] border border-[#28282b] rounded-xl p-3.5 space-y-3">
+                <span className="text-xs font-bold text-zinc-300 uppercase tracking-wider block">
+                  ClickHouse Ingestion Engine
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <Select
+                    label="Sync Mode"
+                    leftIcon={<Clock className="h-3.5 w-3.5" />}
+                    value={syncMode}
+                    onChange={(e) => setSyncMode(e.target.value)}
+                    options={[
+                      { value: "1hr", label: "Auto (1 Hour)" },
+                      { value: "6hr", label: "Auto (6 Hours)" },
+                      { value: "24hr", label: "Auto (24 Hours)" },
+                      { value: "manual", label: "Manual Sync" },
+                    ]}
+                  />
 
-            <p className="text-xs text-zinc-400 leading-tight pt-0.5">
-              Audience comments will automatically start streaming into ClickHouse upon launch.
-            </p>
+                  <Select
+                    label="Initial Volume"
+                    leftIcon={<Zap className="h-3.5 w-3.5 text-[#e6fc4f]" />}
+                    value={initialVolume}
+                    onChange={(e) => setInitialVolume(parseInt(e.target.value))}
+                    options={[
+                      { value: 1000, label: "1,000 (Recommended)" },
+                      { value: 500, label: "500 Comments" },
+                      { value: 250, label: "250 Comments" },
+                    ]}
+                  />
+                </div>
+              </div>
+
+              {/* Campaign Type & Release Date */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <Select
+                  label="Campaign Type"
+                  value={newType}
+                  onChange={(e) => setNewType(e.target.value)}
+                  options={[
+                    { value: "movie", label: "Theatrical Movie" },
+                    { value: "series", label: "Streaming Series" },
+                    { value: "campaign", label: "Promotional Drop" },
+                  ]}
+                />
+
+                <Input
+                  label="Target Release Date"
+                  type="date"
+                  value={newReleaseDate}
+                  onChange={(e) => setNewReleaseDate(e.target.value)}
+                />
+              </div>
+
+              {/* Ingestion Specs Banner */}
+              <div className="bg-[#141416] border border-[#242428] rounded-xl p-3.5 flex items-center gap-3">
+                <div className="h-8 w-8 rounded-lg bg-[#242428] flex items-center justify-center text-[#4ade80] shrink-0">
+                  <Database className="h-4 w-4" />
+                </div>
+                <div className="space-y-0.5 text-xs text-zinc-300">
+                  <span className="font-semibold text-zinc-100 block">
+                    Zero-Lag Telemetry Pipeline
+                  </span>
+                  <p className="text-zinc-400 text-[11px] leading-tight">
+                    Audience feedback will start streaming into ClickHouse immediately upon launch.
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
 
-          {/* Sync Automation & Ingestion Volume Options */}
-          <div className="grid grid-cols-2 gap-3.5 bg-[#161618] border border-[#28282b] rounded-xl p-3.5">
-            <Select
-              label="Sync Mode"
-              leftIcon={<Clock className="h-3.5 w-3.5" />}
-              value={syncMode}
-              onChange={(e) => setSyncMode(e.target.value)}
-              options={[
-                { value: "1hr", label: "Automatic (Every 1 Hour)" },
-                { value: "6hr", label: "Automatic (Every 6 Hours)" },
-                { value: "24hr", label: "Automatic (Every 24 Hours)" },
-                { value: "manual", label: "Manual Sync Only" },
-              ]}
-            />
-
-            <Select
-              label="Initial Volume"
-              leftIcon={<Zap className="h-3.5 w-3.5 text-[#e6fc4f]" />}
-              value={initialVolume}
-              onChange={(e) => setInitialVolume(parseInt(e.target.value))}
-              options={[
-                { value: 1000, label: "1,000 Comments (Recommended)" },
-                { value: 500, label: "500 Comments" },
-                { value: 250, label: "250 Comments" },
-              ]}
-            />
-          </div>
-
-          {/* Description */}
-          <Textarea
-            label="Campaign Description / Logline"
-            required
-            rows={3}
-            placeholder="e.g. Universal Pictures musical adaptation directed by Jon M. Chu..."
-            value={newDesc}
-            onChange={(e) => setNewDesc(e.target.value)}
-          />
-
-          <div className="grid grid-cols-2 gap-3.5">
-            <Select
-              label="Campaign Type"
-              value={newType}
-              onChange={(e) => setNewType(e.target.value)}
-              options={[
-                { value: "movie", label: "Theatrical Movie" },
-                { value: "series", label: "Streaming Series" },
-                { value: "campaign", label: "Promotional Drop" },
-              ]}
-            />
-
-            <Input
-              label="Target Release Date"
-              type="date"
-              value={newReleaseDate}
-              onChange={(e) => setNewReleaseDate(e.target.value)}
-            />
-          </div>
-
-          <div className="pt-3 border-t border-[#28282b]">
+          {/* Bottom Footer Actions */}
+          <div className="pt-4 border-t border-[#28282b] flex items-center justify-end gap-3">
+            <Button
+              type="button"
+              variant="ghost"
+              size="md"
+              onClick={onClose}
+              disabled={isCreating}
+            >
+              Cancel
+            </Button>
             <Button
               type="submit"
               variant="primary"
-              size="lg"
-              className="w-full"
+              size="md"
               isLoading={isCreating}
               disabled={isCreating || !newTitle.trim() || !newTrailerQuery.trim()}
-              leftIcon={<Plus className="h-4.5 w-4.5 stroke-[3]" />}
+              leftIcon={<Plus className="h-4 w-4 stroke-[3]" />}
             >
-              {isCreating ? "Initializing & Streaming Comments..." : "Launch Campaign & Auto-Stream Feedback"}
+              {isCreating ? "Initializing & Streaming Comments..." : "Launch Campaign & Auto-Stream"}
             </Button>
           </div>
         </form>
