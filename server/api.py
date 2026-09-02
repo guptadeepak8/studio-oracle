@@ -7,7 +7,6 @@ from core.database import get_clickhouse_client
 from services.campaign_service import CampaignService
 from ingestion.youtube import ingest_youtube_data
 
-# Import modular routers
 from routers import (
     campaigns_router,
     decisions_router,
@@ -17,17 +16,14 @@ from routers import (
     benchmark_router,
 )
 
-# Initialize FastAPI application
 app = FastAPI(
     title=settings.PROJECT_NAME,
-    description="High-performance autonomous decision intelligence engine for entertainment marketing.",
+    description="Autonomous decision intelligence engine for entertainment marketing.",
     version=settings.VERSION,
 )
 
-# 1. High-Performance Gzip Compression Middleware
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 
-# 2. CORS configuration for production & local frontends
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -44,7 +40,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Health & Readiness Probes
 @app.get("/health")
 @app.get("/health/live")
 def health():
@@ -52,7 +47,6 @@ def health():
 
 @app.get("/health/ready")
 def readiness():
-    """Readiness probe verifying ClickHouse database connectivity."""
     try:
         client = get_clickhouse_client()
         client.ping()
@@ -60,7 +54,6 @@ def readiness():
     except Exception as e:
         return {"status": "degraded", "clickhouse_notice": str(e)}
 
-# Register Feature Routers
 app.include_router(campaigns_router)
 app.include_router(decisions_router)
 app.include_router(comments_router)
@@ -68,21 +61,14 @@ app.include_router(ingestion_router)
 app.include_router(chat_router)
 app.include_router(benchmark_router)
 
-# Periodic Background Surveillance Worker
 async def periodic_campaign_sync():
-    """
-    Background worker that runs every 1 hour (3600s) to automatically
-    fetch and sync the latest audience feedback for all active campaigns.
-    """
     while True:
         try:
             await asyncio.sleep(3600)
-            print("Executing scheduled 1-hour active campaign audience feedback sync...")
             movies = await asyncio.to_thread(CampaignService.get_all_campaigns)
             for m in movies:
                 if m.get("status") == "active" and m.get("target_terms"):
                     query = m["target_terms"][0]
-                    print(f"Auto-syncing feedback for '{m['title']}'...")
                     await asyncio.to_thread(
                         ingest_youtube_data,
                         m["content_id"],
