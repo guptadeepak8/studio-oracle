@@ -1,7 +1,7 @@
 "use client";
 
 import React, { FormEvent, useState } from "react";
-import { Plus, Sparkles, X, Video, ShieldAlert, Database, Lock, CheckCircle2, Link2, Search } from "lucide-react";
+import { Plus, Sparkles, X, Video, ShieldAlert, Database, Lock, CheckCircle2, Link2 } from "lucide-react";
 import { toast } from "sonner";
 import { useCampaigns } from "../hooks/useCampaigns";
 import { Button, Input, Textarea, Select } from "./ui";
@@ -14,7 +14,7 @@ interface RegisterModalProps {
 
 interface CampaignPreset {
   title: string;
-  trailerUrlOrQuery: string;
+  trailerUrl: string;
   desc: string;
   type: string;
   releaseDate: string;
@@ -23,28 +23,28 @@ interface CampaignPreset {
 const PRESET_CAMPAIGNS: CampaignPreset[] = [
   {
     title: "Wicked (2024)",
-    trailerUrlOrQuery: "https://www.youtube.com/watch?v=6COmYeLsz4c",
+    trailerUrl: "https://www.youtube.com/watch?v=6COmYeLsz4c",
     desc: "Universal Pictures musical adaptation directed by Jon M. Chu, starring Cynthia Erivo and Ariana Grande.",
     type: "movie",
     releaseDate: "2024-11-22",
   },
   {
     title: "Gladiator II",
-    trailerUrlOrQuery: "https://www.youtube.com/watch?v=4rgYUipGJNo",
+    trailerUrl: "https://www.youtube.com/watch?v=4rgYUipGJNo",
     desc: "Paramount Pictures historical epic directed by Ridley Scott, following Lucius entering the Colosseum.",
     type: "movie",
     releaseDate: "2024-11-22",
   },
   {
     title: "Deadpool & Wolverine",
-    trailerUrlOrQuery: "https://www.youtube.com/watch?v=73_1biulkYk",
+    trailerUrl: "https://www.youtube.com/watch?v=73_1biulkYk",
     desc: "Marvel Studios multiverse team-up featuring Ryan Reynolds and Hugh Jackman.",
     type: "movie",
     releaseDate: "2024-07-26",
   },
   {
     title: "Moana 2",
-    trailerUrlOrQuery: "https://www.youtube.com/watch?v=hDZ7y8RP5HE",
+    trailerUrl: "https://www.youtube.com/watch?v=hDZ7y8RP5HE",
     desc: "Walt Disney Animation Studios animated musical voyage starring Auli'i Cravalho and Dwayne Johnson.",
     type: "movie",
     releaseDate: "2024-11-27",
@@ -61,7 +61,7 @@ export default function RegisterModal({
   const [newDesc, setNewDesc] = useState("");
   const [newType, setNewType] = useState("movie");
   const [newReleaseDate, setNewReleaseDate] = useState("");
-  const [newTrailerUrlOrQuery, setNewTrailerUrlOrQuery] = useState("");
+  const [newTrailerUrl, setNewTrailerUrl] = useState("");
   const [syncMode, setSyncMode] = useState("1hr");
   const [initialVolume, setInitialVolume] = useState(1000);
 
@@ -71,49 +71,40 @@ export default function RegisterModal({
   // Preset selector
   const handleApplyPreset = (preset: CampaignPreset) => {
     setNewTitle(preset.title);
-    setNewTrailerUrlOrQuery(preset.trailerUrlOrQuery);
+    setNewTrailerUrl(preset.trailerUrl);
     setNewDesc(preset.desc);
     setNewType(preset.type);
     setNewReleaseDate(preset.releaseDate);
-    toast.success(`Loaded "${preset.title}" template with official trailer URL!`);
+    toast.success(`Loaded "${preset.title}" template!`);
   };
 
-  const handleGenerateSearchTerm = () => {
-    if (!newTitle.trim()) {
-      toast.error("Please enter a campaign title first.");
-      return;
-    }
-    setNewTrailerUrlOrQuery(`${newTitle.trim()} Official Trailer`);
-    toast.success("Generated search term from title!");
-  };
-
-  const isHttpInsecure = newTrailerUrlOrQuery.trim().toLowerCase().startsWith("http://");
-  const isUrl = newTrailerUrlOrQuery.trim().toLowerCase().startsWith("https://");
+  const isHttpInsecure = newTrailerUrl.trim().toLowerCase().startsWith("http://");
+  const isUrl = newTrailerUrl.trim().toLowerCase().startsWith("https://");
   const isTitleValid = newTitle.trim().length >= 2;
   const isDescValid = newDesc.trim().length >= 5;
-  const isTrailerValid = newTrailerUrlOrQuery.trim().length >= 2 && !isHttpInsecure;
+  const isTrailerValid = newTrailerUrl.trim().length >= 2 && !isHttpInsecure;
   const isFormValid = isTitleValid && isDescValid && isTrailerValid;
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
     if (isHttpInsecure) {
-      toast.error("Insecure HTTP URL detected. Please use https:// or enter search keywords.");
+      toast.error("Insecure HTTP URL detected. Please use https:// video URLs.");
       return;
     }
 
     if (!isTitleValid) {
-      toast.error("Campaign title must be at least 2 characters long.");
+      toast.error("Campaign title is required (at least 2 characters).");
       return;
     }
 
     if (!isTrailerValid) {
-      toast.error("Please provide a valid YouTube video URL (https://...) or search term.");
+      toast.error("Please provide a valid YouTube trailer URL or search query.");
       return;
     }
 
     if (!isDescValid) {
-      toast.error("Campaign description must be at least 5 characters long.");
+      toast.error("Campaign description is required (at least 5 characters).");
       return;
     }
 
@@ -122,7 +113,7 @@ export default function RegisterModal({
       content_type: newType,
       description: newDesc.trim(),
       release_date: newReleaseDate || null,
-      target_terms: [newTrailerUrlOrQuery.trim()],
+      target_terms: [newTrailerUrl.trim()],
       sync_mode: syncMode,
       initial_volume: initialVolume,
     });
@@ -146,7 +137,7 @@ export default function RegisterModal({
       <IngestProgressModal
         isOpen={showProgress}
         onClose={handleFinishProgress}
-        targetQuery={newTrailerUrlOrQuery || newTitle}
+        targetQuery={newTrailerUrl || newTitle}
         source="youtube"
       />
     );
@@ -166,7 +157,7 @@ export default function RegisterModal({
                 Track New Campaign Launch
               </h2>
               <span className="text-[11px] text-zinc-400 font-mono">
-                Independent Title & Trailer Ingestion Target
+                Telemetry & Audience Intelligence Ingestion
               </span>
             </div>
           </div>
@@ -212,21 +203,12 @@ export default function RegisterModal({
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
                 />
-                {!isTitleValid && newTitle.length > 0 ? (
-                  <p className="text-[11px] text-amber-400 pt-1">
-                    Title must contain at least 2 characters.
-                  </p>
-                ) : newTitle.trim().length >= 2 ? (
-                  <p className="text-[11px] text-emerald-400 pt-1 flex items-center gap-1">
-                    <CheckCircle2 className="h-3 w-3" /> Valid campaign title.
-                  </p>
-                ) : null}
               </div>
 
               {/* Field 2: Distinct YouTube Trailer URL or Search Query */}
               <div>
                 <Input
-                  label="YouTube Trailer Video (HTTPS URL or Search Term) *"
+                  label="YouTube Trailer Video URL *"
                   required
                   leftIcon={
                     isHttpInsecure ? (
@@ -234,42 +216,20 @@ export default function RegisterModal({
                     ) : isUrl ? (
                       <Link2 className="h-4 w-4 text-emerald-400" />
                     ) : (
-                      <Search className="h-4 w-4 text-indigo-400" />
+                      <Video className="h-4 w-4 text-zinc-400" />
                     )
                   }
-                  placeholder="https://www.youtube.com/watch?v=... or Gladiator II Official Trailer"
-                  value={newTrailerUrlOrQuery}
-                  onChange={(e) => setNewTrailerUrlOrQuery(e.target.value)}
+                  placeholder="https://www.youtube.com/watch?v=... or Trailer Title"
+                  value={newTrailerUrl}
+                  onChange={(e) => setNewTrailerUrl(e.target.value)}
                 />
 
-                <div className="pt-1.5 flex items-center justify-between flex-wrap gap-2 text-[11px]">
-                  {isHttpInsecure ? (
-                    <div className="flex items-center gap-1 text-rose-400 font-medium">
-                      <ShieldAlert className="h-3.5 w-3.5 shrink-0" />
-                      <span>Insecure HTTP detected. Only HTTPS URLs (https://...) are permitted.</span>
-                    </div>
-                  ) : isUrl ? (
-                    <div className="flex items-center gap-1 text-emerald-400 font-medium">
-                      <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
-                      <span>Direct YouTube Video Link (HTTPS)</span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-1 text-zinc-400">
-                      <Lock className="h-3 w-3 text-zinc-500 inline shrink-0" />
-                      <span>Paste direct YouTube URL or search keywords.</span>
-                    </div>
-                  )}
-
-                  {newTitle.trim() && !newTrailerUrlOrQuery.trim() && (
-                    <button
-                      type="button"
-                      onClick={handleGenerateSearchTerm}
-                      className="text-indigo-400 hover:text-indigo-300 hover:underline flex items-center gap-1 font-semibold cursor-pointer"
-                    >
-                      Use "{newTitle.trim()} Trailer"
-                    </button>
-                  )}
-                </div>
+                {isHttpInsecure && (
+                  <div className="flex items-center gap-1 text-[11px] text-rose-400 font-medium pt-1">
+                    <ShieldAlert className="h-3.5 w-3.5 shrink-0" />
+                    <span>Insecure HTTP detected. Only HTTPS URLs (https://...) are permitted.</span>
+                  </div>
+                )}
               </div>
 
               {/* Field 3: Description (Mandatory) */}
@@ -282,15 +242,6 @@ export default function RegisterModal({
                   value={newDesc}
                   onChange={(e) => setNewDesc(e.target.value)}
                 />
-                {!isDescValid && newDesc.length > 0 ? (
-                  <p className="text-[11px] text-amber-400 pt-1">
-                    Description must be at least 5 characters long.
-                  </p>
-                ) : newDesc.trim().length >= 5 ? (
-                  <p className="text-[11px] text-emerald-400 pt-1 flex items-center gap-1">
-                    <CheckCircle2 className="h-3 w-3" /> Valid campaign logline.
-                  </p>
-                ) : null}
               </div>
             </div>
 
