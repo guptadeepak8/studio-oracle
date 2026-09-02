@@ -88,14 +88,16 @@ export default function ExecutiveScorecard({
           </div>
         </Card>
 
-        {/* Card 5: Ingestion Feeds */}
+        {/* Card 5: Ingestion Feeds & ClickHouse Columnar Speed */}
         <Card className="p-4.5 space-y-2">
           <span className="text-xs text-zinc-300 font-semibold block uppercase tracking-wider">
-            Active Sources
+            ClickHouse Engine
           </span>
-          <div className="flex items-center gap-2 text-sm text-zinc-100 font-semibold truncate">
-            <span className="h-2.5 w-2.5 rounded-full bg-[#4ade80]" />
-            <span>YouTube & Reddit</span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5 text-xs text-[#e6fc4f] font-mono font-bold">
+              <span>⚡ &lt; 20ms Query Speed</span>
+            </div>
+            <span className="text-[11px] text-zinc-400 font-mono">100K Scale</span>
           </div>
         </Card>
       </div>
