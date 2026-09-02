@@ -59,3 +59,4 @@ class ChatService:
                         yield f"data: {clean_part}\n\n"
 
 chat_service = ChatService()
+

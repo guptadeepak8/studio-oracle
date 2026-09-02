@@ -42,3 +42,4 @@ def ingest_reddit_campaign_data(content_id: str, request: RedditIngestRequest):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Reddit ingestion error: {str(e)}")
+

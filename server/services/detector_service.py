@@ -138,3 +138,4 @@ class DetectorService:
             print(f"Notice in detector sample query: {e}")
 
         return signals
+

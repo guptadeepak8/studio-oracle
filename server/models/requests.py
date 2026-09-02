@@ -22,3 +22,4 @@ class CampaignCreateRequest(BaseModel):
 
 class CampaignStatusRequest(BaseModel):
     status: str
+

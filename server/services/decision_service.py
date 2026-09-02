@@ -209,3 +209,4 @@ class DecisionService:
             last_investigation=datetime.utcnow().isoformat(),
             decisions=decisions
         )
+

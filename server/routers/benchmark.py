@@ -41,3 +41,4 @@ def trigger_seed_benchmark(background_tasks: BackgroundTasks):
         "status": "started",
         "message": "100,000 comment ClickHouse batch streaming benchmark started in background."
     }
+

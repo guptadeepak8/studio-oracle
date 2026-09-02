@@ -23,3 +23,4 @@ def get_comment_detail(comment_id: str):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Database error fetching comment: {str(e)}")
+

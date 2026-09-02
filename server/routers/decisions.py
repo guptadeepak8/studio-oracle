@@ -28,3 +28,4 @@ def trigger_agent_investigation(content_id: str):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Investigation failed: {str(e)}")
+

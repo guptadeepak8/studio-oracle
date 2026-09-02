@@ -7,9 +7,10 @@ from dotenv import load_dotenv
 
 load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"))
 
-from ingestion.youtube import get_clickhouse_client
+from core.database import get_clickhouse_client
+from core.cache import invalidate_cache
 from tools.movie import create_content_record
-import db
+from services.campaign_service import CampaignService
 
 # Realistic comment variations and topics for realistic distribution
 POS_COMMENTS = [
@@ -48,7 +49,7 @@ def seed_100k_benchmark(target_count: int = 100000):
     
     # 1. Create or retrieve benchmark campaign
     benchmark_title = "Gladiator II (100K Scale Benchmark)"
-    movies = db.fetch_movies()
+    movies = CampaignService.get_all_campaigns()
     benchmark_movie = next((m for m in movies if "100K" in m["title"]), None)
     
     if benchmark_movie:
@@ -63,7 +64,7 @@ def seed_100k_benchmark(target_count: int = 100000):
             release_date="2026-11-22",
             target_terms=["Gladiator II Official Trailer", "Gladiator 2 Reddit"]
         )
-        db.set_campaign_status(content_id, "active")
+        CampaignService.set_status(content_id, "active")
         print(f"Created benchmark campaign with ID: {content_id}")
 
     # Check existing comments count
@@ -143,7 +144,7 @@ def seed_100k_benchmark(target_count: int = 100000):
         print(f"\n✅ Inserted {needed:,} comments in {insert_duration:.2f} seconds (Rate: {needed/insert_duration:,.0f} rows/sec)!\n")
 
     # Invalidate cache so fresh benchmark analytics load immediately
-    db.invalidate_campaign_cache(content_id)
+    invalidate_cache(content_id)
 
     # 2. RUN SPEED BENCHMARKS (The Hackathon Flex)
     print("--------------------------------------------------------")

@@ -22,3 +22,4 @@ def invalidate_cache(pattern_or_id: Optional[str] = None) -> None:
             _QUERY_CACHE.pop(k, None)
     else:
         _QUERY_CACHE.clear()
+

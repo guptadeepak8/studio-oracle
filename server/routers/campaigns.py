@@ -114,3 +114,4 @@ def get_campaign_pulse(content_id: str):
         return {"pulseSummary": summary}
     except Exception as e:
         return {"pulseSummary": "Audience metrics show healthy engagement across key themes."}
+

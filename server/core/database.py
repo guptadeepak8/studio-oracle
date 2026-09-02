@@ -51,3 +51,4 @@ def init_sqlite_db() -> None:
     """)
     conn.commit()
     conn.close()
+
