@@ -5,9 +5,6 @@ from core.config import settings
 _clickhouse_client_instance = None
 
 def get_clickhouse_client():
-    """
-    Singleton thread-safe ClickHouse connection pool with auto-reconnect ping.
-    """
     global _clickhouse_client_instance
     if _clickhouse_client_instance is not None:
         try:
@@ -29,18 +26,12 @@ def get_clickhouse_client():
     return _clickhouse_client_instance
 
 def get_sqlite_connection(timeout: float = 30.0) -> sqlite3.Connection:
-    """
-    Returns an optimized SQLite connection with Write-Ahead Logging (WAL) enabled.
-    """
     conn = sqlite3.connect(settings.SQLITE_DB_PATH, timeout=timeout)
     conn.execute("PRAGMA journal_mode=WAL;")
     conn.execute("PRAGMA synchronous=NORMAL;")
     return conn
 
 def init_sqlite_db() -> None:
-    """
-    Initialize SQLite tables for persistent status tracking.
-    """
     conn = get_sqlite_connection()
     cursor = conn.cursor()
     cursor.execute("""
@@ -51,4 +42,3 @@ def init_sqlite_db() -> None:
     """)
     conn.commit()
     conn.close()
-

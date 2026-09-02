@@ -4,11 +4,6 @@ from core.database import get_clickhouse_client
 class DetectorService:
     @staticmethod
     def detect_campaign_signals(content_id: str) -> Dict[str, Any]:
-        """
-        Deterministic mathematical detector for campaign anomaly detection.
-        Queries ClickHouse directly for net sentiment, platform divergence,
-        and topic friction/resonance before engaging LLM reasoning.
-        """
         client = get_clickhouse_client()
         signals = {
             "content_id": content_id,
@@ -23,7 +18,6 @@ class DetectorService:
             "sample_evidence": []
         }
 
-        # 1. Total & Sentiment Counts
         sent_query = f"""
         SELECT 
             count() as total,
@@ -42,13 +36,12 @@ class DetectorService:
                 signals["negative_pct"] = round((neg / tot) * 100)
                 signals["neutral_pct"] = round((neu / tot) * 100)
                 signals["net_sentiment_score"] = round((pos - neg) / tot, 2)
-        except Exception as e:
-            print(f"Notice in detector sentiment counts: {e}")
+        except Exception:
+            pass
 
         if signals["total_comments"] == 0:
             return signals
 
-        # 2. Platform Breakdown
         plat_query = f"""
         SELECT 
             source,
@@ -68,10 +61,9 @@ class DetectorService:
                     "positive_pct": round((p / t) * 100) if t > 0 else 0,
                     "negative_pct": round((n / t) * 100) if t > 0 else 0
                 }
-        except Exception as e:
-            print(f"Notice in detector platform query: {e}")
+        except Exception:
+            pass
 
-        # 3. Thematic Topic Friction & Resonance
         topic_query = f"""
         SELECT 
             topic,
@@ -109,10 +101,9 @@ class DetectorService:
                         "negative_pct": n_pct,
                         "resonance_score": round(p / t, 2)
                     })
-        except Exception as e:
-            print(f"Notice in detector topic query: {e}")
+        except Exception:
+            pass
 
-        # 4. Extract Representative Quotes with Verbatim comment_id
         sample_query = f"""
         SELECT 
             comment_id, source, author, text, sentiment, topics, confidence, published_at
@@ -134,8 +125,7 @@ class DetectorService:
                     "confidence": float(r[6]) if r[6] else 0.85,
                     "published_at": str(r[7]) if r[7] else None
                 })
-        except Exception as e:
-            print(f"Notice in detector sample query: {e}")
+        except Exception:
+            pass
 
         return signals
-

@@ -12,7 +12,6 @@ from core.cache import invalidate_cache
 from tools.movie import create_content_record
 from services.campaign_service import CampaignService
 
-# Realistic comment variations and topics for realistic distribution
 POS_COMMENTS = [
     ("The cinematography in this trailer is genuinely breathtaking. Ridley Scott still has it!", ["cinematography", "visuals", "scale"]),
     ("Paul Mescal and Pedro Pascal have unreal on-screen presence. That Colosseum scene gave me chills.", ["casting", "performance", "action"]),
@@ -41,22 +40,15 @@ NEU_COMMENTS = [
 AUTHORS = ["Cinephile99", "MovieBuff_Max", "ArenaCritic", "FilmSnob_London", "ActionJunkie", "BoxOfficeTracker", "ScreenRantFan", "GladiatorFan2000", "VFXArtist_Tom", "LoreMaster_Rome"]
 
 def seed_100k_benchmark(target_count: int = 100000):
-    print(f"\n========================================================")
-    print(f"🚀 StudioOracle ClickHouse Scale Benchmark: {target_count:,} Comments")
-    print(f"========================================================\n")
-    
     client = get_clickhouse_client()
     
-    # 1. Create or retrieve benchmark campaign
     benchmark_title = "Gladiator II (100K Scale Benchmark)"
     movies = CampaignService.get_all_campaigns()
     benchmark_movie = next((m for m in movies if "100K" in m["title"]), None)
     
     if benchmark_movie:
         content_id = benchmark_movie["content_id"]
-        print(f"Using existing benchmark campaign: '{benchmark_title}' ({content_id})")
     else:
-        print(f"Creating new benchmark campaign: '{benchmark_title}'...")
         content_id = create_content_record(
             title=benchmark_title,
             content_type="movie",
@@ -65,21 +57,15 @@ def seed_100k_benchmark(target_count: int = 100000):
             target_terms=["Gladiator II Official Trailer", "Gladiator 2 Reddit"]
         )
         CampaignService.set_status(content_id, "active")
-        print(f"Created benchmark campaign with ID: {content_id}")
 
-    # Check existing comments count
     cnt_query = f"SELECT count() FROM studio_oracle.audience_comments WHERE content_id = '{content_id}'"
     existing_count = client.query(cnt_query).result_rows[0][0]
-    print(f"Current comments in ClickHouse for benchmark campaign: {existing_count:,}")
 
     if existing_count < target_count:
         needed = target_count - existing_count
-        print(f"\nGenerating and inserting {needed:,} comments in high-speed vectorized batches...")
-        
         batch_size = 10000
         total_inserted = 0
         insert_start = time.time()
-        
         base_time = datetime.now() - timedelta(days=14)
         
         while total_inserted < needed:
@@ -91,7 +77,6 @@ def seed_100k_benchmark(target_count: int = 100000):
                 pid = f"vid_{random.randint(1, 10)}"
                 source = "youtube" if random.random() < 0.65 else "reddit"
                 
-                # Distribution: 58% pos, 28% neg, 14% neutral
                 rand_val = random.random()
                 if rand_val < 0.58:
                     text, topics = random.choice(POS_COMMENTS)
@@ -126,7 +111,6 @@ def seed_100k_benchmark(target_count: int = 100000):
                     topics, topic_sentiments, "success"
                 ))
 
-            # Direct vectorized insert into ClickHouse
             client.insert(
                 "studio_oracle.audience_comments",
                 batch_rows,
@@ -138,69 +122,10 @@ def seed_100k_benchmark(target_count: int = 100000):
                 ]
             )
             total_inserted += current_batch_size
-            print(f"  Inserted {total_inserted:,} / {needed:,} comments into ClickHouse...")
 
-        insert_duration = time.time() - insert_start
-        print(f"\n✅ Inserted {needed:,} comments in {insert_duration:.2f} seconds (Rate: {needed/insert_duration:,.0f} rows/sec)!\n")
+        invalidate_cache(content_id)
 
-    # Invalidate cache so fresh benchmark analytics load immediately
-    invalidate_cache(content_id)
-
-    # 2. RUN SPEED BENCHMARKS (The Hackathon Flex)
-    print("--------------------------------------------------------")
-    print("⚡ RUNNING CLICKHOUSE REAL-TIME SPEED TESTS ACROSS 100K ROWS")
-    print("--------------------------------------------------------")
-
-    # Test 1: Full Sentiment Count Aggregation
-    t0 = time.time()
-    q1 = f"SELECT sentiment, count() FROM studio_oracle.audience_comments WHERE content_id = '{content_id}' GROUP BY sentiment"
-    res1 = client.query(q1).result_rows
-    lat1 = (time.time() - t0) * 1000
-    print(f"1. Full Sentiment Aggregation (100K rows) : {lat1:.2f} ms -> {res1}")
-
-    # Test 2: Multi-dimensional ARRAY JOIN topic grouping
-    t0 = time.time()
-    q2 = f"""
-    SELECT topic, count() as cnt, countIf(sentiment = 'positive') as pos, countIf(sentiment = 'negative') as neg
-    FROM studio_oracle.audience_comments
-    ARRAY JOIN topics AS topic
-    WHERE content_id = '{content_id}'
-    GROUP BY topic ORDER BY cnt DESC LIMIT 10
-    """
-    res2 = client.query(q2).result_rows
-    lat2 = (time.time() - t0) * 1000
-    print(f"2. Array Join Topic Aggregation (100K rows): {lat2:.2f} ms -> {len(res2)} topics grouped")
-
-    # Test 3: Cross-Platform Sentiment Divergence
-    t0 = time.time()
-    q3 = f"""
-    SELECT source, count(), countIf(sentiment='positive'), countIf(sentiment='negative')
-    FROM studio_oracle.audience_comments
-    WHERE content_id = '{content_id}'
-    GROUP BY source
-    """
-    res3 = client.query(q3).result_rows
-    lat3 = (time.time() - t0) * 1000
-    print(f"3. Cross-Platform Divergence Calculation   : {lat3:.2f} ms -> {res3}")
-
-    # Test 4: Extreme Value Extraction (argMax top positive & negative verbatim quotes)
-    t0 = time.time()
-    q4 = f"""
-    SELECT 
-        argMax(text, like_count) FILTER (WHERE sentiment = 'positive'),
-        argMax(text, like_count) FILTER (WHERE sentiment = 'negative')
-    FROM studio_oracle.audience_comments
-    WHERE content_id = '{content_id}'
-    """
-    res4 = client.query(q4).result_rows
-    lat4 = (time.time() - t0) * 1000
-    print(f"4. Extreme argMax Quote Extraction         : {lat4:.2f} ms")
-
-    print(f"\n========================================================")
-    print(f"🏆 BENCHMARK RESULT: Average ClickHouse query latency: {(lat1+lat2+lat3+lat4)/4:.2f} ms across 100,000+ comments!")
-    print(f"========================================================\n")
     return content_id
 
 if __name__ == "__main__":
     seed_100k_benchmark(100000)
-

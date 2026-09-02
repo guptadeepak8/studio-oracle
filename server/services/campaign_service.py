@@ -36,8 +36,7 @@ class CampaignService:
             client.command(f"DELETE FROM studio_oracle.audience_comments WHERE content_id = '{content_id}'")
             client.command(f"DELETE FROM studio_oracle.audience_posts WHERE content_id = '{content_id}'")
             client.command(f"DELETE FROM studio_oracle.content WHERE content_id = '{content_id}'")
-        except Exception as del_err:
-            print(f"Fallback ALTER TABLE DELETE mutation: {del_err}")
+        except Exception:
             client.command(f"ALTER TABLE studio_oracle.audience_comments DELETE WHERE content_id = '{content_id}'")
             client.command(f"ALTER TABLE studio_oracle.audience_posts DELETE WHERE content_id = '{content_id}'")
             client.command(f"ALTER TABLE studio_oracle.content DELETE WHERE content_id = '{content_id}'")
@@ -103,8 +102,7 @@ class CampaignService:
             }
             set_cached(f"movie_{content_id}", res)
             return res
-        except Exception as e:
-            print(f"Notice: Campaign query for {content_id}: {e}")
+        except Exception:
             return None
 
     @staticmethod
@@ -160,8 +158,7 @@ class CampaignService:
                 "topics": list(r[9]) if r[9] else [],
                 "confidence": float(r[10]) if r[10] else 0.85
             }
-        except Exception as e:
-            print(f"Error fetching comment {comment_id}: {e}")
+        except Exception:
             return None
 
     @staticmethod
@@ -173,7 +170,6 @@ class CampaignService:
 
         client = get_clickhouse_client()
         
-        # Sentiment counts
         sent_query = f"SELECT sentiment, count() FROM studio_oracle.audience_comments WHERE content_id = '{content_id}' GROUP BY sentiment"
         try:
             sent_rows = client.query(sent_query).result_rows
@@ -198,7 +194,6 @@ class CampaignService:
             "negPercent": neg_percent
         }
 
-        # Themes
         theme_query = (
             f"SELECT topic, count() as total, "
             f"       countIf(topic_sentiments[topic] = 'positive') as pos_c, "
@@ -225,7 +220,6 @@ class CampaignService:
                 "negPercent": round((neg_c / total) * 100) if total > 0 else 0
             })
 
-        # Conflict signals
         conflict_query = (
             f"SELECT topic, "
             f"       argMax(text, like_count) FILTER (WHERE topic_sentiments[topic] = 'positive') as pos_text, "
@@ -385,4 +379,3 @@ class CampaignService:
             ]
         except Exception:
             return []
-

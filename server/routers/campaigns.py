@@ -10,7 +10,6 @@ router = APIRouter(tags=["Campaigns"])
 @router.get("/api/movies")
 @router.get("/api/campaigns")
 def get_campaigns() -> List[Dict[str, Any]]:
-    """Retrieve all campaign content records with tracking status."""
     try:
         return CampaignService.get_all_campaigns()
     except Exception as e:
@@ -18,7 +17,6 @@ def get_campaigns() -> List[Dict[str, Any]]:
 
 @router.post("/api/campaigns")
 def create_campaign(request: CampaignCreateRequest, background_tasks: BackgroundTasks):
-    """Register a new campaign and trigger background comment ingestion."""
     try:
         content_id = create_content_record(
             title=request.title,
@@ -29,7 +27,6 @@ def create_campaign(request: CampaignCreateRequest, background_tasks: Background
         )
         CampaignService.set_status(content_id, "active")
 
-        # Trigger initial ingestion
         initial_query = request.target_terms[0] if (request.target_terms and len(request.target_terms) > 0) else request.title
         background_tasks.add_task(ingest_youtube_data, content_id, initial_query, limit=3, max_comments_per_video=300)
 
@@ -43,7 +40,6 @@ def create_campaign(request: CampaignCreateRequest, background_tasks: Background
 
 @router.delete("/api/campaigns/{content_id}")
 def delete_campaign(content_id: str):
-    """Hard delete of a campaign and all associated telemetry records."""
     try:
         CampaignService.delete_campaign(content_id)
         return {
@@ -112,6 +108,5 @@ def get_campaign_pulse(content_id: str):
 
         summary = f"Audience engagement reflects {pos_pct}% positive vs {neg_pct}% critical polarity, driven primarily by discussions around {top_theme}."
         return {"pulseSummary": summary}
-    except Exception as e:
+    except Exception:
         return {"pulseSummary": "Audience metrics show healthy engagement across key themes."}
-

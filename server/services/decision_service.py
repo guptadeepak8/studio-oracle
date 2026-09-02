@@ -16,11 +16,6 @@ from services.detector_service import DetectorService
 class DecisionService:
     @staticmethod
     def get_or_investigate_decisions(content_id: str) -> CampaignDecisionsResponse:
-        """
-        Executes an autonomous campaign-scoped decision investigation.
-        Evaluates signals, cross-platform corroboration, and produces 6-tier
-        traceable Decision Artifacts.
-        """
         campaign = CampaignService.get_campaign_by_id(content_id)
         title = campaign.get("title", "Campaign") if campaign else "Campaign"
         signals = DetectorService.detect_campaign_signals(content_id)
@@ -28,7 +23,6 @@ class DecisionService:
         decisions: List[DecisionArtifact] = []
         total_comments = signals.get("total_comments", 0)
 
-        # 1. Epistemic Discipline: Check for Insufficient Evidence
         if total_comments < 25:
             sample_refs = [
                 EvidenceReference(**s) for s in signals.get("sample_evidence", [])
@@ -84,7 +78,6 @@ class DecisionService:
                 ) for k, v in signals.get("platform_split", {}).items()
             ]
 
-            # 2. Friction Mitigation Decision
             friction_topics = signals.get("friction_topics", [])
             if friction_topics:
                 top_fric = friction_topics[0]
@@ -115,14 +108,13 @@ class DecisionService:
                         confidence_rating=ConfidenceRating.HIGH,
                         why=[
                             f"Direct volume confirmation: {vol} topic-specific audience comments in ClickHouse.",
-                            f"Multi-platform verification: Observed across active channels.",
+                            "Multi-platform verification: Observed across active channels.",
                             "Consistently reproducible sentiment polarity."
                         ],
                         created_at=datetime.utcnow().isoformat()
                     )
                 )
 
-            # 3. Resonance Amplifier Decision
             resonance_topics = signals.get("resonance_topics", [])
             if resonance_topics:
                 top_res = resonance_topics[0]
@@ -160,7 +152,6 @@ class DecisionService:
                     )
                 )
 
-            # 4. Cross-Platform Divergence Decision
             plat_split = signals.get("platform_split", {})
             if "youtube" in plat_split and "reddit" in plat_split:
                 yt_pos = plat_split["youtube"]["positive_pct"]
@@ -209,4 +200,3 @@ class DecisionService:
             last_investigation=datetime.utcnow().isoformat(),
             decisions=decisions
         )
-

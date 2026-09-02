@@ -1,7 +1,6 @@
 import time
 from typing import Any, Optional, Dict, Tuple
 
-# Thread-safe in-memory TTL query cache for hot read operations
 _QUERY_CACHE: Dict[str, Tuple[float, Any]] = {}
 
 def get_cached(key: str, ttl_seconds: float = 15.0) -> Optional[Any]:
@@ -22,4 +21,3 @@ def invalidate_cache(pattern_or_id: Optional[str] = None) -> None:
             _QUERY_CACHE.pop(k, None)
     else:
         _QUERY_CACHE.clear()
-
