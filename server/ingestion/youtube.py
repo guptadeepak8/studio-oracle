@@ -121,6 +121,71 @@ def extract_youtube_video_id(url_or_query: str) -> str | None:
             return match.group(1)
     return None
 
+def search_youtube_trailers(query: str, limit: int = 6) -> List[Dict]:
+    """Search YouTube Data API v3 for official movie trailers matching query."""
+    api_key = os.getenv("YOUTUBE_API_KEY")
+    clean_query = (query or "").strip()
+    if not clean_query:
+        return []
+
+    direct_vid = extract_youtube_video_id(clean_query)
+    if direct_vid:
+        return [{
+            "video_id": direct_vid,
+            "title": f"Direct YouTube Video ({direct_vid})",
+            "channel_title": "YouTube",
+            "description": "Direct YouTube video target URL",
+            "published_at": "",
+            "thumbnail_url": f"https://i.ytimg.com/vi/{direct_vid}/mqdefault.jpg",
+            "url": f"https://www.youtube.com/watch?v={direct_vid}"
+        }]
+
+    if not api_key:
+        return []
+
+    search_term = clean_query if "trailer" in clean_query.lower() else f"{clean_query} official trailer"
+    search_url = "https://www.googleapis.com/youtube/v3/search"
+    params = {
+        "part": "snippet",
+        "q": search_term,
+        "type": "video",
+        "maxResults": limit,
+        "key": api_key
+    }
+    
+    try:
+        res = requests.get(search_url, params=params, timeout=10)
+        if res.status_code != 200:
+            return []
+        items = res.json().get("items", [])
+        results = []
+        for item in items:
+            vid_id = item.get("id", {}).get("videoId")
+            if not vid_id:
+                continue
+            snippet = item.get("snippet", {})
+            thumbnails = snippet.get("thumbnails", {})
+            thumb = (
+                thumbnails.get("medium", {}).get("url") or
+                thumbnails.get("default", {}).get("url") or
+                f"https://i.ytimg.com/vi/{vid_id}/mqdefault.jpg"
+            )
+            pub_date = snippet.get("publishedAt", "")[:10]
+            
+            results.append({
+                "video_id": vid_id,
+                "title": snippet.get("title", ""),
+                "channel_title": snippet.get("channelTitle", ""),
+                "description": snippet.get("description", ""),
+                "published_at": pub_date,
+                "thumbnail_url": thumb,
+                "url": f"https://www.youtube.com/watch?v={vid_id}"
+            })
+        return results
+    except Exception as e:
+        print(f"Error searching YouTube trailers: {e}")
+        return []
+
 def ingest_youtube_data(content_id: str, query: str, limit: int = 3, max_comments_per_video: int = 500) -> dict:
     """
     Search YouTube videos or direct URL matching `query`, paginate comments up to `max_comments_per_video`,

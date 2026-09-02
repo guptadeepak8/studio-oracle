@@ -1,14 +1,25 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 from models.requests import IngestRequest
-from ingestion.youtube import ingest_youtube_data
+from ingestion.youtube import ingest_youtube_data, search_youtube_trailers
 from services.search_service import GoogleSearchService
 
 router = APIRouter(tags=["Ingestion & Grounding"])
 
 class SearchGroundingRequest(BaseModel):
     query: Optional[str] = None
+
+@router.get("/api/youtube/search-trailers")
+def search_trailers(q: str = Query(..., min_length=1, max_length=200), limit: int = Query(6, ge=1, le=10)):
+    """
+    Searches YouTube Data API v3 for official movie trailers and promotional video teasers.
+    """
+    try:
+        results = search_youtube_trailers(q, limit=limit)
+        return results
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"YouTube trailer search error: {str(e)}")
 
 @router.post("/api/ingest")
 @router.post("/api/ingest-youtube")

@@ -1,15 +1,26 @@
 "use client";
 
 import React, { FormEvent, useState, useRef, useEffect } from "react";
-import { Plus, Sparkles, X, Video, ShieldAlert, Database, Lock, CheckCircle2, Link2, Film, Calendar, Clapperboard } from "lucide-react";
+import { Plus, Sparkles, X, Video, ShieldAlert, Database, Lock, Film, Search, Loader2, Play } from "lucide-react";
 import { toast } from "sonner";
 import { useCampaigns } from "../hooks/useCampaigns";
+import { API_BASE_URL } from "../utils/constants";
 import { Button, Input, Textarea, Select } from "./ui";
 import IngestProgressModal from "./IngestProgressModal";
 
 interface RegisterModalProps {
   onClose: () => void;
   onSuccess?: (contentId: string) => void;
+}
+
+interface YouTubeTrailerResult {
+  video_id: string;
+  title: string;
+  channel_title: string;
+  description: string;
+  published_at: string;
+  thumbnail_url: string;
+  url: string;
 }
 
 interface MovieCatalogItem {
@@ -21,7 +32,7 @@ interface MovieCatalogItem {
   studio: string;
 }
 
-const MOVIE_CATALOG: MovieCatalogItem[] = [
+const POPULAR_TEMPLATES: MovieCatalogItem[] = [
   {
     title: "Wicked (2024)",
     trailerUrl: "https://www.youtube.com/watch?v=6COmYeLsz4c",
@@ -54,86 +65,6 @@ const MOVIE_CATALOG: MovieCatalogItem[] = [
     releaseDate: "2024-11-27",
     studio: "Walt Disney Animation",
   },
-  {
-    title: "Nosferatu (2024)",
-    trailerUrl: "https://www.youtube.com/watch?v=nulvWqYUM8k",
-    desc: "Focus Features gothic horror masterpiece directed by Robert Eggers, starring Bill Skarsgård, Nicholas Hoult, and Lily-Rose Depp.",
-    type: "movie",
-    releaseDate: "2024-12-25",
-    studio: "Focus Features",
-  },
-  {
-    title: "Superman (2025)",
-    trailerUrl: "https://www.youtube.com/watch?v=uhUht6vAsMY",
-    desc: "DC Studios superhero film written and directed by James Gunn, starring David Corenswet as the Man of Steel.",
-    type: "movie",
-    releaseDate: "2025-07-11",
-    studio: "DC Studios / Warner Bros.",
-  },
-  {
-    title: "Avatar: Fire and Ash",
-    trailerUrl: "https://www.youtube.com/watch?v=d9MyW72ELq0",
-    desc: "20th Century Studios sci-fi epic directed by James Cameron, introducing the aggressive Ash People Na'vi clan on Pandora.",
-    type: "movie",
-    releaseDate: "2025-12-19",
-    studio: "20th Century Studios / Disney",
-  },
-  {
-    title: "Dune: Part Two",
-    trailerUrl: "https://www.youtube.com/watch?v=Way9Dexny3w",
-    desc: "Warner Bros. Pictures sci-fi adaptation directed by Denis Villeneuve, following Paul Atreides uniting with the Fremen.",
-    type: "movie",
-    releaseDate: "2024-03-01",
-    studio: "Warner Bros. / Legendary",
-  },
-  {
-    title: "Joker: Folie à Deux",
-    trailerUrl: "https://www.youtube.com/watch?v=_OKAwz2NiJs",
-    desc: "Warner Bros. Pictures musical psychological thriller directed by Todd Phillips, starring Joaquin Phoenix and Lady Gaga.",
-    type: "movie",
-    releaseDate: "2024-10-04",
-    studio: "Warner Bros. Pictures",
-  },
-  {
-    title: "Mufasa: The Lion King",
-    trailerUrl: "https://www.youtube.com/watch?v=o17MF9vnabg",
-    desc: "Walt Disney Studios photorealistic musical drama directed by Barry Jenkins, chronicling the rise of King Mufasa.",
-    type: "movie",
-    releaseDate: "2024-12-20",
-    studio: "Walt Disney Pictures",
-  },
-  {
-    title: "Sonic the Hedgehog 3",
-    trailerUrl: "https://www.youtube.com/watch?v=qSu6i2iFMO0",
-    desc: "Paramount Pictures action adventure starring Ben Schwartz as Sonic, Jim Carrey as Dr. Robotnik, and Keanu Reeves as Shadow.",
-    type: "movie",
-    releaseDate: "2024-12-20",
-    studio: "Paramount Pictures",
-  },
-  {
-    title: "Captain America: Brave New World",
-    trailerUrl: "https://www.youtube.com/watch?v=1pHDWnXmK7Y",
-    desc: "Marvel Studios espionage superhero film starring Anthony Mackie as Sam Wilson and Harrison Ford as Thaddeus Ross / Red Hulk.",
-    type: "movie",
-    releaseDate: "2025-02-14",
-    studio: "Marvel Studios",
-  },
-  {
-    title: "The Fantastic Four: First Steps",
-    trailerUrl: "https://www.youtube.com/watch?v=7h3e9iM9wE0",
-    desc: "Marvel Studios retro-futuristic 1960s superhero epic starring Pedro Pascal, Vanessa Kirby, Joseph Quinn, and Ebon Moss-Bachrach.",
-    type: "movie",
-    releaseDate: "2025-07-25",
-    studio: "Marvel Studios",
-  },
-  {
-    title: "Thunderbolts*",
-    trailerUrl: "https://www.youtube.com/watch?v=v-bL8vW6p78",
-    desc: "Marvel Studios antihero ensemble directed by Jake Schreier, starring Florence Pugh, Sebastian Stan, and David Harbour.",
-    type: "movie",
-    releaseDate: "2025-05-02",
-    studio: "Marvel Studios",
-  },
 ];
 
 export default function RegisterModal({
@@ -150,37 +81,89 @@ export default function RegisterModal({
   const [syncMode, setSyncMode] = useState("1hr");
   const [initialVolume, setInitialVolume] = useState(1000);
 
-  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [youtubeResults, setYoutubeResults] = useState<YouTubeTrailerResult[]>([]);
+  const [isSearchingYouTube, setIsSearchingYouTube] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
-  const suggestionsRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const [createdId, setCreatedId] = useState<string | null>(null);
   const [showProgress, setShowProgress] = useState(false);
 
-  // Filter autocomplete suggestions based on user input
-  const suggestions = newTitle.trim().length > 0
-    ? MOVIE_CATALOG.filter((movie) =>
-        movie.title.toLowerCase().includes(newTitle.toLowerCase()) ||
-        movie.studio.toLowerCase().includes(newTitle.toLowerCase())
-      )
-    : [];
+  // Debounced live YouTube API search
+  useEffect(() => {
+    const query = newTitle.trim();
+    if (query.length < 2) {
+      setYoutubeResults([]);
+      setShowDropdown(false);
+      return;
+    }
 
-  const handleSelectMovie = (movie: MovieCatalogItem) => {
-    setNewTitle(movie.title);
-    setNewTrailerUrl(movie.trailerUrl);
-    setNewDesc(movie.desc);
-    setNewType(movie.type);
-    setNewReleaseDate(movie.releaseDate);
-    setShowSuggestions(false);
+    const timer = setTimeout(async () => {
+      setIsSearchingYouTube(true);
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/youtube/search-trailers?q=${encodeURIComponent(query)}&limit=5`);
+        if (res.ok) {
+          const data: YouTubeTrailerResult[] = await res.json();
+          setYoutubeResults(data);
+          if (data.length > 0) {
+            setShowDropdown(true);
+          }
+        }
+      } catch (e) {
+        console.error("YouTube search error:", e);
+      } finally {
+        setIsSearchingYouTube(false);
+      }
+    }, 350);
+
+    return () => clearTimeout(timer);
+  }, [newTitle]);
+
+  // Clean raw YouTube title to film name
+  const cleanFilmTitle = (raw: string) => {
+    return raw
+      .replace(/\|.*$/gi, "")
+      .replace(/\[.*?\]/g, "")
+      .replace(/\(.*?\)/g, "")
+      .replace(/Official Trailer.*$/gi, "")
+      .replace(/Teaser Trailer.*$/gi, "")
+      .replace(/Trailer.*$/gi, "")
+      .replace(/4K.*$/gi, "")
+      .replace(/HD.*$/gi, "")
+      .trim();
+  };
+
+  const handleSelectYouTubeTrailer = (trailer: YouTubeTrailerResult) => {
+    const extractedTitle = cleanFilmTitle(trailer.title) || newTitle.trim();
+    setNewTitle(extractedTitle);
+    setNewTrailerUrl(trailer.url);
+    if (!newDesc.trim() && trailer.description) {
+      setNewDesc(trailer.description.slice(0, 300));
+    }
+    if (trailer.published_at) {
+      setNewReleaseDate(trailer.published_at);
+    }
+    setShowDropdown(false);
     setSelectedIndex(-1);
-    toast.success(`Selected "${movie.title}" · Official trailer URL loaded!`);
+    toast.success(`Selected "${trailer.title.slice(0, 40)}..." · Live trailer URL linked!`);
+  };
+
+  const handleSelectTemplate = (template: MovieCatalogItem) => {
+    setNewTitle(template.title);
+    setNewTrailerUrl(template.trailerUrl);
+    setNewDesc(template.desc);
+    setNewType(template.type);
+    setNewReleaseDate(template.releaseDate);
+    setShowDropdown(false);
+    toast.success(`Loaded "${template.title}" template!`);
   };
 
   // Close dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (suggestionsRef.current && !suggestionsRef.current.contains(e.target as Node)) {
-        setShowSuggestions(false);
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setShowDropdown(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -188,19 +171,19 @@ export default function RegisterModal({
   }, []);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (!showSuggestions || suggestions.length === 0) return;
+    if (!showDropdown || youtubeResults.length === 0) return;
 
     if (e.key === "ArrowDown") {
       e.preventDefault();
-      setSelectedIndex((prev) => (prev < suggestions.length - 1 ? prev + 1 : 0));
+      setSelectedIndex((prev) => (prev < youtubeResults.length - 1 ? prev + 1 : 0));
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
-      setSelectedIndex((prev) => (prev > 0 ? prev - 1 : suggestions.length - 1));
+      setSelectedIndex((prev) => (prev > 0 ? prev - 1 : youtubeResults.length - 1));
     } else if (e.key === "Enter" && selectedIndex >= 0) {
       e.preventDefault();
-      handleSelectMovie(suggestions[selectedIndex]);
+      handleSelectYouTubeTrailer(youtubeResults[selectedIndex]);
     } else if (e.key === "Escape") {
-      setShowSuggestions(false);
+      setShowDropdown(false);
     }
   };
 
@@ -225,7 +208,7 @@ export default function RegisterModal({
     }
 
     if (!isTrailerValid) {
-      toast.error("Please provide a valid YouTube trailer URL or search query.");
+      toast.error("Please provide a valid YouTube trailer URL.");
       return;
     }
 
@@ -283,7 +266,7 @@ export default function RegisterModal({
                 Track New Campaign Launch
               </h2>
               <span className="text-[11px] text-zinc-400 font-mono">
-                Smart Movie Autocomplete & Verified Trailer Ingestion
+                Live YouTube Data API Search & Columnar Ingestion
               </span>
             </div>
           </div>
@@ -300,14 +283,14 @@ export default function RegisterModal({
         {/* 1-Click Quick Template Bar */}
         <div className="px-6 py-2.5 bg-[#141416] border-b border-[#242428] flex items-center gap-2 flex-wrap text-xs text-zinc-400">
           <span className="font-semibold text-zinc-300 flex items-center gap-1">
-            <Clapperboard className="h-3 w-3 text-indigo-400" />
-            Popular Campaigns:
+            <Video className="h-3 w-3 text-indigo-400" />
+            Popular Templates:
           </span>
-          {MOVIE_CATALOG.slice(0, 4).map((preset) => (
+          {POPULAR_TEMPLATES.map((preset) => (
             <button
               key={preset.title}
               type="button"
-              onClick={() => handleSelectMovie(preset)}
+              onClick={() => handleSelectTemplate(preset)}
               className="bg-[#1f1f23] hover:bg-[#28282d] hover:text-white text-zinc-300 px-2.5 py-1 rounded-md border border-[#2e2e33] transition cursor-pointer font-medium text-[11px]"
             >
               {preset.title}
@@ -320,52 +303,76 @@ export default function RegisterModal({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
             {/* Left Column: Primary Details */}
             <div className="space-y-4">
-              {/* Field 1: Campaign / Film Title with Autocomplete */}
-              <div className="relative" ref={suggestionsRef}>
+              {/* Field 1: Campaign / Film Title with Live YouTube API Autocomplete */}
+              <div className="relative" ref={dropdownRef}>
                 <Input
-                  label="Campaign / Film Title *"
+                  label="Campaign / Film Title (Search Any Movie) *"
                   required
-                  placeholder="e.g. Gladiator II, Wicked, Superman..."
+                  placeholder="Type any movie title (e.g. Gladiator II, Oppenheimer, Avatar...)"
                   value={newTitle}
-                  onChange={(e) => {
-                    setNewTitle(e.target.value);
-                    setShowSuggestions(true);
-                    setSelectedIndex(-1);
+                  onChange={(e) => setNewTitle(e.target.value)}
+                  onFocus={() => {
+                    if (youtubeResults.length > 0) setShowDropdown(true);
                   }}
-                  onFocus={() => setShowSuggestions(true)}
                   onKeyDown={handleKeyDown}
                   autoComplete="off"
+                  rightElement={
+                    isSearchingYouTube ? (
+                      <div className="flex items-center gap-1 text-[11px] text-indigo-400 font-mono">
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                        <span>Searching YouTube...</span>
+                      </div>
+                    ) : undefined
+                  }
                 />
 
-                {/* Smart Autocomplete Suggestions Dropdown */}
-                {showSuggestions && suggestions.length > 0 && (
-                  <div className="absolute left-0 right-0 top-[68px] bg-[#1a1a1d] border border-indigo-500/40 rounded-xl shadow-2xl z-30 max-h-56 overflow-y-auto divide-y divide-[#28282b] font-sans animate-fade-in">
+                {/* Live YouTube API Search Results Dropdown */}
+                {showDropdown && youtubeResults.length > 0 && (
+                  <div className="absolute left-0 right-0 top-[68px] bg-[#1a1a1d] border border-indigo-500/40 rounded-xl shadow-2xl z-30 max-h-64 overflow-y-auto divide-y divide-[#28282b] font-sans animate-fade-in">
                     <div className="px-3 py-1.5 bg-[#141416] text-[10px] font-bold uppercase tracking-wider text-indigo-400 flex items-center justify-between">
-                      <span>Matching Movies in Catalog</span>
-                      <span className="text-zinc-500 lowercase">Click to auto-populate details</span>
+                      <span className="flex items-center gap-1">
+                        <Video className="h-3 w-3 text-red-500" /> Live YouTube API Trailer Results
+                      </span>
+                      <span className="text-zinc-500 lowercase">Click to auto-fill official URL</span>
                     </div>
-                    {suggestions.map((movie, index) => (
+
+                    {youtubeResults.map((trailer, index) => (
                       <div
-                        key={movie.title}
-                        onClick={() => handleSelectMovie(movie)}
-                        className={`p-3 flex items-center justify-between gap-3 cursor-pointer transition ${
+                        key={trailer.video_id}
+                        onClick={() => handleSelectYouTubeTrailer(trailer)}
+                        className={`p-3 flex items-center gap-3 cursor-pointer transition ${
                           selectedIndex === index
                             ? "bg-indigo-600/20 text-white"
                             : "hover:bg-[#242428] text-zinc-200"
                         }`}
                       >
-                        <div className="space-y-0.5 min-w-0">
-                          <div className="font-bold text-xs text-zinc-100 flex items-center gap-1.5 truncate">
-                            <Film className="h-3 w-3 text-indigo-400 shrink-0" />
-                            <span>{movie.title}</span>
+                        {/* Video Thumbnail */}
+                        <div className="relative w-20 h-12 rounded-md overflow-hidden bg-black shrink-0 border border-[#28282b]">
+                          <img
+                            src={trailer.thumbnail_url}
+                            alt={trailer.title}
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 hover:opacity-100 transition">
+                            <Play className="h-4 w-4 text-white fill-white" />
                           </div>
-                          <p className="text-[11px] text-zinc-400 line-clamp-1">
-                            {movie.studio} · {movie.desc}
-                          </p>
                         </div>
-                        <span className="font-mono text-[10px] text-zinc-400 shrink-0 bg-[#141416] px-2 py-0.5 rounded border border-[#28282b]">
-                          {movie.releaseDate}
-                        </span>
+
+                        {/* Video Info */}
+                        <div className="space-y-0.5 min-w-0 flex-1">
+                          <div className="font-bold text-xs text-zinc-100 line-clamp-1">
+                            {trailer.title}
+                          </div>
+                          <div className="flex items-center gap-2 text-[11px] text-zinc-400">
+                            <span className="text-zinc-300 font-semibold">{trailer.channel_title}</span>
+                            {trailer.published_at && (
+                              <>
+                                <span>·</span>
+                                <span className="font-mono">{trailer.published_at}</span>
+                              </>
+                            )}
+                          </div>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -381,7 +388,7 @@ export default function RegisterModal({
                     isHttpInsecure ? (
                       <ShieldAlert className="h-4 w-4 text-rose-400" />
                     ) : isUrl ? (
-                      <Link2 className="h-4 w-4 text-emerald-400" />
+                      <Video className="h-4 w-4 text-emerald-400" />
                     ) : (
                       <Video className="h-4 w-4 text-zinc-400" />
                     )
