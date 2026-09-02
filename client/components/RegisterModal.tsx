@@ -4,6 +4,7 @@ import React, { FormEvent, useState } from "react";
 import { Plus, Sparkles, X, Video, Clock, Zap, Wand2, Database } from "lucide-react";
 import { useCampaigns } from "../hooks/useCampaigns";
 import { Button, Input, Textarea, Select } from "./ui";
+import IngestProgressModal from "./IngestProgressModal";
 
 interface RegisterModalProps {
   onClose: () => void;
@@ -24,6 +25,9 @@ export default function RegisterModal({
   const [syncMode, setSyncMode] = useState("1hr");
   const [initialVolume, setInitialVolume] = useState(1000);
 
+  const [createdId, setCreatedId] = useState<string | null>(null);
+  const [showProgress, setShowProgress] = useState(false);
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!newTitle.trim() || !newTrailerQuery.trim()) return;
@@ -39,12 +43,29 @@ export default function RegisterModal({
     });
 
     if (contentId) {
-      onClose();
-      if (onSuccess) {
-        onSuccess(contentId);
-      }
+      setCreatedId(contentId);
+      setShowProgress(true);
     }
   };
+
+  const handleFinishProgress = () => {
+    setShowProgress(false);
+    onClose();
+    if (createdId && onSuccess) {
+      onSuccess(createdId);
+    }
+  };
+
+  if (showProgress) {
+    return (
+      <IngestProgressModal
+        isOpen={showProgress}
+        onClose={handleFinishProgress}
+        targetQuery={newTrailerQuery || newTitle}
+        source="youtube"
+      />
+    );
+  }
 
   return (
     <div className="fixed inset-0 bg-black/85 backdrop-blur-xs flex items-center justify-center z-50 p-4 font-sans animate-fade-in">
@@ -74,7 +95,6 @@ export default function RegisterModal({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
             {/* Left Column: Primary Details */}
             <div className="space-y-4">
-              {/* Campaign Title */}
               <Input
                 label="Campaign / Film Title"
                 required
@@ -83,7 +103,6 @@ export default function RegisterModal({
                 onChange={(e) => setNewTitle(e.target.value)}
               />
 
-              {/* YouTube Trailer Target or URL */}
               <Input
                 label="YouTube Trailer Target or URL"
                 required
@@ -107,7 +126,6 @@ export default function RegisterModal({
                 }
               />
 
-              {/* Description */}
               <Textarea
                 label="Campaign Description / Logline"
                 required
@@ -118,80 +136,94 @@ export default function RegisterModal({
               />
             </div>
 
-            {/* Right Column: Ingestion Engine & Release Settings */}
+            {/* Right Column: Telemetry & Ingestion Strategy */}
             <div className="space-y-4">
-              {/* Row 1: Sync Mode & Initial Volume */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3">
                 <Select
-                  label="Sync Mode"
-                  leftIcon={<Clock className="h-4 w-4 text-zinc-400" />}
-                  value={syncMode}
-                  onChange={(e) => setSyncMode(e.target.value)}
-                  options={[
-                    { value: "1hr", label: "Auto (1 Hour)" },
-                    { value: "6hr", label: "Auto (6 Hours)" },
-                    { value: "24hr", label: "Auto (24 Hours)" },
-                    { value: "manual", label: "Manual Sync" },
-                  ]}
-                />
-
-                <Select
-                  label="Initial Volume"
-                  leftIcon={<Zap className="h-4 w-4 text-[#e6fc4f]" />}
-                  value={initialVolume}
-                  onChange={(e) => setInitialVolume(parseInt(e.target.value))}
-                  options={[
-                    { value: 1000, label: "1,000 (Recommended)" },
-                    { value: 500, label: "500 Comments" },
-                    { value: 250, label: "250 Comments" },
-                  ]}
-                />
-              </div>
-
-              {/* Row 2: Campaign Type & Release Date */}
-              <div className="grid grid-cols-2 gap-4">
-                <Select
-                  label="Campaign Type"
+                  label="Content Type"
                   value={newType}
                   onChange={(e) => setNewType(e.target.value)}
                   options={[
-                    { value: "movie", label: "Theatrical Movie" },
-                    { value: "series", label: "Streaming Series" },
-                    { value: "campaign", label: "Promotional Drop" },
+                    { value: "movie", label: "Theatrical Film" },
+                    { value: "show", label: "Streaming / TV Series" },
+                    { value: "franchise", label: "Franchise IP" },
                   ]}
                 />
 
                 <Input
-                  label="Target Release Date"
                   type="date"
+                  label="Release Date"
                   value={newReleaseDate}
                   onChange={(e) => setNewReleaseDate(e.target.value)}
                 />
               </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <Select
+                  label="Surveillance Interval"
+                  value={syncMode}
+                  onChange={(e) => setSyncMode(e.target.value)}
+                  options={[
+                    { value: "1hr", label: "Every 1 Hour (Active)" },
+                    { value: "6hr", label: "Every 6 Hours" },
+                    { value: "24hr", label: "Every 24 Hours" },
+                    { value: "manual", label: "Manual Sync Only" },
+                  ]}
+                />
+
+                <Select
+                  label="Initial Comment Volume"
+                  value={initialVolume}
+                  onChange={(e) => setInitialVolume(parseInt(e.target.value))}
+                  options={[
+                    { value: 100, label: "100 Comments (Fast)" },
+                    { value: 250, label: "250 Comments" },
+                    { value: 500, label: "500 Comments" },
+                    { value: 1000, label: "1,000 Comments (Recommended)" },
+                    { value: 2500, label: "2,500 Comments (Deep Ingest)" },
+                  ]}
+                />
+              </div>
+
+              {/* Engine Spec Banner */}
+              <div className="bg-[#141416] border border-[#28282b] rounded-xl p-3.5 space-y-1.5 text-xs text-zinc-300">
+                <div className="flex items-center gap-1.5 font-bold text-zinc-100">
+                  <Database className="h-3.5 w-3.5 text-[#e6fc4f]" />
+                  <span>ClickHouse Vectorized Storage</span>
+                </div>
+                <p className="text-[11px] text-zinc-400 leading-relaxed">
+                  Comments are parsed into high-speed columnar arrays (`topics`, `sentiment`, `claim`) enabling sub-20ms multi-dimensional anomaly queries.
+                </p>
+              </div>
             </div>
           </div>
 
-          {/* Bottom Footer Actions */}
-          <div className="pt-4 border-t border-[#28282b] flex items-center justify-end gap-3">
-            <Button
-              type="button"
-              variant="ghost"
-              size="md"
-              onClick={onClose}
-              disabled={isCreating}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              variant="primary"
-              size="md"
-              isLoading={isCreating}
-              disabled={isCreating || !newTitle.trim() || !newTrailerQuery.trim()}
-              leftIcon={<Plus className="h-4 w-4 stroke-[3]" />}
-            >
-              {isCreating ? "Initializing & Streaming Comments..." : "Launch Campaign & Auto-Stream"}
-            </Button>
+          {/* Footer Actions */}
+          <div className="pt-4 border-t border-[#28282b] flex items-center justify-between">
+            <span className="text-xs text-zinc-400">
+              Auto-syncs YouTube trailers & Google Search intelligence.
+            </span>
+
+            <div className="flex items-center gap-3">
+              <Button
+                type="button"
+                variant="secondary"
+                size="md"
+                onClick={onClose}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                variant="primary"
+                size="md"
+                disabled={isCreating || !newTitle.trim() || !newTrailerQuery.trim()}
+                isLoading={isCreating}
+                leftIcon={<Plus className="h-4 w-4" />}
+              >
+                {isCreating ? "Initializing Pipeline..." : "Register & Start Ingestion"}
+              </Button>
+            </div>
           </div>
         </form>
       </div>
