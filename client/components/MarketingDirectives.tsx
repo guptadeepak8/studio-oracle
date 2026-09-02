@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState } from "react";
-import { ChevronDown, ChevronRight, Target, Send, Users, Layers, Sparkles, Check, Copy, AlertCircle, Zap, Megaphone, TrendingUp, Film, Play } from "lucide-react";
+import { Send, Users, Layers, Sparkles, Check, Copy, AlertCircle } from "lucide-react";
 import { Movie } from "../utils/types";
 import TrailerComparison, { DropItem } from "./TrailerComparison";
+import { Card, Badge, Button, PageHeader } from "./ui";
 import { toast } from "sonner";
 
 interface ThemeItem {
@@ -163,7 +164,7 @@ export default function MarketingDirectives({ campaign, themeStats, drops = [] }
       });
     }
 
-    return plans.slice(0, 3); // Top 3 high-impact strategic actions
+    return plans.slice(0, 3);
   };
 
   const actionPlans = generateActionPlan(themeStats);
@@ -177,30 +178,26 @@ export default function MarketingDirectives({ campaign, themeStats, drops = [] }
 
   return (
     <div className="w-full space-y-8 font-sans">
-      {/* 1. What Changed: Real Drops from ClickHouse */}
+      {/* 1. Milestone Inflection Drops */}
       <TrailerComparison campaign={campaign} drops={drops} />
 
       {/* 2. Marketing Action Directives List */}
       <div className="space-y-4">
-        <div className="flex items-center justify-between border-b border-[#202023] pb-3">
-          <div>
-            <h2 className="font-bold text-lg text-zinc-100 uppercase tracking-wider">
-              Marketing Strategic Directives
-            </h2>
-            <p className="text-sm text-zinc-400">
-              High-leverage marketing pivots and ready-to-use promotional copy generated from audience reaction signals.
-            </p>
-          </div>
-          <span className="text-xs font-mono font-bold text-[#e6fc4f] bg-[#1c1c1f] border border-[#28282b] px-3.5 py-1.5 rounded-md">
-            {actionPlans.length} Strategic Actions
-          </span>
-        </div>
+        <PageHeader
+          title="Marketing Strategic Directives"
+          description="High-leverage marketing pivots and ready-to-use promotional copy generated from audience reaction signals."
+          badge={
+            <Badge variant="default">
+              {actionPlans.length} Strategic Actions
+            </Badge>
+          }
+        />
 
         <div className="space-y-5">
           {actionPlans.map((plan, idx) => (
-            <div
+            <Card
               key={idx}
-              className="bg-[#1c1c1f] border border-[#28282b] rounded-xl p-6 space-y-5 shadow-xs hover:border-zinc-700 transition"
+              className="p-6 space-y-5 shadow-xs"
             >
               {/* Header */}
               <div className="flex items-center justify-between flex-wrap gap-2 border-b border-[#28282b]/70 pb-4">
@@ -211,15 +208,17 @@ export default function MarketingDirectives({ campaign, themeStats, drops = [] }
                   <h3 className="font-bold text-base text-zinc-100">{plan.title}</h3>
                 </div>
 
-                <span className={`text-xs px-3 py-1 rounded-full font-bold uppercase tracking-wider ${
-                  plan.priority === "High Priority"
-                    ? "bg-[#331b20] text-[#f87171] border border-[#4c242a]"
-                    : plan.priority === "Quick Win"
-                    ? "bg-[#183424] text-[#4ade80] border border-[#234e35]"
-                    : "bg-[#1e293b] text-[#60a5fa] border border-[#334155]"
-                }`}>
+                <Badge
+                  variant={
+                    plan.priority === "High Priority"
+                      ? "negative"
+                      : plan.priority === "Quick Win"
+                      ? "positive"
+                      : "info"
+                  }
+                >
                   {plan.priority}
-                </span>
+                </Badge>
               </div>
 
               {/* 2-Column Strategy & Copy Grid */}
@@ -251,26 +250,21 @@ export default function MarketingDirectives({ campaign, themeStats, drops = [] }
                         <Send className="h-4 w-4 text-[#e6fc4f]" />
                         Ready-to-Use Promotional Copy
                       </span>
-                      <button
+                      <Button
+                        variant="primary"
+                        size="sm"
                         onClick={() => handleCopyDraft(plan.copyDraft, idx)}
-                        className="flex items-center gap-1.5 bg-[#e6fc4f] hover:bg-[#d8ed47] text-black font-bold text-xs px-3 py-1.5 rounded-md transition cursor-pointer shadow-xs"
+                        leftIcon={copiedIndex === idx ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
                       >
-                        {copiedIndex === idx ? (
-                          <>
-                            <Check className="h-3.5 w-3.5" /> Copied
-                          </>
-                        ) : (
-                          <>
-                            <Copy className="h-3.5 w-3.5" /> Copy Copy Draft
-                          </>
-                        )}
-                      </button>
+                        {copiedIndex === idx ? "Copied" : "Copy Copy Draft"}
+                      </Button>
                     </div>
 
                     <p className="text-sm font-mono text-[#e6fc4f] bg-[#101012] border border-[#28282b] rounded-lg p-3.5 leading-relaxed">
                       {plan.copyDraft}
                     </p>
                   </div>
+
                   <div className="bg-[#161618] border border-[#28282b] rounded-xl p-4.5 space-y-2 text-xs">
                     <div className="flex items-center justify-between">
                       <span className="font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
@@ -287,7 +281,7 @@ export default function MarketingDirectives({ campaign, themeStats, drops = [] }
                   </div>
                 </div>
               </div>
-            </div>
+            </Card>
           ))}
         </div>
       </div>

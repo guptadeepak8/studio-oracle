@@ -1,8 +1,9 @@
 "use client";
 
 import React from "react";
-import { Plus, CheckCircle2, MessageSquare, Sparkles } from "lucide-react";
+import { Sparkles, Settings } from "lucide-react";
 import { SentimentStats } from "../utils/analytics";
+import { Card, Badge, Button } from "./ui";
 
 interface ExecutiveScorecardProps {
   sentiment: SentimentStats;
@@ -31,7 +32,7 @@ export default function ExecutiveScorecard({
       {/* 5-Card Horizontal Row with Large, Readable Typography */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {/* Card 1: Audience Score */}
-        <div className="bg-[#1c1c1f] border border-[#28282b] rounded-xl p-4.5 space-y-2 shadow-xs">
+        <Card className="p-4.5 space-y-2">
           <span className="text-xs text-zinc-300 font-semibold block uppercase tracking-wider">
             Audience Score
           </span>
@@ -43,50 +44,50 @@ export default function ExecutiveScorecard({
               {audienceScore >= 30 ? "High Excitement" : audienceScore >= 0 ? "Moderate" : "Watch Friction"}
             </span>
           </div>
-        </div>
+        </Card>
 
         {/* Card 2: Comments Tracked */}
-        <div className="bg-[#1c1c1f] border border-[#28282b] rounded-xl p-4.5 space-y-2 shadow-xs">
+        <Card className="p-4.5 space-y-2">
           <span className="text-xs text-zinc-300 font-semibold block uppercase tracking-wider">
             Reactions Analyzed
           </span>
           <div className="text-xl font-bold text-zinc-100 font-mono">
             {totalComments.toLocaleString()} <span className="text-xs text-zinc-400 font-normal font-sans">comments</span>
           </div>
-        </div>
+        </Card>
 
         {/* Card 3: Target Release Date */}
-        <div className="bg-[#1c1c1f] border border-[#28282b] rounded-xl p-4.5 space-y-2 shadow-xs">
+        <Card className="p-4.5 space-y-2">
           <span className="text-xs text-zinc-300 font-semibold block uppercase tracking-wider">
             Target Release Date
           </span>
           <div className="text-base font-bold text-zinc-100">
             {releaseDate || "Nov 22, 2026"}
           </div>
-        </div>
+        </Card>
 
         {/* Card 4: Tracking Engine & Auto-Sync Status */}
-        <div className="bg-[#1c1c1f] border border-[#28282b] rounded-xl p-4.5 space-y-2 flex flex-col justify-between shadow-xs">
+        <Card className="p-4.5 space-y-2 flex flex-col justify-between">
           <span className="text-xs text-zinc-300 font-semibold block uppercase tracking-wider">
             Tracking Engine
           </span>
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold font-mono text-[#4ade80] bg-[#183424] border border-[#234e35] px-3 py-1 rounded-md flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-[#4ade80] animate-pulse" />
+            <Badge variant="active" pulsing>
               Auto-Sync (1 hr)
-            </span>
+            </Badge>
             <button
               onClick={onTriggerImport}
-              className="text-xs text-zinc-400 hover:text-[#e6fc4f] transition underline cursor-pointer font-medium"
+              className="text-xs text-zinc-400 hover:text-[#e6fc4f] transition underline cursor-pointer font-medium flex items-center gap-1"
               title="Configure Sync Settings"
             >
-              Settings
+              <Settings className="h-3 w-3" />
+              <span>Settings</span>
             </button>
           </div>
-        </div>
+        </Card>
 
         {/* Card 5: Ingestion Feeds */}
-        <div className="bg-[#1c1c1f] border border-[#28282b] rounded-xl p-4.5 space-y-2 shadow-xs">
+        <Card className="p-4.5 space-y-2">
           <span className="text-xs text-zinc-300 font-semibold block uppercase tracking-wider">
             Active Sources
           </span>
@@ -94,11 +95,11 @@ export default function ExecutiveScorecard({
             <span className="h-2.5 w-2.5 rounded-full bg-[#4ade80]" />
             <span>YouTube & Reddit</span>
           </div>
-        </div>
+        </Card>
       </div>
 
       {/* Clean AI Executive Summary Banner */}
-      <div className="bg-[#1c1c1f] border border-[#28282b] rounded-xl p-5 flex items-start gap-4 shadow-xs">
+      <Card className="p-5 flex items-start gap-4">
         <div className="h-7 w-7 rounded-lg bg-[#242428] flex items-center justify-center text-[#e6fc4f] shrink-0 mt-0.5">
           <Sparkles className="h-4 w-4" />
         </div>
@@ -110,7 +111,7 @@ export default function ExecutiveScorecard({
             {pulseSummary}
           </p>
         </div>
-      </div>
+      </Card>
     </div>
   );
 }

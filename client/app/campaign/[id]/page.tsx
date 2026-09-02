@@ -19,6 +19,7 @@ import CampaignHeader from "../../../components/CampaignHeader";
 import IngestConfig from "../../../components/IngestConfig";
 import ExecutiveScorecardSkeleton from "../../../components/skeletons/ExecutiveScorecardSkeleton";
 import SectionCardSkeleton from "../../../components/skeletons/SectionCardSkeleton";
+import { Button } from "../../../components/ui";
 
 function CampaignWorkspaceInner() {
   const params = useParams();
@@ -170,23 +171,27 @@ function CampaignWorkspaceInner() {
           </p>
 
           <div className="flex items-center gap-3.5">
-            <button
+            <Button
+              variant="primary"
+              size="md"
               onClick={handleToggleStatus}
+              isLoading={isUpdatingStatus}
               disabled={isUpdatingStatus || isDeleting}
-              className="bg-[#e6fc4f] hover:bg-[#d8ed47] text-sm font-bold text-black px-6 py-2.5 rounded-lg shadow-xs flex items-center gap-2 cursor-pointer transition"
+              leftIcon={<PlayCircle className="h-4 w-4 fill-black" />}
             >
-              <PlayCircle className="h-4 w-4 fill-black" />
-              <span>Resume Live Tracking</span>
-            </button>
+              Resume Live Tracking
+            </Button>
 
-            <button
+            <Button
+              variant="secondary"
+              size="md"
               onClick={() => setShowDeleteConfirm(true)}
               disabled={isUpdatingStatus || isDeleting}
-              className="bg-[#242428] hover:bg-rose-950/40 text-rose-400 hover:text-rose-300 border border-[#323238] hover:border-rose-800 text-sm font-bold px-5 py-2.5 rounded-lg shadow-xs flex items-center gap-2 cursor-pointer transition"
+              leftIcon={<Trash2 className="h-4 w-4 text-rose-400" />}
+              className="text-rose-400 hover:text-rose-300 hover:bg-rose-950/40 hover:border-rose-800"
             >
-              <Trash2 className="h-4 w-4" />
-              <span>Delete Campaign</span>
-            </button>
+              Delete Campaign
+            </Button>
           </div>
         </div>
       )}

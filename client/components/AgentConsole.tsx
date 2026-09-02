@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useRef, useEffect } from "react";
-import { RefreshCw, User, Database, Send, Download, Sparkles, Bot, MessageSquare } from "lucide-react";
+import { RefreshCw, User, Database, Send, Download, Sparkles, Bot } from "lucide-react";
 import { ChatMessage } from "../utils/types";
+import { Card, Button, Badge } from "./ui";
 
 interface AgentConsoleProps {
   chatMessages: ChatMessage[];
@@ -29,7 +30,7 @@ export default function AgentConsole({
     "What are audiences most divided about?",
     "What topics are driving negative friction?",
     "Compare YouTube audience reactions with Reddit.",
-    "Give me 3 high-priority marketing pivots for this campaign."
+    "Give me 3 high-priority marketing pivots for this campaign.",
   ];
 
   useEffect(() => {
@@ -42,15 +43,15 @@ export default function AgentConsole({
     const regex = /(\*\*.*?\*\*|`.*?`|\[ref:\s*[\w\-_]+\])/gi;
     let match;
     let key = 0;
-    
+
     while ((match = regex.exec(text)) !== null) {
       const matchStart = match.index;
       const matchText = match[0];
-      
+
       if (matchStart > currentIdx) {
         parts.push(text.substring(currentIdx, matchStart));
       }
-      
+
       if (matchText.startsWith("**") && matchText.endsWith("**")) {
         parts.push(
           <strong key={key++} className="font-bold text-zinc-100">
@@ -59,7 +60,10 @@ export default function AgentConsole({
         );
       } else if (matchText.startsWith("`") && matchText.endsWith("`")) {
         parts.push(
-          <code key={key++} className="font-mono text-[11px] bg-[#141416] border border-[#28282b] px-1.5 py-0.5 rounded text-[#e6fc4f]">
+          <code
+            key={key++}
+            className="font-mono text-[11px] bg-[#141416] border border-[#28282b] px-1.5 py-0.5 rounded text-[#e6fc4f]"
+          >
             {matchText.slice(1, -1)}
           </code>
         );
@@ -77,14 +81,14 @@ export default function AgentConsole({
           </button>
         );
       }
-      
+
       currentIdx = matchStart + matchText.length;
     }
-    
+
     if (currentIdx < text.length) {
       parts.push(text.substring(currentIdx));
     }
-    
+
     return parts;
   };
 
@@ -138,65 +142,70 @@ export default function AgentConsole({
       }
     });
 
-    const blob = new Blob([memoContent], { type: "text/markdown;charset=utf-8;" });
+    const blob = new Blob([memoContent], { type: "text/markdown" });
     const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", `studio_oracle_executive_briefing_${Date.now()}.md`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `StudioOracle_Memo_${Date.now()}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   return (
-    <div className="w-full flex flex-col h-full bg-[#0e0e10] font-sans">
-      {/* Header bar */}
-      <div className="px-6 py-3.5 border-b border-[#202023] flex items-center justify-between bg-[#141416]">
-        <div className="flex items-center gap-2">
-          <div className="h-6 w-6 rounded-md bg-[#242428] flex items-center justify-center text-[#e6fc4f]">
-            <Bot className="h-3.5 w-3.5" />
+    <div className="flex-1 flex flex-col h-full bg-[#0e0e10] overflow-hidden font-sans">
+      {/* Top Header */}
+      <div className="px-6 py-4 border-b border-[#202023] flex items-center justify-between bg-[#141416] shrink-0">
+        <div className="flex items-center gap-3">
+          <div className="h-7 w-7 rounded-lg bg-[#242428] flex items-center justify-center text-[#e6fc4f]">
+            <Sparkles className="h-4 w-4" />
           </div>
           <div>
-            <span className="font-bold text-xs text-zinc-100 block leading-tight">
-              AI Research Assistant
-            </span>
-            <span className="text-[10px] text-zinc-500 font-mono">
-              Powered by ClickHouse Telemetry & Gemini 2.5 Flash
-            </span>
+            <div className="font-bold text-sm text-zinc-100 flex items-center gap-2">
+              <span>Audience Ops Assistant</span>
+              <Badge variant="active" pulsing>
+                Gemini 2.5 Pro Live
+              </Badge>
+            </div>
+            <p className="text-xs text-zinc-400">
+              Query ClickHouse comments, sentiment anomalies, and messaging strategies in natural language.
+            </p>
           </div>
         </div>
+
         <div className="flex items-center gap-2">
-          <button
-            onClick={handleExportMemo}
-            disabled={chatMessages.length === 0}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#1c1c1f] hover:bg-[#28282d] border border-[#28282b] rounded-md text-xs font-semibold text-zinc-200 transition cursor-pointer disabled:opacity-40"
-            title="Download Executive Intelligence Briefing"
-          >
-            <Download className="h-3.5 w-3.5 text-[#e6fc4f]" />
-            <span>Export Briefing</span>
-          </button>
-          <button
+          {chatMessages.length > 0 && (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={handleExportMemo}
+              leftIcon={<Download className="h-3.5 w-3.5" />}
+            >
+              Export Memo
+            </Button>
+          )}
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={onRefreshMovies}
-            className="p-1.5 hover:bg-[#1c1c1f] rounded-md text-zinc-400 hover:text-zinc-200 transition cursor-pointer"
-            title="Refresh Metadata"
+            leftIcon={<RefreshCw className="h-3.5 w-3.5" />}
           >
-            <RefreshCw className="h-3.5 w-3.5" />
-          </button>
+            Refresh
+          </Button>
         </div>
       </div>
 
-      {/* Main chat window */}
-      <div className="flex-1 overflow-y-auto px-6 py-6 space-y-5">
+      {/* Messages Feed */}
+      <div className="flex-1 overflow-y-auto p-6 space-y-6">
         {chatMessages.length === 0 && (
-          <div className="max-w-2xl mx-auto py-8 text-center space-y-3">
-            <div className="h-10 w-10 rounded-xl bg-[#1c1c1f] border border-[#28282b] flex items-center justify-center text-[#e6fc4f] mx-auto">
-              <Sparkles className="h-5 w-5" />
+          <div className="text-center py-16 space-y-3 max-w-md mx-auto">
+            <div className="h-12 w-12 rounded-2xl bg-[#1c1c1f] border border-[#28282b] flex items-center justify-center mx-auto text-[#e6fc4f]">
+              <Bot className="h-6 w-6" />
             </div>
-            <h3 className="font-bold text-sm text-zinc-100">
-              Interactive Campaign Intelligence
+            <h3 className="font-bold text-base text-zinc-100">
+              Studio Intelligence Console
             </h3>
-            <p className="text-xs text-zinc-400 max-w-md mx-auto leading-relaxed">
-              Ask deep questions about audience sentiment shifts, polarization between platforms, or request custom marketing copy pivots.
+            <p className="text-sm text-zinc-400 leading-relaxed">
+              Ask deep questions about audience reception, sentiment shifts, or request marketing copy drafts backed by real comments.
             </p>
           </div>
         )}
@@ -220,7 +229,7 @@ export default function AgentConsole({
               <div className="h-8 w-8 rounded-full bg-[#1c1c1f] border border-[#3a3a20] flex items-center justify-center shrink-0 text-[#e6fc4f]">
                 <Bot className="h-4 w-4" />
               </div>
-              <div className="flex-1 bg-[#1c1c1f] border border-[#28282b] rounded-xl p-5 space-y-2 min-w-0 shadow-xs">
+              <Card className="flex-1 p-5 space-y-2 min-w-0 shadow-xs">
                 {renderMessageText(msg.text)}
                 {msg.isStreaming && (
                   <span className="inline-flex gap-1 ml-1 items-center pt-1">
@@ -229,7 +238,7 @@ export default function AgentConsole({
                     <span className="h-2 w-2 rounded-full bg-[#e6fc4f] animate-bounce"></span>
                   </span>
                 )}
-              </div>
+              </Card>
             </div>
           );
         })}
@@ -256,7 +265,7 @@ export default function AgentConsole({
         </div>
       )}
 
-      {/* Input controls matching ClickHouse console style */}
+      {/* Input controls */}
       <div className="p-4 border-t border-[#202023] bg-[#141416] flex items-center gap-3">
         <input
           type="text"
@@ -266,14 +275,15 @@ export default function AgentConsole({
           placeholder="Ask AI Assistant about audience sentiment, anomalies, or messaging pivots..."
           className="flex-1 bg-[#1c1c1f] border border-[#28282b] rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#e6fc4f] transition text-zinc-100 placeholder-zinc-500 font-sans"
         />
-        <button
+        <Button
+          variant="primary"
+          size="md"
           onClick={() => onSendChat()}
           disabled={!inputMessage.trim()}
-          className="bg-[#e6fc4f] hover:bg-[#d8ed47] disabled:opacity-40 px-5 py-3 rounded-lg transition text-sm font-bold text-black flex items-center gap-2 cursor-pointer shadow-xs"
+          leftIcon={<Send className="h-4 w-4 stroke-[2.5]" />}
         >
-          <Send className="h-4 w-4 stroke-[2.5]" />
-          <span>Send</span>
-        </button>
+          Send
+        </Button>
       </div>
     </div>
   );
