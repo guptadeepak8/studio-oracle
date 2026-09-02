@@ -16,86 +16,75 @@ import {
   Search,
   CheckCircle2,
   Video,
-  MessageCircle,
   Clock,
   HelpCircle,
 } from "lucide-react";
 import { Movie, CampaignDecisionsResponse, DecisionArtifact, EvidenceReference } from "../utils/types";
 import TrailerComparison, { DropItem } from "./TrailerComparison";
 import EvidenceDrawer from "./EvidenceDrawer";
-import { Card, Badge, Button, PageHeader } from "./ui";
-import { toast } from "sonner";
-
-interface ThemeItem {
-  name: string;
-  count: number;
-  posPercent?: number;
-  negPercent?: number;
-}
+import { Card, Badge, Button } from "./ui";
 
 interface MarketingDirectivesProps {
   campaign: Movie;
-  themeStats: ThemeItem[];
-  drops?: DropItem[];
-  decisionsResponse?: CampaignDecisionsResponse | null;
+  decisionsResponse: CampaignDecisionsResponse | null;
   isLoadingDecisions?: boolean;
-  isInvestigating?: boolean;
   onTriggerInvestigation?: () => void;
-  onSelectEvidence?: (commentId: string) => void;
+  isInvestigating?: boolean;
+  drops?: DropItem[];
 }
 
 export default function MarketingDirectives({
   campaign,
-  themeStats,
-  drops = [],
   decisionsResponse,
   isLoadingDecisions = false,
-  isInvestigating = false,
   onTriggerInvestigation,
-  onSelectEvidence,
+  isInvestigating = false,
+  drops = [],
 }: MarketingDirectivesProps) {
   const [copiedIndex, setCopiedIndex] = useState<string | null>(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedEvidenceItem, setSelectedEvidenceItem] = useState<EvidenceReference | null>(null);
   const [selectedCommentId, setSelectedCommentId] = useState<string | null>(null);
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   const decisions: DecisionArtifact[] = decisionsResponse?.decisions || [];
 
   const handleCopyDraft = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
     setCopiedIndex(id);
-    toast.success("Marketing copy draft copied to clipboard!");
-    setTimeout(() => setCopiedIndex(null), 2000);
+    setTimeout(() => setCopiedIndex(null), 2500);
   };
 
-  const handleOpenEvidenceDetail = (evidence?: EvidenceReference, commentId?: string) => {
-    if (evidence) {
-      setSelectedEvidenceItem(evidence);
-      setSelectedCommentId(evidence.comment_id);
-    } else if (commentId) {
-      setSelectedEvidenceItem(null);
-      setSelectedCommentId(commentId);
-    }
+  const handleOpenEvidenceDetail = (evidence: EvidenceReference) => {
+    setSelectedEvidenceItem(evidence);
+    setSelectedCommentId(evidence.comment_id);
     setIsDrawerOpen(true);
-    if (onSelectEvidence && (evidence?.comment_id || commentId)) {
-      onSelectEvidence(evidence?.comment_id || commentId!);
-    }
+  };
+
+  const handleOpenCitationTag = (commentId: string) => {
+    setSelectedEvidenceItem(null);
+    setSelectedCommentId(commentId);
+    setIsDrawerOpen(true);
   };
 
   return (
-    <div className="w-full space-y-8 font-sans">
-      {/* 1. Milestone Inflection Drops */}
-      <TrailerComparison campaign={campaign} drops={drops} />
+    <div className="space-y-8 font-sans">
+      {/* 1. Trailer & Creative Asset Inflection Tracker */}
+      {drops.length > 0 && (
+        <TrailerComparison
+          drops={drops}
+          campaign={campaign}
+        />
+      )}
 
-      {/* 2. Autonomous Decision Intelligence Header */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between flex-wrap gap-4 border-b border-[#202023] pb-4">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2.5">
-              <div className="h-7 w-7 rounded-lg bg-[#242428] flex items-center justify-center text-[#e6fc4f]">
+      {/* 2. Autonomous Decision Intelligence Directives */}
+      <div className="space-y-5">
+        <div className="flex items-center justify-between flex-wrap gap-4 border-b border-[#28282b] pb-4">
+          <div>
+            <div className="flex items-center gap-2.5 mb-1">
+              <div className="h-7 w-7 rounded-lg bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
                 <Sparkles className="h-4 w-4" />
               </div>
-              <h2 className="font-bold text-lg text-zinc-100 uppercase tracking-wider">
+              <h2 className="font-bold text-lg text-zinc-100 tracking-tight uppercase">
                 Autonomous Decision Intelligence
               </h2>
             </div>
@@ -128,7 +117,7 @@ export default function MarketingDirectives({
         {/* Loading State */}
         {isLoadingDecisions && (
           <div className="py-16 text-center space-y-3">
-            <div className="h-8 w-8 rounded-full border-2 border-[#e6fc4f] border-t-transparent animate-spin mx-auto" />
+            <div className="h-8 w-8 rounded-full border-2 border-indigo-500 border-t-transparent animate-spin mx-auto" />
             <p className="text-sm text-zinc-400 font-mono">
               Campaign Agent is analyzing ClickHouse telemetry and synthesizing decisions...
             </p>
@@ -138,13 +127,27 @@ export default function MarketingDirectives({
         {/* 6-Tier Decision Intelligence Cards List */}
         {!isLoadingDecisions && decisions.length === 0 && (
           <Card className="p-8 text-center space-y-3">
-            <Sparkles className="h-8 w-8 text-zinc-500 mx-auto" />
-            <h3 className="font-bold text-base text-zinc-200">
-              Awaiting Audience Feedback Stream
+            <div className="h-10 w-10 rounded-full bg-zinc-800 flex items-center justify-center mx-auto text-zinc-400">
+              <ShieldCheck className="h-5 w-5" />
+            </div>
+            <h3 className="font-bold text-base text-zinc-100">
+              No Decision Directives Synthesized Yet
             </h3>
-            <p className="text-sm text-zinc-400 max-w-md mx-auto leading-relaxed">
-              No audience feedback comments have been ingested for "{campaign.title}" yet. Ingest comments from YouTube or Reddit above to activate autonomous decision synthesis.
+            <p className="text-sm text-zinc-400 max-w-md mx-auto">
+              The campaign agent requires telemetry data to extract statistically grounded decisions. Click "Re-investigate Now" or sync YouTube feedback.
             </p>
+            {onTriggerInvestigation && (
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={onTriggerInvestigation}
+                isLoading={isInvestigating}
+                disabled={isInvestigating}
+                leftIcon={<Sparkles className="h-4 w-4" />}
+              >
+                Synthesize Decisions Now
+              </Button>
+            )}
           </Card>
         )}
 
@@ -155,13 +158,17 @@ export default function MarketingDirectives({
 
             return (
               <Card
-                key={decision.id || idx}
-                className="p-6 space-y-6 shadow-md border-[#2d2d32] hover:border-zinc-600 transition"
+                key={decision.id}
+                className={`p-6 space-y-5 border transition-all ${
+                  isInsufficient
+                    ? "border-amber-900/40 bg-[#161614]"
+                    : "border-[#28282b] bg-[#1a1a1d] hover:border-zinc-700"
+                }`}
               >
                 {/* Header: Topic, Status & Statistical Confidence */}
                 <div className="flex items-center justify-between flex-wrap gap-2 border-b border-[#28282b] pb-4">
                   <div className="flex items-center gap-3">
-                    <span className="font-mono text-xs font-bold text-[#e6fc4f] bg-[#161618] border border-[#3b3a1a] px-2.5 py-1 rounded-md">
+                    <span className="font-mono text-xs font-bold text-indigo-400 bg-indigo-500/10 border border-indigo-500/30 px-2.5 py-1 rounded-md">
                       0{idx + 1}
                     </span>
                     <h3 className="font-bold text-base text-zinc-100 uppercase tracking-wide">
@@ -192,7 +199,7 @@ export default function MarketingDirectives({
 
                 {/* 1. TIER 1: INSIGHT */}
                 <div className="space-y-1.5">
-                  <span className="text-xs font-bold text-[#e6fc4f] uppercase tracking-wider flex items-center gap-1.5">
+                  <span className="text-xs font-bold text-indigo-400 uppercase tracking-wider flex items-center gap-1.5">
                     <TrendingUp className="h-3.5 w-3.5" />
                     1. Observed Inflection Signal (Insight)
                   </span>
@@ -205,7 +212,7 @@ export default function MarketingDirectives({
                 <div className="bg-[#141416] border border-[#242428] rounded-xl p-4.5 space-y-4">
                   <div className="flex items-center justify-between flex-wrap gap-2">
                     <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
-                      <Database className="h-3.5 w-3.5 text-[#e6fc4f]" />
+                      <Database className="h-3.5 w-3.5 text-indigo-400" />
                       2. Measurable Ground-Truth Evidence
                     </span>
                     <span className="font-mono text-xs text-zinc-400">
@@ -264,7 +271,7 @@ export default function MarketingDirectives({
                             className="bg-[#1a1a1d] hover:bg-[#222226] border border-[#28282b] hover:border-zinc-600 rounded-lg p-3 text-xs text-zinc-300 flex items-center justify-between gap-3 cursor-pointer transition"
                           >
                             <p className="italic line-clamp-1">"{sample.text}"</p>
-                            <span className="font-mono text-[10px] text-[#e6fc4f] bg-[#141416] border border-[#3b3a1a] px-2 py-0.5 rounded font-bold shrink-0">
+                            <span className="font-mono text-[10px] text-indigo-400 bg-indigo-500/10 border border-indigo-500/30 px-2 py-0.5 rounded font-bold shrink-0">
                               ref:{sample.comment_id.slice(0, 8)}
                             </span>
                           </div>
@@ -277,7 +284,7 @@ export default function MarketingDirectives({
                 {/* 3. TIER 3: INTERPRETATION (Facts vs Inferences) */}
                 <div className="bg-[#161618] border border-[#28282b] rounded-xl p-4.5 space-y-2 text-xs leading-relaxed">
                   <span className="font-bold text-zinc-400 uppercase tracking-wider block flex items-center gap-1.5">
-                    <AlertCircle className="h-3.5 w-3.5 text-[#e6fc4f]" />
+                    <AlertCircle className="h-3.5 w-3.5 text-indigo-400" />
                     3. Analytical Interpretation (Facts vs. Inferences)
                   </span>
                   <p className="text-zinc-200 font-sans text-sm">{decision.interpretation}</p>
@@ -286,7 +293,7 @@ export default function MarketingDirectives({
                 {/* 4. TIER 4: ACTION & READY-TO-USE COPY */}
                 <div className="bg-[#161618] border border-[#28282b] rounded-xl p-4.5 space-y-3.5">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-[#e6fc4f] uppercase tracking-wider block flex items-center gap-1.5">
+                    <span className="text-xs font-bold text-indigo-400 uppercase tracking-wider block flex items-center gap-1.5">
                       <Sparkles className="h-3.5 w-3.5" />
                       4. Recommended Strategic Marketing Action
                     </span>
@@ -314,7 +321,7 @@ export default function MarketingDirectives({
                   </p>
 
                   {decision.copy_draft && (
-                    <div className="bg-[#101012] border border-[#28282b] rounded-lg p-3.5 font-mono text-xs text-[#e6fc4f] leading-relaxed">
+                    <div className="bg-[#121217] border border-indigo-500/30 rounded-lg p-3.5 font-mono text-xs text-indigo-300 leading-relaxed">
                       {decision.copy_draft}
                     </div>
                   )}
@@ -323,14 +330,14 @@ export default function MarketingDirectives({
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 text-xs border-t border-[#28282b]">
                     {decision.target_channels && decision.target_channels.length > 0 && (
                       <div className="flex items-center gap-1.5 text-zinc-400">
-                        <Layers className="h-3.5 w-3.5 text-[#e6fc4f]" />
+                        <Layers className="h-3.5 w-3.5 text-indigo-400" />
                         <span>Target Channels:</span>
                         <strong className="text-zinc-200">{decision.target_channels.join(", ")}</strong>
                       </div>
                     )}
                     {decision.target_audience && (
                       <div className="flex items-center gap-1.5 text-zinc-400">
-                        <Users className="h-3.5 w-3.5 text-[#e6fc4f]" />
+                        <Users className="h-3.5 w-3.5 text-indigo-400" />
                         <span>Target Audience:</span>
                         <strong className="text-zinc-200">{decision.target_audience}</strong>
                       </div>

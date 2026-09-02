@@ -29,7 +29,6 @@ export default function RegisterModal({
   const [createdId, setCreatedId] = useState<string | null>(null);
   const [showProgress, setShowProgress] = useState(false);
 
-  // Safety & Validation checks
   const isHttpInsecure = newTrailerQuery.trim().toLowerCase().startsWith("http://");
   const isTitleValid = newTitle.trim().length >= 2;
   const isDescValid = newDesc.trim().length >= 5;
@@ -100,7 +99,7 @@ export default function RegisterModal({
         {/* Header */}
         <div className="px-6 py-4 border-b border-[#28282b] flex items-center justify-between bg-[#161618]">
           <div className="flex items-center gap-2.5">
-            <div className="h-7 w-7 rounded-lg bg-[#242428] flex items-center justify-center text-[#e6fc4f]">
+            <div className="h-7 w-7 rounded-lg bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
               <Sparkles className="h-4 w-4" />
             </div>
             <div>
@@ -152,7 +151,7 @@ export default function RegisterModal({
                     isHttpInsecure ? (
                       <ShieldAlert className="h-4 w-4 text-rose-400" />
                     ) : (
-                      <Video className="h-4 w-4 text-[#e6fc4f]" />
+                      <Video className="h-4 w-4 text-indigo-400" />
                     )
                   }
                   placeholder="e.g. Wicked Official Trailer or https://www.youtube.com/watch?v=..."
@@ -165,8 +164,8 @@ export default function RegisterModal({
                         variant="ghost"
                         size="xs"
                         onClick={() => setNewTrailerQuery(`${newTitle.trim()} Official Trailer`)}
-                        leftIcon={<Wand2 className="h-3 w-3 text-[#e6fc4f]" />}
-                        className="text-xs text-[#e6fc4f] hover:underline p-0 h-auto font-medium"
+                        leftIcon={<Wand2 className="h-3 w-3 text-indigo-400" />}
+                        className="text-xs text-indigo-400 hover:underline p-0 h-auto font-medium"
                       >
                         Auto-fill: <span className="underline ml-1 font-bold">"{newTitle.trim()} Trailer"</span>
                       </Button>
@@ -257,7 +256,7 @@ export default function RegisterModal({
               {/* Security & Engine Spec Banner */}
               <div className="bg-[#141416] border border-[#28282b] rounded-xl p-3.5 space-y-1.5 text-xs text-zinc-300">
                 <div className="flex items-center gap-1.5 font-bold text-zinc-100">
-                  <Database className="h-3.5 w-3.5 text-[#e6fc4f]" />
+                  <Database className="h-3.5 w-3.5 text-indigo-400" />
                   <span>ClickHouse Vectorized Storage</span>
                 </div>
                 <p className="text-[11px] text-zinc-400 leading-relaxed">

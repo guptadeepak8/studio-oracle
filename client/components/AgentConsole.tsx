@@ -62,7 +62,7 @@ export default function AgentConsole({
         parts.push(
           <code
             key={key++}
-            className="font-mono text-[11px] bg-[#141416] border border-[#28282b] px-1.5 py-0.5 rounded text-[#e6fc4f]"
+            className="font-mono text-[11px] bg-[#141416] border border-[#28282b] px-1.5 py-0.5 rounded text-indigo-400"
           >
             {matchText.slice(1, -1)}
           </code>
@@ -75,9 +75,9 @@ export default function AgentConsole({
             variant="chip"
             size="xs"
             onClick={() => onSelectEvidence && onSelectEvidence(commentId)}
-            leftIcon={<Database className="h-2.5 w-2.5 text-[#e6fc4f]" />}
+            leftIcon={<Database className="h-2.5 w-2.5 text-indigo-400" />}
             title={`Evidence comment: ${commentId}`}
-            className="font-mono text-[10px] text-[#e6fc4f] border-[#3a3a20] px-1.5 py-0.5 mx-1"
+            className="font-mono text-[10px] text-indigo-400 border-indigo-500/30 px-1.5 py-0.5 mx-1"
           >
             ref:{commentId.slice(0, 8)}
           </Button>
@@ -158,7 +158,7 @@ export default function AgentConsole({
       {/* Top Header */}
       <div className="px-6 py-4 border-b border-[#202023] flex items-center justify-between bg-[#141416] shrink-0">
         <div className="flex items-center gap-3">
-          <div className="h-7 w-7 rounded-lg bg-[#242428] flex items-center justify-center text-[#e6fc4f]">
+          <div className="h-7 w-7 rounded-lg bg-[#242428] flex items-center justify-center text-indigo-400">
             <Sparkles className="h-4 w-4" />
           </div>
           <div>

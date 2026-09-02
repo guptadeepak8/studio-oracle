@@ -33,7 +33,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
           required={required}
           className={`w-full bg-[#141416] border ${
             error ? "border-rose-500" : "border-[#28282b]"
-          } rounded-lg p-3.5 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-[#e6fc4f] transition font-sans resize-none ${className}`}
+          } rounded-lg p-3.5 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-indigo-500 transition font-sans resize-none ${className}`}
           {...props}
         />
 

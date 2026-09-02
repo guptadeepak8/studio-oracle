@@ -40,7 +40,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             required={required}
             className={`w-full h-11 bg-[#141416] border ${
               error ? "border-rose-500" : "border-[#28282b]"
-            } rounded-lg px-3.5 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-[#e6fc4f] transition font-sans ${
+            } rounded-lg px-3.5 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-indigo-500 transition font-sans ${
               leftIcon ? "pl-10" : ""
             } ${className}`}
             {...props}

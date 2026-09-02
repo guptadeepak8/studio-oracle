@@ -229,7 +229,6 @@ function CampaignWorkspaceInner() {
           <div className="flex-1 overflow-y-auto p-8 max-w-7xl mx-auto w-full space-y-8">
             <MarketingDirectives
               campaign={campaign}
-              themeStats={themeStats}
               drops={drops}
               decisionsResponse={decisionsData}
               isLoadingDecisions={isLoadingDecisions}
@@ -301,7 +300,7 @@ export default function CampaignWorkspace() {
     <Suspense
       fallback={
         <div className="flex-1 bg-[#0e0e10] flex flex-col items-center justify-center text-zinc-400 text-sm gap-2 h-screen">
-          <Loader2 className="h-7 w-7 animate-spin text-[#e6fc4f]" />
+          <Loader2 className="h-7 w-7 animate-spin text-indigo-400" />
           Loading workspace...
         </div>
       }

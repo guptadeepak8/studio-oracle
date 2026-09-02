@@ -44,7 +44,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 
     const variantStyles: Record<ButtonVariant, string> = {
       primary:
-        "bg-[#e6fc4f] hover:bg-[#d8ed47] text-black shadow-xs font-bold uppercase tracking-wider",
+        "bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white shadow-xs font-bold uppercase tracking-wider transition-colors",
       secondary:
         "bg-[#1f1f23] hover:bg-[#28282d] text-zinc-100 border border-[#2d2d32] shadow-xs",
       danger:
@@ -56,7 +56,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       chip:
         "bg-[#161618] hover:bg-[#202024] text-zinc-400 hover:text-zinc-200 border border-[#28282b] font-semibold",
       "chip-active":
-        "bg-[#242428] text-[#e6fc4f] border border-[#3b3a1a] font-semibold shadow-xs",
+        "bg-[#242428] text-indigo-400 border border-indigo-500/40 font-semibold shadow-xs",
       "menu-item":
         "w-full justify-start text-left px-4 py-2 hover:bg-[#242428] hover:text-zinc-100 text-zinc-300 font-medium rounded-md",
       "menu-item-danger":

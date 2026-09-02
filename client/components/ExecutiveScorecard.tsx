@@ -40,7 +40,7 @@ export default function ExecutiveScorecard({
             <span className={`text-xl font-bold font-mono ${isScorePositive ? "text-zinc-100" : "text-rose-400"}`}>
               {audienceScore > 0 ? `+${audienceScore}` : audienceScore} / 100
             </span>
-            <span className="text-xs text-[#e6fc4f] font-semibold">
+            <span className="text-xs text-indigo-400 font-semibold">
               {audienceScore >= 30 ? "High Excitement" : audienceScore >= 0 ? "Moderate" : "Watch Friction"}
             </span>
           </div>
@@ -81,7 +81,7 @@ export default function ExecutiveScorecard({
               onClick={onTriggerImport}
               leftIcon={<Settings className="h-3 w-3" />}
               title="Configure Sync Settings"
-              className="text-zinc-400 hover:text-[#e6fc4f] px-2 py-0.5"
+              className="text-zinc-400 hover:text-indigo-400 px-2 py-0.5"
             >
               Settings
             </Button>
@@ -94,7 +94,7 @@ export default function ExecutiveScorecard({
             ClickHouse Engine
           </span>
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5 text-xs text-[#e6fc4f] font-mono font-bold">
+            <div className="flex items-center gap-1.5 text-xs text-indigo-400 font-mono font-bold">
               <span>⚡ &lt; 20ms Query Speed</span>
             </div>
             <span className="text-[11px] text-zinc-400 font-mono">100K Scale</span>
@@ -104,7 +104,7 @@ export default function ExecutiveScorecard({
 
       {/* Clean AI Executive Summary Banner */}
       <Card className="p-5 flex items-start gap-4">
-        <div className="h-7 w-7 rounded-lg bg-[#242428] flex items-center justify-center text-[#e6fc4f] shrink-0 mt-0.5">
+        <div className="h-7 w-7 rounded-lg bg-[#242428] flex items-center justify-center text-indigo-400 shrink-0 mt-0.5">
           <Sparkles className="h-4 w-4" />
         </div>
         <div className="space-y-1">

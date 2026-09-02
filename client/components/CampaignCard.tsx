@@ -130,7 +130,7 @@ export default function CampaignCard({ campaign, onRefresh }: CampaignCardProps)
 
       <CardFooter className="pt-3">
         <div className="flex items-center gap-2 text-sm text-zinc-300">
-          <Database className="h-4 w-4 text-[#e6fc4f]" />
+          <Database className="h-4 w-4 text-indigo-400" />
           <span className="font-semibold">{evidenceCount !== null ? evidenceCount.toLocaleString() : "..."}</span>
           <span className="text-zinc-400 font-normal">comments</span>
         </div>
@@ -140,7 +140,7 @@ export default function CampaignCard({ campaign, onRefresh }: CampaignCardProps)
           size="sm"
           onClick={() => router.push(`/campaign/${campaign.content_id}?tab=overview`)}
           rightIcon={<ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition" />}
-          className="text-[#e6fc4f] hover:text-[#d8ed47] font-bold"
+          className="text-indigo-400 hover:text-indigo-300 font-bold"
         >
           Dashboard
         </Button>

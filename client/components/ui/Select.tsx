@@ -62,7 +62,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
             required={required}
             className={`w-full h-11 bg-[#141416] border ${
               error ? "border-rose-500" : "border-[#28282b]"
-            } rounded-lg px-3.5 pr-9 text-sm text-zinc-100 focus:outline-none focus:border-[#e6fc4f] transition cursor-pointer font-sans appearance-none ${
+            } rounded-lg px-3.5 pr-9 text-sm text-zinc-100 focus:outline-none focus:border-indigo-500 transition cursor-pointer font-sans appearance-none ${
               leftIcon ? "pl-10" : ""
             } ${className}`}
             {...props}

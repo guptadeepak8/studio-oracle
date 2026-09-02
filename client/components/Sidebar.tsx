@@ -130,9 +130,9 @@ export default function Sidebar() {
         </div>
 
         {/* Info Card */}
-        <div className="mx-1 bg-[#1a1a16] border border-[#3b3a1a] rounded-xl p-3.5 space-y-1 text-xs">
+        <div className="mx-1 bg-[#14141a] border border-indigo-500/30 rounded-xl p-3.5 space-y-1 text-xs">
           <div className="flex items-start gap-2">
-            <Star className="h-3.5 w-3.5 text-[#e6fc4f] shrink-0 mt-0.5 fill-[#e6fc4f]" />
+            <Star className="h-3.5 w-3.5 text-indigo-400 shrink-0 mt-0.5 fill-indigo-400" />
             <div className="space-y-0.5 text-zinc-200">
               <span className="font-semibold text-zinc-100 block text-[11px]">
                 ClickHouse Ingestion
@@ -154,7 +154,7 @@ export default function Sidebar() {
               <Building2 className="h-3.5 w-3.5 text-zinc-400" />
               <span className="font-semibold">StudioOracle</span>
             </div>
-            <span className="text-[10px] text-[#e6fc4f] font-mono font-semibold">Pro Tier</span>
+            <span className="text-[10px] text-indigo-400 font-mono font-semibold">Pro Tier</span>
           </div>
         </div>
       </div>

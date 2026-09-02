@@ -86,7 +86,7 @@ export default function IngestProgressModal({
             <div className="flex items-center gap-3">
               <div className="flex items-end gap-1 h-6">
                 <span className="w-1 bg-red-500 rounded-full animate-[bounce_0.8s_ease-in-out_infinite_0.1s] h-4" />
-                <span className="w-1 bg-[#e6fc4f] rounded-full animate-[bounce_0.8s_ease-in-out_infinite_0.3s] h-6" />
+                <span className="w-1 bg-indigo-500 rounded-full animate-[bounce_0.8s_ease-in-out_infinite_0.3s] h-6" />
                 <span className="w-1 bg-[#38bdf8] rounded-full animate-[bounce_0.8s_ease-in-out_infinite_0.2s] h-3" />
                 <span className="w-1 bg-[#4ade80] rounded-full animate-[bounce_0.8s_ease-in-out_infinite_0.4s] h-5" />
               </div>
@@ -104,7 +104,7 @@ export default function IngestProgressModal({
             </div>
 
             {currentStep < 4 ? (
-              <Loader2 className="h-5 w-5 text-[#e6fc4f] animate-spin shrink-0" />
+              <Loader2 className="h-5 w-5 text-indigo-400 animate-spin shrink-0" />
             ) : (
               <CheckCircle2 className="h-5 w-5 text-[#4ade80] shrink-0" />
             )}
@@ -113,7 +113,7 @@ export default function IngestProgressModal({
           {/* Stepper Pipeline */}
           <div className="space-y-3">
             {/* Step 1 */}
-            <div className={`flex items-start gap-3 p-3 rounded-lg transition-all ${currentStep === 1 ? "bg-[#242428] border border-[#3b3a1a]" : "opacity-75"}`}>
+            <div className={`flex items-start gap-3 p-3 rounded-lg transition-all ${currentStep === 1 ? "bg-[#242428] border border-indigo-500/30" : "opacity-75"}`}>
               <div className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${currentStep > 1 ? "bg-[#4ade80] text-black" : currentStep === 1 ? "bg-red-500 text-white" : "bg-zinc-800 text-zinc-400"}`}>
                 {currentStep > 1 ? <CheckCircle2 className="h-4 w-4" /> : "1"}
               </div>
@@ -128,8 +128,8 @@ export default function IngestProgressModal({
             </div>
 
             {/* Step 2 */}
-            <div className={`flex items-start gap-3 p-3 rounded-lg transition-all ${currentStep === 2 ? "bg-[#242428] border border-[#3b3a1a]" : "opacity-75"}`}>
-              <div className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${currentStep > 2 ? "bg-[#4ade80] text-black" : currentStep === 2 ? "bg-[#e6fc4f] text-black" : "bg-zinc-800 text-zinc-400"}`}>
+            <div className={`flex items-start gap-3 p-3 rounded-lg transition-all ${currentStep === 2 ? "bg-[#242428] border border-indigo-500/30" : "opacity-75"}`}>
+              <div className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${currentStep > 2 ? "bg-[#4ade80] text-black" : currentStep === 2 ? "bg-indigo-600 text-white" : "bg-zinc-800 text-zinc-400"}`}>
                 {currentStep > 2 ? <CheckCircle2 className="h-4 w-4" /> : "2"}
               </div>
               <div className="space-y-0.5">

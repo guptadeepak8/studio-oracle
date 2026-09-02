@@ -37,7 +37,7 @@ export default function CollapsibleSection({
               <ChevronRight className="h-4.5 w-4.5 text-zinc-400" />
             )
           }
-          className="text-base font-bold text-zinc-100 hover:text-[#e6fc4f] px-0 hover:bg-transparent"
+          className="text-base font-bold text-zinc-100 hover:text-indigo-400 px-0 hover:bg-transparent"
         >
           {title}
         </Button>

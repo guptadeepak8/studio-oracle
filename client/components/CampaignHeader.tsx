@@ -62,7 +62,7 @@ export default function CampaignHeader({
 
           {/* Dedicated Campaign Agent Identity Pill */}
           <div className="hidden sm:flex items-center gap-1.5 text-xs text-zinc-400 bg-[#1c1c1f] border border-[#28282b] px-3 py-1 rounded-full font-mono">
-            <Bot className="h-3.5 w-3.5 text-[#e6fc4f]" />
+            <Bot className="h-3.5 w-3.5 text-indigo-400" />
             <span>{campaign.title} Agent:</span>
             <span className="text-[#4ade80] font-semibold flex items-center gap-1">
               <span className="h-1.5 w-1.5 rounded-full bg-[#4ade80] animate-pulse" />
@@ -77,7 +77,7 @@ export default function CampaignHeader({
             variant="secondary"
             size="sm"
             onClick={() => onTabChange(activeTab === "agent" ? "overview" : "agent")}
-            leftIcon={<MessageSquare className="h-4 w-4 text-[#e6fc4f]" />}
+            leftIcon={<MessageSquare className="h-4 w-4 text-indigo-400" />}
           >
             {activeTab === "agent" ? "Back to Dashboard" : "Ask AI Assistant"}
           </Button>

@@ -136,9 +136,9 @@ export default function TrailerComparison({ campaign, drops = [] }: TrailerCompa
                     href={dropA.url}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-1.5 text-xs text-[#e6fc4f] hover:underline font-bold pt-1"
+                    className="inline-flex items-center gap-1.5 text-xs text-indigo-400 hover:text-indigo-300 hover:underline font-bold pt-1"
                   >
-                    <Play className="h-3.5 w-3.5 fill-[#e6fc4f]" /> Watch Trailer Video
+                    <Play className="h-3.5 w-3.5 fill-indigo-400" /> Watch Trailer Video
                   </a>
                 </div>
               )}
@@ -190,9 +190,9 @@ export default function TrailerComparison({ campaign, drops = [] }: TrailerCompa
                     href={dropB.url}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-1.5 text-xs text-[#e6fc4f] hover:underline font-bold pt-1"
+                    className="inline-flex items-center gap-1.5 text-xs text-indigo-400 hover:text-indigo-300 hover:underline font-bold pt-1"
                   >
-                    <Play className="h-3.5 w-3.5 fill-[#e6fc4f]" /> Watch Trailer Video
+                    <Play className="h-3.5 w-3.5 fill-indigo-400" /> Watch Trailer Video
                   </a>
                 </div>
               )}
