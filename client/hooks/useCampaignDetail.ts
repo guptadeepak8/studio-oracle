@@ -11,10 +11,10 @@ import {
   useDecisionsQuery,
   useInvestigateDecisionsMutation,
   useIngestYouTubeMutation,
-  useIngestRedditMutation,
+  useGroundGoogleSearchMutation,
 } from "./queries/useCampaignDetailQueries";
 import { CAMPAIGNS_QUERY_KEY } from "./queries/useCampaignsQueries";
-import { IngestResponse, CampaignDecisionsResponse } from "../utils/types";
+import { IngestResponse } from "../utils/types";
 
 export function useCampaignDetail(campaignId: string) {
   const queryClient = useQueryClient();
@@ -28,7 +28,7 @@ export function useCampaignDetail(campaignId: string) {
 
   const investigateMutation = useInvestigateDecisionsMutation(campaignId);
   const ingestYouTubeMutation = useIngestYouTubeMutation(campaignId);
-  const ingestRedditMutation = useIngestRedditMutation(campaignId);
+  const groundGoogleSearchMutation = useGroundGoogleSearchMutation(campaignId);
 
   const sentiment = analyticsData?.sentiment || {
     positive: 0,
@@ -61,9 +61,9 @@ export function useCampaignDetail(campaignId: string) {
     }
   };
 
-  const triggerReddit = async (query?: string): Promise<boolean> => {
+  const triggerGoogleSearch = async (query?: string): Promise<boolean> => {
     try {
-      await ingestRedditMutation.mutateAsync(query);
+      await groundGoogleSearchMutation.mutateAsync(query);
       return true;
     } catch {
       return false;
@@ -94,10 +94,10 @@ export function useCampaignDetail(campaignId: string) {
     isLoadingDecisions,
     isInvestigating: investigateMutation.isPending,
     isIngesting: ingestYouTubeMutation.isPending,
-    isIngestingReddit: ingestRedditMutation.isPending,
+    isGroundingSearch: groundGoogleSearchMutation.isPending,
     refreshAll,
     triggerIngest,
-    triggerReddit,
+    triggerGoogleSearch,
     triggerInvestigation,
   };
 }

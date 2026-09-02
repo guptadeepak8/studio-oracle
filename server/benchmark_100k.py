@@ -54,7 +54,7 @@ def seed_100k_benchmark(target_count: int = 100000):
             content_type="movie",
             description="High-velocity 100,000 comment audience feedback scale benchmark testing ClickHouse columnar execution speed.",
             release_date="2026-11-22",
-            target_terms=["Gladiator II Official Trailer", "Gladiator 2 Reddit"]
+            target_terms=["Gladiator II Official Trailer", "Gladiator II Google Search Buzz"]
         )
         CampaignService.set_status(content_id, "active")
 
@@ -75,7 +75,7 @@ def seed_100k_benchmark(target_count: int = 100000):
             for i in range(current_batch_size):
                 cid = f"bm_{uuid.uuid4().hex[:12]}"
                 pid = f"vid_{random.randint(1, 10)}"
-                source = "youtube" if random.random() < 0.65 else "reddit"
+                source = "youtube" if random.random() < 0.65 else "google_search"
                 
                 rand_val = random.random()
                 if rand_val < 0.58:

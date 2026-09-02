@@ -17,3 +17,4 @@ def ground_campaign_with_google_search(content_id: str, search_query: str = None
     return f"Successfully grounded {res.get('ingested_insights', 0)} Google Search industry reviews into ClickHouse for campaign '{content_id}'."
 
 google_search_grounding_tool = FunctionTool(ground_campaign_with_google_search)
+

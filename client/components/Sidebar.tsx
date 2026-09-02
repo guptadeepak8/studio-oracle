@@ -138,7 +138,7 @@ export default function Sidebar() {
                 ClickHouse Ingestion
               </span>
               <p className="text-[11px] text-zinc-400 leading-tight">
-                Live audience telemetry synced across YouTube & Reddit.
+                Live audience telemetry synced across YouTube & Google Search Grounding.
               </p>
             </div>
           </div>

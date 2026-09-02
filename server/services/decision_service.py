@@ -52,7 +52,7 @@ class DecisionService:
                     insight=f"Awaiting statistically sufficient audience volume for '{title}' (Currently {total_comments} comments tracked).",
                     evidence=evidence_breakdown,
                     interpretation="Sample size is below the 25-comment statistical power threshold. Premature conclusions risk biasing creative allocation.",
-                    action="Maintain surveillance mode. Ingest further YouTube & Reddit trailer feedback before committing marketing spend.",
+                    action="Maintain surveillance mode. Ingest further YouTube & Google Search press telemetry before committing marketing spend.",
                     copy_draft=None,
                     target_channels=["Monitoring"],
                     target_audience="General Audience",
@@ -153,14 +153,15 @@ class DecisionService:
                 )
 
             plat_split = signals.get("platform_split", {})
-            if "youtube" in plat_split and "reddit" in plat_split:
+            other_plat = "google_search" if "google_search" in plat_split else None
+            if "youtube" in plat_split and other_plat:
                 yt_pos = plat_split["youtube"]["positive_pct"]
-                rd_pos = plat_split["reddit"]["positive_pct"]
-                gap = abs(yt_pos - rd_pos)
+                other_pos = plat_split[other_plat]["positive_pct"]
+                gap = abs(yt_pos - other_pos)
 
                 if gap >= 15:
-                    leading_plat = "YouTube" if yt_pos > rd_pos else "Reddit"
-                    trailing_plat = "Reddit" if yt_pos > rd_pos else "YouTube"
+                    leading_plat = "YouTube" if yt_pos > other_pos else "Google Search Press"
+                    trailing_plat = "Google Search Press" if yt_pos > other_pos else "YouTube"
 
                     decisions.append(
                         DecisionArtifact(
@@ -168,7 +169,7 @@ class DecisionService:
                             campaign_id=content_id,
                             status=DecisionStatus.ACTIVE_RECOMMENDATION,
                             topic="Channel Sentiment Divergence",
-                            insight=f"{gap}% sentiment divergence detected between {leading_plat} (+{max(yt_pos, rd_pos)}%) and {trailing_plat} (+{min(yt_pos, rd_pos)}%).",
+                            insight=f"{gap}% sentiment divergence detected between {leading_plat} (+{max(yt_pos, other_pos)}%) and {trailing_plat} (+{min(yt_pos, other_pos)}%).",
                             evidence=EvidenceBreakdown(
                                 total_comments_analyzed=total_comments,
                                 time_window="Surveillance Window",
@@ -176,17 +177,17 @@ class DecisionService:
                                 key_comment_refs=[s.comment_id for s in sample_refs[:2]],
                                 sample_evidence=sample_refs[:2]
                             ),
-                            interpretation=f"FACT: Mainstream viewers on {leading_plat} respond positively to action and star power, while enthusiast communities on {trailing_plat} express deeper continuity or technical scrutiny.",
-                            action=f"Deploy bifurcated channel strategy: maintain high-energy spectacle creatives on {leading_plat}, and seed director/craft behind-the-scenes content on {trailing_plat}.",
-                            copy_draft=f"Go behind the craft: How Ridley Scott brought ancient Rome back to life for {title}.",
-                            target_channels=[f"{trailing_plat} Community AMAs", "Featurettes"],
-                            target_audience="Dedicated Fans & Cinema Enthusiasts",
-                            confidence_score=0.84,
+                            interpretation=f"FACT: Mainstream audience on {leading_plat} responds directly to spectacle and action, while trade press and critics on {trailing_plat} focus on narrative pacing and franchise expectations.",
+                            action=f"Deploy bifurcated channel strategy: maintain high-energy spectacle creatives on {leading_plat}, and deploy craft & director behind-the-scenes featurettes on {trailing_plat}.",
+                            copy_draft=f"Go behind the craft: How the filmmakers brought ancient Rome back to life for {title}.",
+                            target_channels=[f"{trailing_plat} Editorial Features", "Long-Form Video"],
+                            target_audience="Cinema Enthusiasts & Film Critics",
+                            confidence_score=0.88,
                             confidence_rating=ConfidenceRating.HIGH,
                             why=[
-                                f"Statistically significant divergence ({gap}% gap) between platforms.",
-                                "Clear audience demographic segmentation verified across sources.",
-                                "Historical validation shows bifurcated messaging protects word-of-mouth."
+                                f"Statistically significant divergence ({gap}% gap) between audience comments and trade press reviews.",
+                                "Clear segmentation between mainstream hype and critical commentary.",
+                                "Bifurcated creative allocation protects both ticket pre-sales and critical word-of-mouth."
                             ],
                             created_at=datetime.utcnow().isoformat()
                         )

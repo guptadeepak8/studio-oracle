@@ -29,7 +29,7 @@ export default function AgentConsole({
     "Why did audience sentiment change?",
     "What are audiences most divided about?",
     "What topics are driving negative friction?",
-    "Compare YouTube audience reactions with Reddit.",
+    "Compare YouTube audience comments with Google Search press reviews.",
     "Give me 3 high-priority marketing pivots for this campaign.",
   ];
 

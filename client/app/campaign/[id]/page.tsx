@@ -260,7 +260,7 @@ function CampaignWorkspaceInner() {
             {/* 3. Expandable Section: What Fans Love vs What's Not (Table) */}
             <WhatsWorking themeStats={themeStats} />
 
-            {/* 4. Expandable Section: YouTube vs Reddit Reaction */}
+            {/* 4. Expandable Section: YouTube Audience Voice vs Google Search Press Grounding */}
             <PlatformComparison
               platforms={platforms}
               dominantTopic={themeStats.length > 0 ? themeStats[0].name : "General"}

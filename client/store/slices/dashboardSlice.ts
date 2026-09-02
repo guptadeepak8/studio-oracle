@@ -7,7 +7,7 @@ interface DashboardState {
   selectedDropBId: string;
   themeFilter: ThemeFilterType;
   searchFilter: string;
-  activePlatformTab: "both" | "youtube" | "reddit";
+  activePlatformTab: "both" | "youtube" | "google_search";
 }
 
 const initialState: DashboardState = {
@@ -34,7 +34,7 @@ export const dashboardSlice = createSlice({
     setSearchFilter: (state, action: PayloadAction<string>) => {
       state.searchFilter = action.payload;
     },
-    setActivePlatformTab: (state, action: PayloadAction<"both" | "youtube" | "reddit">) => {
+    setActivePlatformTab: (state, action: PayloadAction<"both" | "youtube" | "google_search">) => {
       state.activePlatformTab = action.payload;
     },
     resetDashboardFilters: (state) => {
@@ -55,4 +55,3 @@ export const {
 } = dashboardSlice.actions;
 
 export default dashboardSlice.reducer;
-

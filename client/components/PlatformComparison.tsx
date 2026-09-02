@@ -27,7 +27,7 @@ export default function PlatformComparison({ platforms = {}, dominantTopic }: Pl
     topNegative: "",
   };
 
-  const googleSearch = platforms["google_search"] || platforms["reddit"] || {
+  const googleSearch = platforms["google_search"] || {
     total: 0,
     posPercent: 0,
     negPercent: 0,

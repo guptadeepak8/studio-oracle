@@ -131,22 +131,26 @@ export function useIngestYouTubeMutation(campaignId: string) {
   });
 }
 
-export function useIngestRedditMutation(campaignId: string) {
+export function useGroundGoogleSearchMutation(campaignId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (query?: string) => {
       return apiRequest<{ status: string; message: string }>(
-        `${API_BASE_URL}/api/campaigns/${campaignId}/ingest-reddit`,
+        `${API_BASE_URL}/api/campaigns/${campaignId}/ingest-web-grounding`,
         {
           method: "POST",
           body: JSON.stringify({ query }),
         }
       );
     },
-    onSuccess: (res) => {
-      toast.success(res.message || "Successfully synced Reddit community discussions!");
+    onSuccess: (data) => {
+      toast.success(data.message || "Successfully grounded Google Search pre-release intelligence!");
       queryClient.invalidateQueries({ queryKey: campaignDetailKeys.all(campaignId) });
+      queryClient.invalidateQueries({ queryKey: CAMPAIGNS_QUERY_KEY });
+    },
+    onError: (error: any) => {
+      toast.error(`Google Search Grounding error: ${error.message}`);
     },
   });
 }

@@ -25,7 +25,6 @@ def ingest_data(request: IngestRequest):
         raise HTTPException(status_code=500, detail=f"YouTube ingestion error: {str(e)}")
 
 @router.post("/api/campaigns/{content_id}/ingest-web-grounding")
-@router.post("/api/campaigns/{content_id}/ingest-reddit")
 def ground_campaign_web_search(content_id: str, request: SearchGroundingRequest):
     """
     Triggers real-time Google Search Grounding to pull live press reviews,

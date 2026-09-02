@@ -149,3 +149,4 @@ class GoogleSearchService:
             "search_query": search_term,
             "message": f"Successfully grounded {len(comment_rows)} Google Search press & industry insights in ClickHouse."
         }
+
