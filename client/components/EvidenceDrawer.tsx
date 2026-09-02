@@ -64,6 +64,7 @@ export default function EvidenceDrawer({
   if (!isOpen) return null;
 
   const isYouTube = data?.platform?.toLowerCase().includes("youtube");
+  const isGoogleSearch = data?.platform?.toLowerCase().includes("google") || data?.platform?.toLowerCase().includes("search");
   const isPositive = data?.sentiment === "positive";
   const isNegative = data?.sentiment === "negative";
 
@@ -121,8 +122,12 @@ export default function EvidenceDrawer({
                 <div className="flex items-center justify-between gap-2">
                   <Badge variant={isYouTube ? "warning" : "info"}>
                     <span className="flex items-center gap-1.5 capitalize">
-                      {isYouTube ? <Video className="h-3 w-3" /> : <MessageCircle className="h-3 w-3" />}
-                      {data.platform} Feedback
+                      {isYouTube ? (
+                        <Video className="h-3 w-3" />
+                      ) : (
+                        <Sparkles className="h-3 w-3 text-sky-400" />
+                      )}
+                      {isGoogleSearch ? "Google Search Grounding" : `${data.platform} Telemetry`}
                     </span>
                   </Badge>
 

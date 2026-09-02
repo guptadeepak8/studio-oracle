@@ -7,7 +7,7 @@ from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
 from mcp import StdioServerParameters
 from tools import ingest_youtube_tool, create_content_tool
 from tools.timeline import query_trailer_inflection_tool
-from tools.reddit import ingest_reddit_tool
+from tools.search_grounding import google_search_grounding_tool
 from tools.multimodal import analyze_visual_alignment_tool
 
 load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"))
@@ -39,19 +39,19 @@ root_agent = LlmAgent(
     The `studio_oracle.audience_comments` table contains these columns:
     - `content_id` UUID: Campaign identifier (always filter by this!).
     - `comment_id` String: Unique identifier of the comment.
-    - `source` String: Source platform ('youtube', 'reddit').
-    - `text` String: Raw comment text.
+    - `source` String: Source platform ('youtube', 'google_search').
+    - `text` String: Raw comment text or press review.
     - `sentiment` LowCardinality(String): Overall comment sentiment ('positive', 'negative', 'neutral', 'mixed', 'unknown').
     - `claim` String: Dynamic summary of the core opinion/claim.
     - `evidence_type` LowCardinality(String): 'praise', 'critique', 'question', 'hype', 'mixed', 'neutral'.
     - `confidence` Float32: Classification confidence score.
-    - `topics` Array(String): Dynamic topics/themes discovered (lowercase, normalized, e.g. 'casting', 'cgi', 'franchise_comparison').
+    - `topics` Array(String): Dynamic topics/themes discovered (lowercase, normalized, e.g. 'casting', 'cgi', 'box_office').
     - `topic_sentiments` Map(String, String): Sentiment associated with each topic (e.g. {'cgi': 'negative'}).
     - `published_at` DateTime: Publication timestamp.
 
     AVAILABLE CUSTOM TOOLS:
     - `query_trailer_inflection_tool`: Computes pre vs. post trailer drop sentiment and topic shifts in ClickHouse.
-    - `ingest_reddit_tool`: Ingests Reddit community discussions for cross-platform comparison.
+    - `google_search_grounding_tool`: Pulls live Google Search trade press reactions and critical reviews into ClickHouse.
     - `ingest_youtube_tool`: Ingests YouTube video comments into ClickHouse.
 
     REQUIRED RESPONSE STRUCTURE:
@@ -75,7 +75,7 @@ root_agent = LlmAgent(
     tools=[
         create_content_tool,
         ingest_youtube_tool,
-        ingest_reddit_tool,
+        google_search_grounding_tool,
         query_trailer_inflection_tool,
         analyze_visual_alignment_tool,
         McpToolset(

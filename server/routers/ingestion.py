@@ -1,21 +1,18 @@
-import asyncio
-from fastapi import APIRouter, HTTPException, BackgroundTasks
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import Optional
 from models.requests import IngestRequest
 from ingestion.youtube import ingest_youtube_data
-from ingestion.reddit import ingest_reddit_data
-from services.campaign_service import CampaignService
+from services.search_service import GoogleSearchService
 
-router = APIRouter(tags=["Ingestion Pipelines"])
+router = APIRouter(tags=["Ingestion & Grounding"])
 
-class RedditIngestRequest(BaseModel):
+class SearchGroundingRequest(BaseModel):
     query: Optional[str] = None
 
 @router.post("/api/ingest")
 @router.post("/api/ingest-youtube")
 def ingest_data(request: IngestRequest):
-    """Trigger on-demand YouTube comment ingestion and Gemini classification."""
     try:
         res = ingest_youtube_data(
             request.content_id,
@@ -27,19 +24,15 @@ def ingest_data(request: IngestRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"YouTube ingestion error: {str(e)}")
 
+@router.post("/api/campaigns/{content_id}/ingest-web-grounding")
 @router.post("/api/campaigns/{content_id}/ingest-reddit")
-def ingest_reddit_campaign_data(content_id: str, request: RedditIngestRequest):
-    """Trigger Reddit audience discussion scraping and sentiment analysis."""
+def ground_campaign_web_search(content_id: str, request: SearchGroundingRequest):
+    """
+    Triggers real-time Google Search Grounding to pull live press reviews,
+    box-office tracking, and critic consensus into ClickHouse.
+    """
     try:
-        camp = CampaignService.get_campaign_by_id(content_id)
-        if not camp:
-            raise HTTPException(status_code=404, detail="Campaign not found")
-        
-        query = request.query or (camp["target_terms"][0] if camp.get("target_terms") else camp["title"])
-        res = ingest_reddit_data(content_id, query)
+        res = GoogleSearchService.search_and_ground_campaign(content_id, request.query)
         return res
-    except HTTPException:
-        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Reddit ingestion error: {str(e)}")
-
+        raise HTTPException(status_code=500, detail=f"Google Search Grounding error: {str(e)}")

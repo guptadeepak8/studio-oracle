@@ -226,9 +226,9 @@ export default function MarketingDirectives({
                               {plat.platform.toLowerCase().includes("youtube") ? (
                                 <Video className="h-3.5 w-3.5 text-red-400" />
                               ) : (
-                                <MessageCircle className="h-3.5 w-3.5 text-orange-400" />
+                                <Sparkles className="h-3.5 w-3.5 text-sky-400" />
                               )}
-                              {plat.platform} ({plat.comment_count.toLocaleString()} comments)
+                              {plat.platform.toLowerCase().includes("google") ? "Google Search Press" : plat.platform} ({plat.comment_count.toLocaleString()} {plat.platform.toLowerCase().includes("google") ? "reviews" : "comments"})
                             </span>
                             <span className="font-mono text-[#4ade80] font-bold">
                               +{plat.positive_pct}% Pos / -{plat.negative_pct}% Neg

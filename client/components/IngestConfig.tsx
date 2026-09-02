@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { RefreshCw, MessageCircle } from "lucide-react";
+import { RefreshCw, Globe, Sparkles } from "lucide-react";
 import { API_BASE_URL } from "../utils/constants";
 import { toast } from "sonner";
 import { Card, Button, Input, Select, Badge } from "./ui";
@@ -32,13 +32,13 @@ export default function IngestConfig({
   onTriggerIngest,
   onRefreshAll,
 }: IngestConfigProps) {
-  const [isIngestingReddit, setIsIngestingReddit] = useState(false);
+  const [isGroundingSearch, setIsGroundingSearch] = useState(false);
   const [syncSchedule, setSyncSchedule] = useState("1hr");
 
-  const handleTriggerReddit = async () => {
-    setIsIngestingReddit(true);
+  const handleTriggerGoogleSearch = async () => {
+    setIsGroundingSearch(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/api/campaigns/${campaignId}/ingest-reddit`, {
+      const res = await fetch(`${API_BASE_URL}/api/campaigns/${campaignId}/ingest-web-grounding`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ query: ingestQuery }),
@@ -46,22 +46,22 @@ export default function IngestConfig({
       if (res.ok) {
         const data = await res.json();
         onRefreshAll();
-        toast.success(data.message || "Successfully synced Reddit community discussions!");
+        toast.success(data.message || "Successfully grounded Google Search press & critical reviews!");
       } else {
-        toast.error("Failed to sync Reddit discussions. Ensure tracking is active.");
+        toast.error("Failed to ground Google Search reviews. Ensure tracking is active.");
       }
     } catch (e) {
       console.error(e);
-      toast.error("Network error syncing Reddit discussions.");
+      toast.error("Network error grounding Google Search reviews.");
     } finally {
-      setIsIngestingReddit(false);
+      setIsGroundingSearch(false);
     }
   };
 
   return (
     <CollapsibleSection
-      title="Live Audience Feedback Sync · YouTube & Reddit"
-      subtitle="Automated background syncing and on-demand comment fetching from official YouTube trailers and Reddit discussion threads."
+      title="Live Telemetry Sync · YouTube & Google Search Grounding"
+      subtitle="Automated background syncing and on-demand ingestion from official YouTube trailers and Google Search press intelligence."
       headerAction={
         <Badge variant="active" pulsing>
           Auto-Sync: {syncSchedule === "1hr" ? "Every 1 Hour" : syncSchedule === "6hr" ? "Every 6 Hours" : syncSchedule === "24hr" ? "Every 24 Hours" : "Manual Only"}
@@ -118,37 +118,35 @@ export default function IngestConfig({
           <div className="flex items-center gap-4 text-xs text-zinc-300">
             <div className="flex items-center gap-1.5 font-medium">
               <span className="h-2 w-2 rounded-full bg-[#4ade80]" />
-              <span>YouTube Data API v3 Connected</span>
+              <span>YouTube Video Feed (Audience)</span>
             </div>
             <div className="flex items-center gap-1.5 font-medium">
-              <span className="h-2 w-2 rounded-full bg-[#4ade80]" />
-              <span>Reddit Discussions Feed Connected</span>
+              <span className="h-2 w-2 rounded-full bg-[#38bdf8]" />
+              <span>Google Search Grounding (Industry Press)</span>
             </div>
           </div>
 
-          <div className="flex items-center gap-2.5">
-            {/* Sync Reddit Button */}
+          <div className="flex items-center gap-3">
             <Button
               variant="secondary"
               size="sm"
-              onClick={handleTriggerReddit}
-              isLoading={isIngestingReddit}
-              disabled={isIngesting || isIngestingReddit}
-              leftIcon={<MessageCircle className="h-3.5 w-3.5 text-orange-400" />}
+              onClick={handleTriggerGoogleSearch}
+              disabled={isGroundingSearch}
+              isLoading={isGroundingSearch}
+              leftIcon={<Globe className="h-3.5 w-3.5 text-sky-400" />}
             >
-              Sync Reddit Feedback
+              {isGroundingSearch ? "Grounding Search..." : "Ground with Google Search"}
             </Button>
 
-            {/* Sync YouTube Button */}
             <Button
               variant="primary"
               size="sm"
               onClick={onTriggerIngest}
+              disabled={isIngesting}
               isLoading={isIngesting}
-              disabled={isIngesting || isIngestingReddit}
               leftIcon={<RefreshCw className="h-3.5 w-3.5" />}
             >
-              Fetch YouTube Batch
+              {isIngesting ? "Syncing YouTube..." : "Sync YouTube Comments"}
             </Button>
           </div>
         </div>
