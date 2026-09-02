@@ -28,3 +28,4 @@ export const uiSlice = createSlice({
 
 export const { setCreateModalOpen, toggleSidebar, setSidebarCollapsed } = uiSlice.actions;
 export default uiSlice.reducer;
+

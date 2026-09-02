@@ -17,6 +17,8 @@ import MarketingDirectives from "../../../components/MarketingDirectives";
 import AgentConsole from "../../../components/AgentConsole";
 import CampaignHeader from "../../../components/CampaignHeader";
 import IngestConfig from "../../../components/IngestConfig";
+import ExecutiveScorecardSkeleton from "../../../components/skeletons/ExecutiveScorecardSkeleton";
+import SectionCardSkeleton from "../../../components/skeletons/SectionCardSkeleton";
 
 function CampaignWorkspaceInner() {
   const params = useParams();
@@ -144,9 +146,10 @@ function CampaignWorkspaceInner() {
 
   if (isLoadingCampaign) {
     return (
-      <div className="flex-1 bg-[#0e0e10] flex flex-col items-center justify-center text-zinc-400 text-sm gap-2">
-        <Loader2 className="h-7 w-7 animate-spin text-[#e6fc4f]" />
-        Loading campaign dashboard...
+      <div className="flex-1 bg-[#0e0e10] p-8 space-y-8 max-w-7xl mx-auto w-full overflow-y-auto">
+        <ExecutiveScorecardSkeleton />
+        <SectionCardSkeleton type="cards" />
+        <SectionCardSkeleton type="table" />
       </div>
     );
   }

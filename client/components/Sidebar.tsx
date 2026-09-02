@@ -14,12 +14,13 @@ import {
 } from "lucide-react";
 import { useCampaigns } from "../hooks/useCampaigns";
 import RegisterModal from "./RegisterModal";
+import Skeleton from "./common/Skeleton";
 
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { campaigns } = useCampaigns();
+  const { campaigns, isLoading } = useCampaigns();
   const [showModal, setShowModal] = useState(false);
 
   // Get current active campaign id if inside /campaign/[id]
@@ -93,25 +94,35 @@ export default function Sidebar() {
           </div>
 
           <div className="space-y-1">
-            {campaigns.map((c) => {
-              const isSelected = currentCampaign?.content_id === c.content_id;
-              return (
-                <Link
-                  key={c.content_id}
-                  href={`/campaign/${c.content_id}?tab=${currentTab}`}
-                  className={`flex items-center justify-between px-3.5 py-2.5 rounded-lg text-sm transition ${
-                    isSelected
-                      ? "bg-[#222227] text-white font-bold border border-[#323238] shadow-xs"
-                      : "text-zinc-200 hover:text-white hover:bg-[#1a1a1d] font-medium"
-                  }`}
-                >
-                  <span className="truncate pr-2">{c.title}</span>
-                  <span className={`h-2 w-2 rounded-full shrink-0 ${
-                    c.status === "active" ? "bg-[#4ade80] shadow-[0_0_6px_#4ade80]" : "bg-zinc-600"
-                  }`} />
-                </Link>
-              );
-            })}
+            {isLoading ? (
+              <div className="space-y-2 px-1">
+                {[...Array(4)].map((_, i) => (
+                  <Skeleton key={i} className="h-9 w-full rounded-lg" />
+                ))}
+              </div>
+            ) : (
+              campaigns.map((c) => {
+                const isSelected = currentCampaign?.content_id === c.content_id;
+                return (
+                  <Link
+                    key={c.content_id}
+                    href={`/campaign/${c.content_id}?tab=${currentTab}`}
+                    className={`flex items-center justify-between px-3.5 py-2.5 rounded-lg text-sm transition ${
+                      isSelected
+                        ? "bg-[#222227] text-white font-bold border border-[#323238] shadow-xs"
+                        : "text-zinc-200 hover:text-white hover:bg-[#1a1a1d] font-medium"
+                    }`}
+                  >
+                    <span className="truncate pr-2">{c.title}</span>
+                    <span
+                      className={`h-2 w-2 rounded-full shrink-0 ${
+                        c.status === "active" ? "bg-[#4ade80] shadow-[0_0_6px_#4ade80]" : "bg-zinc-600"
+                      }`}
+                    />
+                  </Link>
+                );
+              })
+            )}
           </div>
         </div>
 

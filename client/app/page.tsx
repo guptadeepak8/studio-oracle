@@ -5,6 +5,7 @@ import { Plus, Loader2, Film } from "lucide-react";
 import { useCampaigns } from "../hooks/useCampaigns";
 import RegisterModal from "../components/RegisterModal";
 import CampaignCard from "../components/CampaignCard";
+import CampaignCardSkeleton from "../components/skeletons/CampaignCardSkeleton";
 
 export default function Page() {
   const { campaigns, isLoading, refreshCampaigns } = useCampaigns();
@@ -35,9 +36,15 @@ export default function Page() {
       </div>
 
       {isLoading ? (
-        <div className="flex flex-col items-center justify-center py-24 text-zinc-400 text-sm gap-2">
-          <Loader2 className="h-7 w-7 animate-spin text-[#e6fc4f]" />
-          Connecting ClickHouse campaigns...
+        <div className="space-y-3">
+          <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider block">
+            Loading Launches...
+          </span>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {[...Array(6)].map((_, i) => (
+              <CampaignCardSkeleton key={i} />
+            ))}
+          </div>
         </div>
       ) : campaigns.length === 0 ? (
         <div className="flex flex-col items-center justify-center text-center py-16 px-6 border border-dashed border-[#28282b] rounded-2xl max-w-lg mx-auto my-8 bg-[#1c1c1f]/40">
