@@ -1,8 +1,10 @@
 "use client";
 
 import React, { useState } from "react";
-import { ChevronDown, ChevronRight, ThumbsUp, ThumbsDown } from "lucide-react";
+import { ChevronDown, ChevronRight, Filter } from "lucide-react";
 import { ThemeItem } from "../utils/analytics";
+import { useAppDispatch, useAppSelector } from "../store";
+import { setThemeFilter, ThemeFilterType } from "../store/slices/dashboardSlice";
 
 interface WhatsWorkingProps {
   themeStats: ThemeItem[];
@@ -10,27 +12,61 @@ interface WhatsWorkingProps {
 
 export default function WhatsWorking({ themeStats }: WhatsWorkingProps) {
   const [isOpen, setIsOpen] = useState(true);
+  const dispatch = useAppDispatch();
+  const { themeFilter } = useAppSelector((state) => state.dashboard);
 
-  // Group top drivers and complaints
-  const sortedThemes = [...themeStats]
-    .filter((t) => t.count > 0)
+  // Filter themes based on Redux selection
+  const filteredThemes = themeStats.filter((t) => {
+    if (t.count <= 0) return false;
+    const pos = t.posPercent || 0;
+    if (themeFilter === "positive") return pos >= 50;
+    if (themeFilter === "friction") return pos < 50;
+    return true;
+  });
+
+  const sortedThemes = [...filteredThemes]
     .sort((a, b) => b.count - a.count)
-    .slice(0, 6);
+    .slice(0, 8);
+
+  const filterOptions: { id: ThemeFilterType; label: string }[] = [
+    { id: "all", label: "All Topics" },
+    { id: "positive", label: "Positive Drivers" },
+    { id: "friction", label: "Watch Friction" },
+  ];
 
   return (
     <div className="space-y-3 font-sans">
-      {/* Section Header with Chevron */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 text-base font-bold text-zinc-100 hover:text-[#e6fc4f] transition cursor-pointer select-none"
-      >
-        {isOpen ? (
-          <ChevronDown className="h-4.5 w-4.5 text-zinc-400" />
-        ) : (
-          <ChevronRight className="h-4.5 w-4.5 text-zinc-400" />
-        )}
-        <span>What Fans Love vs. What Fans Criticize</span>
-      </button>
+      {/* Section Header with Chevron and Redux Theme Filter Pills */}
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="flex items-center gap-2 text-base font-bold text-zinc-100 hover:text-[#e6fc4f] transition cursor-pointer select-none"
+        >
+          {isOpen ? (
+            <ChevronDown className="h-4.5 w-4.5 text-zinc-400" />
+          ) : (
+            <ChevronRight className="h-4.5 w-4.5 text-zinc-400" />
+          )}
+          <span>What Fans Love vs. What Fans Criticize</span>
+        </button>
+
+        {/* Filter Pills */}
+        <div className="flex items-center gap-1.5 bg-[#161618] border border-[#28282b] rounded-lg p-1 text-xs">
+          {filterOptions.map((opt) => (
+            <button
+              key={opt.id}
+              onClick={() => dispatch(setThemeFilter(opt.id))}
+              className={`px-3 py-1 rounded-md text-xs font-semibold transition cursor-pointer ${
+                themeFilter === opt.id
+                  ? "bg-[#242428] text-[#e6fc4f] border border-[#3b3a1a] shadow-xs"
+                  : "text-zinc-400 hover:text-zinc-200"
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      </div>
 
       {isOpen && (
         <div className="bg-[#1c1c1f] border border-[#28282b] rounded-xl overflow-hidden shadow-xs">
@@ -47,7 +83,7 @@ export default function WhatsWorking({ themeStats }: WhatsWorkingProps) {
           {/* Table Rows */}
           {sortedThemes.length === 0 ? (
             <div className="p-8 text-sm text-zinc-500 italic text-center">
-              Awaiting audience feedback comments to rank topics.
+              No topic aspects matching the selected "{themeFilter}" filter.
             </div>
           ) : (
             <div className="divide-y divide-[#28282b]/60 text-sm">
@@ -66,11 +102,13 @@ export default function WhatsWorking({ themeStats }: WhatsWorkingProps) {
                     </div>
 
                     <div className="col-span-2">
-                      <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
-                        isFavorable
-                          ? "bg-[#183424] text-[#4ade80] border border-[#234e35]"
-                          : "bg-[#331b20] text-[#f87171] border border-[#4c242a]"
-                      }`}>
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
+                          isFavorable
+                            ? "bg-[#183424] text-[#4ade80] border border-[#234e35]"
+                            : "bg-[#331b20] text-[#f87171] border border-[#4c242a]"
+                        }`}
+                      >
                         {isFavorable ? "Positive Driver" : "Watch Friction"}
                       </span>
                     </div>

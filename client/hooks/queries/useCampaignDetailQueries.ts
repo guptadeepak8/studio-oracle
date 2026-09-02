@@ -1,0 +1,123 @@
+"use client";
+
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { Movie, Comment, IngestResponse } from "../../utils/types";
+import { API_ENDPOINTS, API_BASE_URL } from "../../utils/constants";
+import { SentimentStats, ThemeItem, ConflictItem } from "../../utils/analytics";
+import { DropItem } from "../../components/TrailerComparison";
+import { apiRequest } from "../../utils/apiClient";
+import { CAMPAIGNS_QUERY_KEY } from "./useCampaignsQueries";
+
+export const campaignDetailKeys = {
+  all: (id: string) => ["campaign", id] as const,
+  detail: (id: string) => ["campaign", id, "detail"] as const,
+  comments: (id: string) => ["campaign", id, "comments"] as const,
+  analytics: (id: string) => ["campaign", id, "analytics"] as const,
+  drops: (id: string) => ["campaign", id, "drops"] as const,
+  pulse: (id: string) => ["campaign", id, "pulse"] as const,
+};
+
+export function useCampaignQuery(campaignId: string) {
+  return useQuery({
+    queryKey: campaignDetailKeys.detail(campaignId),
+    queryFn: async () => {
+      const movies = await apiRequest<Movie[]>(API_ENDPOINTS.MOVIES, { suppressErrorToast: true });
+      return movies.find((m) => m.content_id === campaignId) || null;
+    },
+    enabled: Boolean(campaignId),
+    staleTime: 1000 * 60 * 2,
+  });
+}
+
+export function useCommentsQuery(campaignId: string) {
+  return useQuery({
+    queryKey: campaignDetailKeys.comments(campaignId),
+    queryFn: () => apiRequest<Comment[]>(API_ENDPOINTS.COMMENTS(campaignId), { suppressErrorToast: true }),
+    enabled: Boolean(campaignId),
+    staleTime: 1000 * 30, // 30s
+  });
+}
+
+export function useAnalyticsQuery(campaignId: string) {
+  return useQuery({
+    queryKey: campaignDetailKeys.analytics(campaignId),
+    queryFn: () => apiRequest(API_ENDPOINTS.ANALYTICS(campaignId), { suppressErrorToast: true }),
+    enabled: Boolean(campaignId),
+    staleTime: 1000 * 30,
+  });
+}
+
+export function useDropsQuery(campaignId: string) {
+  return useQuery({
+    queryKey: campaignDetailKeys.drops(campaignId),
+    queryFn: () => apiRequest<DropItem[]>(API_ENDPOINTS.DROPS(campaignId), { suppressErrorToast: true }),
+    enabled: Boolean(campaignId),
+    staleTime: 1000 * 30,
+  });
+}
+
+export function usePulseQuery(campaignId: string) {
+  return useQuery({
+    queryKey: campaignDetailKeys.pulse(campaignId),
+    queryFn: () => apiRequest(API_ENDPOINTS.PULSE(campaignId), { suppressErrorToast: true }),
+    enabled: Boolean(campaignId),
+    staleTime: 1000 * 60,
+  });
+}
+
+export function useIngestYouTubeMutation(campaignId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      query,
+      limit = 3,
+      maxComments = 1000,
+    }: {
+      query: string;
+      limit?: number;
+      maxComments?: number;
+    }) => {
+      return apiRequest<IngestResponse>(API_ENDPOINTS.INGEST, {
+        method: "POST",
+        body: JSON.stringify({
+          content_id: campaignId,
+          query,
+          limit,
+          max_comments: maxComments,
+        }),
+      });
+    },
+    onSuccess: (data) => {
+      if (data.status === "success") {
+        toast.success(`Successfully synced ${data.ingested_comments} comments from YouTube!`);
+        // Automatically invalidate all related campaign queries
+        queryClient.invalidateQueries({ queryKey: campaignDetailKeys.all(campaignId) });
+        queryClient.invalidateQueries({ queryKey: CAMPAIGNS_QUERY_KEY });
+      } else {
+        toast.error(`Sync notice: ${data.message || "Unknown error"}`);
+      }
+    },
+  });
+}
+
+export function useIngestRedditMutation(campaignId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (query?: string) => {
+      return apiRequest<{ status: string; message: string }>(
+        `${API_BASE_URL}/api/campaigns/${campaignId}/ingest-reddit`,
+        {
+          method: "POST",
+          body: JSON.stringify({ query }),
+        }
+      );
+    },
+    onSuccess: (res) => {
+      toast.success(res.message || "Successfully synced Reddit community discussions!");
+      queryClient.invalidateQueries({ queryKey: campaignDetailKeys.all(campaignId) });
+    },
+  });
+}

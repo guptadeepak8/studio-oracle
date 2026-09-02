@@ -15,6 +15,9 @@ export interface DropItem {
   topComment: string;
 }
 
+import { useAppDispatch, useAppSelector } from "../store";
+import { setSelectedDropA, setSelectedDropB } from "../store/slices/dashboardSlice";
+
 interface TrailerComparisonProps {
   campaign: Movie;
   drops: DropItem[];
@@ -22,16 +25,15 @@ interface TrailerComparisonProps {
 
 export default function TrailerComparison({ campaign, drops = [] }: TrailerComparisonProps) {
   const [isOpen, setIsOpen] = useState(true);
-
-  const [dropAId, setDropAId] = useState<string>("");
-  const [dropBId, setDropBId] = useState<string>("");
+  const dispatch = useAppDispatch();
+  const { selectedDropAId, selectedDropBId } = useAppSelector((state) => state.dashboard);
 
   // Auto select first two drops if available
-  const selectedAId = dropAId || drops[0]?.id || "";
-  const selectedBId = dropBId || drops[Math.min(1, drops.length - 1)]?.id || "";
+  const activeAId = selectedDropAId && drops.some((d) => d.id === selectedDropAId) ? selectedDropAId : drops[0]?.id || "";
+  const activeBId = selectedDropBId && drops.some((d) => d.id === selectedDropBId) ? selectedDropBId : drops[Math.min(1, drops.length - 1)]?.id || "";
 
-  const dropA = drops.find((d) => d.id === selectedAId) || drops[0];
-  const dropB = drops.find((d) => d.id === selectedBId) || drops[Math.min(1, drops.length - 1)];
+  const dropA = drops.find((d) => d.id === activeAId) || drops[0];
+  const dropB = drops.find((d) => d.id === activeBId) || drops[Math.min(1, drops.length - 1)];
 
   const deltaSentiment = dropA && dropB ? dropB.posPercent - dropA.posPercent : 0;
   const isSurge = deltaSentiment >= 0;
@@ -58,8 +60,8 @@ export default function TrailerComparison({ campaign, drops = [] }: TrailerCompa
             <div className="flex items-center gap-2 bg-[#1c1c1f] border border-[#28282b] rounded-lg px-3 py-1.5 text-zinc-200 max-w-[220px]">
               <span className="text-xs text-zinc-400 font-bold uppercase shrink-0">Drop A:</span>
               <select
-                value={selectedAId}
-                onChange={(e) => setDropAId(e.target.value)}
+                value={activeAId}
+                onChange={(e) => dispatch(setSelectedDropA(e.target.value))}
                 className="bg-transparent text-zinc-100 text-xs font-semibold focus:outline-none cursor-pointer truncate"
               >
                 {drops.map((d) => (
@@ -75,8 +77,8 @@ export default function TrailerComparison({ campaign, drops = [] }: TrailerCompa
             <div className="flex items-center gap-2 bg-[#1c1c1f] border border-[#28282b] rounded-lg px-3 py-1.5 text-zinc-200 max-w-[220px]">
               <span className="text-xs text-zinc-400 font-bold uppercase shrink-0">Drop B:</span>
               <select
-                value={selectedBId}
-                onChange={(e) => setDropBId(e.target.value)}
+                value={activeBId}
+                onChange={(e) => dispatch(setSelectedDropB(e.target.value))}
                 className="bg-transparent text-zinc-100 text-xs font-semibold focus:outline-none cursor-pointer truncate"
               >
                 {drops.map((d) => (
