@@ -1,0 +1,37 @@
+version: "3.8"
+
+services:
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: studio-oracle-server
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./server/.env
+    volumes:
+      - server-data:/app/sessions.db
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: studio-oracle-client
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://server:8000
+    depends_on:
+      - server
+
+volumes:
+  server-data:

@@ -315,3 +315,4 @@ class CampaignAgentRuntime:
             last_investigation=now_str,
             decisions=decisions
         )
+

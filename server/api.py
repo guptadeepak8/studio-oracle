@@ -1,6 +1,7 @@
 import asyncio
 from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import StreamingResponse
 import os
 from dotenv import load_dotenv
@@ -19,9 +20,16 @@ from tools.movie import create_content_record
 from agent_runtime import CampaignAgentRuntime
 import db
 
-app = FastAPI(title="StudioOracle API")
+app = FastAPI(
+    title="StudioOracle Decision Intelligence API",
+    description="High-performance autonomous decision intelligence engine for entertainment marketing.",
+    version="2.0.0"
+)
 
-# Enable CORS for the Next.js frontend application (supports localhost & 127.0.0.1 on any port)
+# 1. High-Performance Gzip Compression Middleware (for payloads > 1KB)
+app.add_middleware(GZipMiddleware, minimum_size=1000)
+
+# 2. CORS configuration for production & local frontends
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -32,7 +40,7 @@ app.add_middleware(
         "http://localhost:8080",
         "http://127.0.0.1:8080",
     ],
-    allow_origin_regex=r"^http://(localhost|127\.0\.0\.1)(:\d+)?$",
+    allow_origin_regex=r"^https?://.*$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -47,8 +55,20 @@ runner = Runner(
 )
 
 @app.get("/health")
+@app.get("/health/live")
 def health():
-    return {"status": "ok"}
+    return {"status": "ok", "service": "StudioOracle API", "version": "2.0.0"}
+
+@app.get("/health/ready")
+def readiness():
+    """Readiness probe verifying database connectivity."""
+    try:
+        from ingestion.youtube import get_clickhouse_client
+        client = get_clickhouse_client()
+        client.ping()
+        return {"status": "ready", "clickhouse": "connected"}
+    except Exception as e:
+        return {"status": "degraded", "clickhouse_notice": str(e)}
 
 @app.get("/api/movies")
 def get_movies():
@@ -188,12 +208,18 @@ async def periodic_campaign_sync():
         try:
             await asyncio.sleep(3600)  # Wait 1 hour between periodic syncs
             print("Executing scheduled 1-hour active campaign audience feedback sync...")
-            movies = db.fetch_movies()
+            movies = await asyncio.to_thread(db.fetch_movies)
             for m in movies:
                 if m.get("status") == "active" and m.get("target_terms"):
                     query = m["target_terms"][0]
                     print(f"Auto-syncing feedback for '{m['title']}'...")
-                    ingest_youtube_data(m["content_id"], query, limit=2, max_comments_per_video=300)
+                    await asyncio.to_thread(
+                        ingest_youtube_data,
+                        m["content_id"],
+                        query,
+                        limit=2,
+                        max_comments_per_video=300
+                    )
         except Exception as loop_err:
             print(f"Periodic sync notice: {loop_err}")
 

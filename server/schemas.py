@@ -59,3 +59,4 @@ class CampaignDecisionsResponse(BaseModel):
     agent_status: str
     last_investigation: str
     decisions: List[DecisionArtifact]
+

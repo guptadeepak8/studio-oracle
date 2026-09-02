@@ -106,21 +106,35 @@ def analyze_comments(comments: list) -> list:
                 
     return analyzed
 
+_clickhouse_client_instance = None
+
 def get_clickhouse_client():
+    global _clickhouse_client_instance
+    if _clickhouse_client_instance is not None:
+        try:
+            # Quick ping/health check
+            _clickhouse_client_instance.ping()
+            return _clickhouse_client_instance
+        except Exception:
+            _clickhouse_client_instance = None
+
     host = os.getenv("CLICKHOUSE_HOST")
     port = os.getenv("CLICKHOUSE_PORT", "8443")
     user = os.getenv("CLICKHOUSE_USER", "default")
     password = os.getenv("CLICKHOUSE_PASSWORD")
     secure = os.getenv("CLICKHOUSE_SECURE", "true").lower() == "true"
 
-    return clickhouse_connect.get_client(
+    _clickhouse_client_instance = clickhouse_connect.get_client(
         host=host,
         port=int(port),
         username=user,
         password=password,
         secure=secure,
-        verify=True
+        verify=True,
+        connect_timeout=15,
+        send_receive_timeout=30
     )
+    return _clickhouse_client_instance
 
 def extract_youtube_video_id(url_or_query: str) -> str | None:
     """Extract YouTube video ID if string is a direct YouTube link."""

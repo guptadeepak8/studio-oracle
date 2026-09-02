@@ -1,9 +1,35 @@
 import sqlite3
+import time
+from typing import Any
 from ingestion.youtube import get_clickhouse_client
 
+# In-memory TTL cache for read-heavy analytical queries (15s TTL)
+_QUERY_CACHE: dict[str, tuple[float, Any]] = {}
+
+def get_cached_query(key: str, ttl_seconds: float = 15.0) -> Any:
+    if key in _QUERY_CACHE:
+        timestamp, val = _QUERY_CACHE[key]
+        if time.time() - timestamp < ttl_seconds:
+            return val
+    return None
+
+def set_cached_query(key: str, val: Any):
+    _QUERY_CACHE[key] = (time.time(), val)
+
+def invalidate_campaign_cache(content_id: str = None):
+    global _QUERY_CACHE
+    if content_id:
+        keys_to_remove = [k for k in _QUERY_CACHE if content_id in k]
+        for k in keys_to_remove:
+            _QUERY_CACHE.pop(k, None)
+    else:
+        _QUERY_CACHE.clear()
+
 def init_sqlite_db():
-    conn = sqlite3.connect("sessions.db")
+    conn = sqlite3.connect("sessions.db", timeout=30.0)
     cursor = conn.cursor()
+    cursor.execute("PRAGMA journal_mode=WAL;")
+    cursor.execute("PRAGMA synchronous=NORMAL;")
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS campaign_statuses (
             content_id TEXT PRIMARY KEY,
@@ -15,7 +41,7 @@ def init_sqlite_db():
 
 def get_campaign_status(content_id: str) -> str:
     init_sqlite_db()
-    conn = sqlite3.connect("sessions.db")
+    conn = sqlite3.connect("sessions.db", timeout=30.0)
     cursor = conn.cursor()
     cursor.execute("SELECT status FROM campaign_statuses WHERE content_id = ?", (content_id,))
     row = cursor.fetchone()
@@ -24,7 +50,8 @@ def get_campaign_status(content_id: str) -> str:
 
 def set_campaign_status(content_id: str, status: str):
     init_sqlite_db()
-    conn = sqlite3.connect("sessions.db")
+    invalidate_campaign_cache(content_id)
+    conn = sqlite3.connect("sessions.db", timeout=30.0)
     cursor = conn.cursor()
     cursor.execute("""
         INSERT INTO campaign_statuses (content_id, status)
@@ -39,6 +66,7 @@ def delete_campaign_records(content_id: str):
     Immediate hard delete of a campaign and all its associated ClickHouse records
     (posts, comments, sentiments, and metadata) and SQLite tracking records.
     """
+    invalidate_campaign_cache(content_id)
     client = get_clickhouse_client()
     
     # 1. Immediate Hard Delete in ClickHouse
@@ -54,7 +82,7 @@ def delete_campaign_records(content_id: str):
     
     # 2. Hard Delete SQLite status tracking
     init_sqlite_db()
-    conn = sqlite3.connect("sessions.db")
+    conn = sqlite3.connect("sessions.db", timeout=30.0)
     cursor = conn.cursor()
     cursor.execute("DELETE FROM campaign_statuses WHERE content_id = ?", (content_id,))
     conn.commit()
@@ -65,6 +93,10 @@ def fetch_movies() -> list[dict]:
     Retrieve all movie/series campaign records from ClickHouse database,
     joining their persistent tracking status from SQLite.
     """
+    cached = get_cached_query("all_movies", ttl_seconds=10.0)
+    if cached is not None:
+        return cached
+
     client = get_clickhouse_client()
     query = (
         "SELECT content_id, content_type, title, description, release_date, target_terms "
@@ -83,12 +115,17 @@ def fetch_movies() -> list[dict]:
             "target_terms": r[5],
             "status": get_campaign_status(content_id)
         })
+    set_cached_query("all_movies", movies)
     return movies
 
 def fetch_movie_by_id(content_id: str) -> dict | None:
     """
     Retrieve a specific movie/campaign metadata by content_id from ClickHouse.
     """
+    cached = get_cached_query(f"movie_{content_id}", ttl_seconds=30.0)
+    if cached is not None:
+        return cached
+
     client = get_clickhouse_client()
     query = (
         f"SELECT content_id, content_type, title, description, release_date, target_terms "
@@ -99,7 +136,7 @@ def fetch_movie_by_id(content_id: str) -> dict | None:
         if not rows:
             return None
         r = rows[0]
-        return {
+        res = {
             "content_id": str(r[0]),
             "content_type": r[1],
             "title": r[2],
@@ -107,6 +144,8 @@ def fetch_movie_by_id(content_id: str) -> dict | None:
             "release_date": str(r[4]) if r[4] else None,
             "target_terms": r[5]
         }
+        set_cached_query(f"movie_{content_id}", res)
+        return res
     except Exception as e:
         print(f"Notice: Movie query for {content_id}: {e}")
         return None
@@ -138,6 +177,11 @@ def fetch_comments(content_id: str) -> list[dict]:
     return comments
 
 def fetch_campaign_analytics(content_id: str) -> dict:
+    cache_key = f"analytics_{content_id}"
+    cached = get_cached_query(cache_key, ttl_seconds=10.0)
+    if cached is not None:
+        return cached
+
     client = get_clickhouse_client()
     
     # 1. Fetch sentiment counts
@@ -235,11 +279,13 @@ def fetch_campaign_analytics(content_id: str) -> dict:
                 }
             })
             
-    return {
+    analytics_res = {
         "sentiment": sentiment_data,
         "themes": themes,
         "conflicts": conflicts
     }
+    set_cached_query(cache_key, analytics_res)
+    return analytics_res
 
 def fetch_campaign_timeline(content_id: str) -> list[dict]:
     client = get_clickhouse_client()
