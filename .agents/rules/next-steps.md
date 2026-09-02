@@ -64,7 +64,7 @@ This document serves as the tactical engineering roadmap, technical risk log, an
            │
      ┌─────┴─────────────────────────┐
      ▼                               ▼
-[ Analytical REST APIs ]    [ Research Agent (Google ADK) ]
+[ Analytical REST APIs ]    [ Research Agent (Google ADK) ]Polarizing Signals · Direct Evidence Conflicts
   - /analytics, /timeline     - Tool: ClickHouse SQL Query Runner
   - /pulse                    - Tool: Trailer Inflection Comparator
                               - Tool: Cross-Platform Discrepancy Analyzer

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { FormEvent, useState } from "react";
-import { Plus, Sparkles, X, Video, ShieldAlert, Wand2, Database, Lock } from "lucide-react";
+import { Plus, Sparkles, X, Video, ShieldAlert, Wand2, Database, Lock, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { useCampaigns } from "../hooks/useCampaigns";
 import { Button, Input, Textarea, Select } from "./ui";
@@ -11,6 +11,45 @@ interface RegisterModalProps {
   onClose: () => void;
   onSuccess?: (contentId: string) => void;
 }
+
+interface CampaignPreset {
+  title: string;
+  query: string;
+  desc: string;
+  type: string;
+  releaseDate: string;
+}
+
+const PRESET_CAMPAIGNS: CampaignPreset[] = [
+  {
+    title: "Wicked (2024)",
+    query: "Wicked Official Trailer",
+    desc: "Universal Pictures musical adaptation directed by Jon M. Chu, starring Cynthia Erivo and Ariana Grande.",
+    type: "movie",
+    releaseDate: "2024-11-22",
+  },
+  {
+    title: "Gladiator II",
+    query: "Gladiator II Official Trailer",
+    desc: "Paramount Pictures historical epic directed by Ridley Scott, following Lucius entering the Colosseum.",
+    type: "movie",
+    releaseDate: "2024-11-22",
+  },
+  {
+    title: "Deadpool & Wolverine",
+    query: "Deadpool & Wolverine Official Trailer",
+    desc: "Marvel Studios multiverse team-up featuring Ryan Reynolds and Hugh Jackman.",
+    type: "movie",
+    releaseDate: "2024-07-26",
+  },
+  {
+    title: "Moana 2",
+    query: "Moana 2 Official Trailer",
+    desc: "Walt Disney Animation Studios animated musical voyage starring Auli'i Cravalho and Dwayne Johnson.",
+    type: "movie",
+    releaseDate: "2024-11-27",
+  },
+];
 
 export default function RegisterModal({
   onClose,
@@ -23,11 +62,45 @@ export default function RegisterModal({
   const [newType, setNewType] = useState("movie");
   const [newReleaseDate, setNewReleaseDate] = useState("");
   const [newTrailerQuery, setNewTrailerQuery] = useState("");
+  const [isTrailerManuallyEdited, setIsTrailerManuallyEdited] = useState(false);
   const [syncMode, setSyncMode] = useState("1hr");
   const [initialVolume, setInitialVolume] = useState(1000);
 
   const [createdId, setCreatedId] = useState<string | null>(null);
   const [showProgress, setShowProgress] = useState(false);
+
+  // Intelligent title change handler: syncs trailer query automatically unless user wrote a custom query
+  const handleTitleChange = (val: string) => {
+    setNewTitle(val);
+    if (!isTrailerManuallyEdited || !newTrailerQuery.trim()) {
+      if (val.trim()) {
+        setNewTrailerQuery(`${val.trim()} Official Trailer`);
+      } else {
+        setNewTrailerQuery("");
+      }
+    }
+  };
+
+  // Preset selector
+  const handleApplyPreset = (preset: CampaignPreset) => {
+    setNewTitle(preset.title);
+    setNewTrailerQuery(preset.query);
+    setNewDesc(preset.desc);
+    setNewType(preset.type);
+    setNewReleaseDate(preset.releaseDate);
+    setIsTrailerManuallyEdited(false);
+    toast.success(`Loaded "${preset.title}" template!`);
+  };
+
+  const handleResetTrailerAutoFill = () => {
+    if (!newTitle.trim()) {
+      toast.error("Please enter a campaign title first.");
+      return;
+    }
+    setNewTrailerQuery(`${newTitle.trim()} Official Trailer`);
+    setIsTrailerManuallyEdited(false);
+    toast.success("Trailer target synchronized with campaign title!");
+  };
 
   const isHttpInsecure = newTrailerQuery.trim().toLowerCase().startsWith("http://");
   const isTitleValid = newTitle.trim().length >= 2;
@@ -107,7 +180,7 @@ export default function RegisterModal({
                 Track New Campaign Launch
               </h2>
               <span className="text-[11px] text-zinc-400 font-mono">
-                Mandatory Fields & HTTPS Security Enforced
+                Auto-fill & HTTPS Security Enforced
               </span>
             </div>
           </div>
@@ -119,6 +192,24 @@ export default function RegisterModal({
           >
             <X className="h-5 w-5" />
           </Button>
+        </div>
+
+        {/* 1-Click Quick Template Bar */}
+        <div className="px-6 py-2.5 bg-[#141416] border-b border-[#242428] flex items-center gap-2 flex-wrap text-xs text-zinc-400">
+          <span className="font-semibold text-zinc-300 flex items-center gap-1">
+            <Wand2 className="h-3 w-3 text-indigo-400" />
+            1-Click Templates:
+          </span>
+          {PRESET_CAMPAIGNS.map((preset) => (
+            <button
+              key={preset.title}
+              type="button"
+              onClick={() => handleApplyPreset(preset)}
+              className="bg-[#1f1f23] hover:bg-[#28282d] hover:text-white text-zinc-300 px-2.5 py-1 rounded-md border border-[#2e2e33] transition cursor-pointer font-medium text-[11px]"
+            >
+              {preset.title}
+            </button>
+          ))}
         </div>
 
         {/* Form - 2-Column Balanced Grid */}
@@ -133,13 +224,17 @@ export default function RegisterModal({
                   required
                   placeholder="e.g. Wicked (2024)"
                   value={newTitle}
-                  onChange={(e) => setNewTitle(e.target.value)}
+                  onChange={(e) => handleTitleChange(e.target.value)}
                 />
-                {!isTitleValid && newTitle.length > 0 && (
+                {!isTitleValid && newTitle.length > 0 ? (
                   <p className="text-[11px] text-amber-400 pt-1">
                     Title must contain at least 2 characters.
                   </p>
-                )}
+                ) : newTitle.trim().length >= 2 ? (
+                  <p className="text-[11px] text-emerald-400 pt-1 flex items-center gap-1">
+                    <CheckCircle2 className="h-3 w-3" /> Valid campaign title.
+                  </p>
+                ) : null}
               </div>
 
               {/* YouTube Trailer Target or URL (Mandatory, HTTPS Only) */}
@@ -156,34 +251,36 @@ export default function RegisterModal({
                   }
                   placeholder="e.g. Wicked Official Trailer or https://www.youtube.com/watch?v=..."
                   value={newTrailerQuery}
-                  onChange={(e) => setNewTrailerQuery(e.target.value)}
-                  rightElement={
-                    newTitle.trim() && !newTrailerQuery.trim() ? (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="xs"
-                        onClick={() => setNewTrailerQuery(`${newTitle.trim()} Official Trailer`)}
-                        leftIcon={<Wand2 className="h-3 w-3 text-indigo-400" />}
-                        className="text-xs text-indigo-400 hover:underline p-0 h-auto font-medium"
-                      >
-                        Auto-fill: <span className="underline ml-1 font-bold">"{newTitle.trim()} Trailer"</span>
-                      </Button>
-                    ) : undefined
-                  }
+                  onChange={(e) => {
+                    setNewTrailerQuery(e.target.value);
+                    setIsTrailerManuallyEdited(true);
+                  }}
                 />
 
-                {isHttpInsecure ? (
-                  <div className="flex items-center gap-1.5 text-[11px] text-rose-400 pt-1 font-medium">
-                    <ShieldAlert className="h-3.5 w-3.5 shrink-0" />
-                    <span>Insecure URL detected. Only HTTPS URLs (https://...) are permitted.</span>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-1 text-[11px] text-zinc-500 pt-1">
-                    <Lock className="h-3 w-3 text-emerald-400 inline" />
-                    <span>HTTPS & keyword search query safety verified.</span>
-                  </div>
-                )}
+                <div className="pt-1.5 flex items-center justify-between flex-wrap gap-2 text-[11px]">
+                  {isHttpInsecure ? (
+                    <div className="flex items-center gap-1 text-rose-400 font-medium">
+                      <ShieldAlert className="h-3.5 w-3.5 shrink-0" />
+                      <span>Insecure URL detected. Only HTTPS URLs (https://...) are permitted.</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-1 text-zinc-400">
+                      <Lock className="h-3 w-3 text-emerald-400 inline shrink-0" />
+                      <span>YouTube search keyword or https:// video URL.</span>
+                    </div>
+                  )}
+
+                  {newTitle.trim() && (
+                    <button
+                      type="button"
+                      onClick={handleResetTrailerAutoFill}
+                      className="text-indigo-400 hover:text-indigo-300 hover:underline flex items-center gap-1 font-semibold cursor-pointer"
+                    >
+                      <Wand2 className="h-3 w-3" />
+                      Sync with title
+                    </button>
+                  )}
+                </div>
               </div>
 
               {/* Description (Mandatory) */}
@@ -196,11 +293,15 @@ export default function RegisterModal({
                   value={newDesc}
                   onChange={(e) => setNewDesc(e.target.value)}
                 />
-                {!isDescValid && newDesc.length > 0 && (
+                {!isDescValid && newDesc.length > 0 ? (
                   <p className="text-[11px] text-amber-400 pt-1">
                     Description must be at least 5 characters long.
                   </p>
-                )}
+                ) : newDesc.trim().length >= 5 ? (
+                  <p className="text-[11px] text-emerald-400 pt-1 flex items-center gap-1">
+                    <CheckCircle2 className="h-3 w-3" /> Valid campaign logline.
+                  </p>
+                ) : null}
               </div>
             </div>
 
