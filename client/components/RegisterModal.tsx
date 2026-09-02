@@ -1,9 +1,9 @@
 "use client";
 
 import React, { FormEvent, useState } from "react";
-import { Plus, Sparkles, X, Video, Clock, Zap, Wand2, Database, ShieldCheck } from "lucide-react";
+import { Plus, Sparkles, X, Video, Clock, Zap, Wand2, Database } from "lucide-react";
 import { useCampaigns } from "../hooks/useCampaigns";
-import { Button, Input, Textarea, Select, Badge } from "./ui";
+import { Button, Input, Textarea, Select } from "./ui";
 
 interface RegisterModalProps {
   onClose: () => void;
@@ -50,7 +50,7 @@ export default function RegisterModal({
     <div className="fixed inset-0 bg-black/85 backdrop-blur-xs flex items-center justify-center z-50 p-4 font-sans animate-fade-in">
       <div className="bg-[#1c1c1f] border border-[#28282b] rounded-2xl w-full max-w-4xl overflow-hidden shadow-2xl">
         {/* Header */}
-        <div className="px-6 py-4.5 border-b border-[#28282b] flex items-center justify-between bg-[#161618]">
+        <div className="px-6 py-4 border-b border-[#28282b] flex items-center justify-between bg-[#161618]">
           <div className="flex items-center gap-2.5">
             <div className="h-7 w-7 rounded-lg bg-[#242428] flex items-center justify-center text-[#e6fc4f]">
               <Sparkles className="h-4 w-4" />
@@ -69,10 +69,10 @@ export default function RegisterModal({
           </Button>
         </div>
 
-        {/* Form - 2-Column Horizontal Layout */}
+        {/* Form - 2-Column Balanced Grid */}
         <form onSubmit={handleSubmit} className="p-6 text-sm font-sans space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Left Column: Title, Trailer Target & Description */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+            {/* Left Column: Primary Details */}
             <div className="space-y-4">
               {/* Campaign Title */}
               <Input
@@ -83,36 +83,29 @@ export default function RegisterModal({
                 onChange={(e) => setNewTitle(e.target.value)}
               />
 
-              {/* YouTube Trailer Feed Requirement */}
-              <div className="space-y-2 bg-[#161618] border border-[#3b3a1a] rounded-xl p-3.5">
-                <div className="flex items-center justify-between">
-                  <label className="font-bold text-[#e6fc4f] uppercase tracking-wider text-xs flex items-center gap-1.5">
-                    <Video className="h-4 w-4 text-[#e6fc4f]" />
-                    YouTube Trailer Target or URL *
-                  </label>
-                  <span className="text-[11px] text-zinc-400 font-mono">Auto-Streamed</span>
-                </div>
-                <Input
-                  required
-                  placeholder="e.g. Wicked Official Trailer or https://..."
-                  value={newTrailerQuery}
-                  onChange={(e) => setNewTrailerQuery(e.target.value)}
-                />
-
-                {/* Quick Auto-fill Suggestion */}
-                {newTitle.trim() && !newTrailerQuery.trim() && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="xs"
-                    onClick={() => setNewTrailerQuery(`${newTitle.trim()} Official Trailer`)}
-                    leftIcon={<Wand2 className="h-3 w-3 text-[#e6fc4f]" />}
-                    className="text-xs text-[#e6fc4f] hover:underline p-0 h-auto"
-                  >
-                    Auto-fill: <strong className="ml-1">"{newTitle.trim()} Official Trailer"</strong>
-                  </Button>
-                )}
-              </div>
+              {/* YouTube Trailer Target or URL */}
+              <Input
+                label="YouTube Trailer Target or URL"
+                required
+                leftIcon={<Video className="h-4 w-4 text-[#e6fc4f]" />}
+                placeholder="e.g. Wicked Official Trailer or https://..."
+                value={newTrailerQuery}
+                onChange={(e) => setNewTrailerQuery(e.target.value)}
+                rightElement={
+                  newTitle.trim() && !newTrailerQuery.trim() ? (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="xs"
+                      onClick={() => setNewTrailerQuery(`${newTitle.trim()} Official Trailer`)}
+                      leftIcon={<Wand2 className="h-3 w-3 text-[#e6fc4f]" />}
+                      className="text-xs text-[#e6fc4f] hover:underline p-0 h-auto font-medium"
+                    >
+                      Auto-fill: <span className="underline ml-1 font-bold">"{newTitle.trim()} Trailer"</span>
+                    </Button>
+                  ) : undefined
+                }
+              />
 
               {/* Description */}
               <Textarea
@@ -125,43 +118,38 @@ export default function RegisterModal({
               />
             </div>
 
-            {/* Right Column: Sync Engine Settings, Metadata & Telemetry Preview */}
-            <div className="space-y-4 flex flex-col justify-between">
-              {/* Sync Automation & Ingestion Volume */}
-              <div className="bg-[#161618] border border-[#28282b] rounded-xl p-3.5 space-y-3">
-                <span className="text-xs font-bold text-zinc-300 uppercase tracking-wider block">
-                  ClickHouse Ingestion Engine
-                </span>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <Select
-                    label="Sync Mode"
-                    leftIcon={<Clock className="h-3.5 w-3.5" />}
-                    value={syncMode}
-                    onChange={(e) => setSyncMode(e.target.value)}
-                    options={[
-                      { value: "1hr", label: "Auto (1 Hour)" },
-                      { value: "6hr", label: "Auto (6 Hours)" },
-                      { value: "24hr", label: "Auto (24 Hours)" },
-                      { value: "manual", label: "Manual Sync" },
-                    ]}
-                  />
+            {/* Right Column: Ingestion Engine & Release Settings */}
+            <div className="space-y-4">
+              {/* Row 1: Sync Mode & Initial Volume */}
+              <div className="grid grid-cols-2 gap-4">
+                <Select
+                  label="Sync Mode"
+                  leftIcon={<Clock className="h-4 w-4 text-zinc-400" />}
+                  value={syncMode}
+                  onChange={(e) => setSyncMode(e.target.value)}
+                  options={[
+                    { value: "1hr", label: "Auto (1 Hour)" },
+                    { value: "6hr", label: "Auto (6 Hours)" },
+                    { value: "24hr", label: "Auto (24 Hours)" },
+                    { value: "manual", label: "Manual Sync" },
+                  ]}
+                />
 
-                  <Select
-                    label="Initial Volume"
-                    leftIcon={<Zap className="h-3.5 w-3.5 text-[#e6fc4f]" />}
-                    value={initialVolume}
-                    onChange={(e) => setInitialVolume(parseInt(e.target.value))}
-                    options={[
-                      { value: 1000, label: "1,000 (Recommended)" },
-                      { value: 500, label: "500 Comments" },
-                      { value: 250, label: "250 Comments" },
-                    ]}
-                  />
-                </div>
+                <Select
+                  label="Initial Volume"
+                  leftIcon={<Zap className="h-4 w-4 text-[#e6fc4f]" />}
+                  value={initialVolume}
+                  onChange={(e) => setInitialVolume(parseInt(e.target.value))}
+                  options={[
+                    { value: 1000, label: "1,000 (Recommended)" },
+                    { value: 500, label: "500 Comments" },
+                    { value: 250, label: "250 Comments" },
+                  ]}
+                />
               </div>
 
-              {/* Campaign Type & Release Date */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              {/* Row 2: Campaign Type & Release Date */}
+              <div className="grid grid-cols-2 gap-4">
                 <Select
                   label="Campaign Type"
                   value={newType}
@@ -181,18 +169,10 @@ export default function RegisterModal({
                 />
               </div>
 
-              {/* Ingestion Specs Banner */}
-              <div className="bg-[#141416] border border-[#242428] rounded-xl p-3.5 flex items-center gap-3">
-                <div className="h-8 w-8 rounded-lg bg-[#242428] flex items-center justify-center text-[#4ade80] shrink-0">
+              {/* Telemetry Specs Box */}
+              <div className="bg-[#161618] border border-[#28282b] rounded-xl p-4 flex items-start gap-3.5 mt-2">
+                <div className="h-8 w-8 rounded-lg bg-[#242428] flex items-center justify-center text-[#4ade80] shrink-0 mt-0.5">
                   <Database className="h-4 w-4" />
-                </div>
-                <div className="space-y-0.5 text-xs text-zinc-300">
-                  <span className="font-semibold text-zinc-100 block">
-                    Zero-Lag Telemetry Pipeline
-                  </span>
-                  <p className="text-zinc-400 text-[11px] leading-tight">
-                    Audience feedback will start streaming into ClickHouse immediately upon launch.
-                  </p>
                 </div>
               </div>
             </div>

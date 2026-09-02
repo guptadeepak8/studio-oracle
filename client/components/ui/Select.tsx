@@ -14,33 +14,57 @@ export interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElemen
   helperText?: string;
   options?: SelectOption[];
   leftIcon?: React.ReactNode;
+  rightElement?: React.ReactNode;
 }
 
 export const Select = forwardRef<HTMLSelectElement, SelectProps>(
-  ({ label, error, helperText, options, children, leftIcon, className = "", id, required, ...props }, ref) => {
+  (
+    {
+      label,
+      error,
+      helperText,
+      options,
+      children,
+      leftIcon,
+      rightElement,
+      className = "",
+      id,
+      required,
+      ...props
+    },
+    ref
+  ) => {
     const selectId = id || (label ? label.toLowerCase().replace(/\s+/g, "-") : undefined);
 
     return (
       <div className="space-y-1.5 font-sans w-full text-left">
         {label && (
-          <label
-            htmlFor={selectId}
-            className="flex items-center gap-1.5 text-xs font-semibold text-zinc-300 uppercase tracking-wider"
-          >
-            {leftIcon && <span className="text-zinc-400">{leftIcon}</span>}
-            <span>{label}</span>
-            {required && <span className="text-amber-400">*</span>}
-          </label>
+          <div className="flex items-center justify-between min-h-[18px]">
+            <label
+              htmlFor={selectId}
+              className="block text-xs font-semibold text-zinc-300 uppercase tracking-wider select-none"
+            >
+              {label} {required && <span className="text-amber-400">*</span>}
+            </label>
+            {rightElement}
+          </div>
         )}
 
         <div className="relative flex items-center">
+          {leftIcon && (
+            <div className="absolute left-3.5 text-zinc-400 pointer-events-none flex items-center justify-center">
+              {leftIcon}
+            </div>
+          )}
           <select
             id={selectId}
             ref={ref}
             required={required}
-            className={`w-full bg-[#141416] border ${
+            className={`w-full h-11 bg-[#141416] border ${
               error ? "border-rose-500" : "border-[#28282b]"
-            } rounded-lg p-2.5 pr-8 text-sm text-zinc-100 focus:outline-none focus:border-[#e6fc4f] transition cursor-pointer font-sans appearance-none ${className}`}
+            } rounded-lg px-3.5 pr-9 text-sm text-zinc-100 focus:outline-none focus:border-[#e6fc4f] transition cursor-pointer font-sans appearance-none ${
+              leftIcon ? "pl-10" : ""
+            } ${className}`}
             {...props}
           >
             {options
@@ -51,7 +75,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
                 ))
               : children}
           </select>
-          <ChevronDown className="absolute right-3 h-4 w-4 text-zinc-400 pointer-events-none" />
+          <ChevronDown className="absolute right-3.5 h-4 w-4 text-zinc-400 pointer-events-none" />
         </div>
 
         {error && <p className="text-xs text-rose-400">{error}</p>}
@@ -62,4 +86,3 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
 );
 
 Select.displayName = "Select";
-
