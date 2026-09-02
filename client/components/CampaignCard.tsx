@@ -2,87 +2,54 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { MoreVertical, Database, Play, Square, Loader2, ArrowRight } from "lucide-react";
+import { MoreVertical, Database, Play, Square, ArrowRight } from "lucide-react";
 import { API_ENDPOINTS } from "../utils/constants";
 import { Movie, Comment } from "../utils/types";
-import { toast } from "sonner";
+import { useCampaigns } from "../hooks/useCampaigns";
+import DeleteConfirmModal from "./common/DeleteConfirmModal";
+import StatusBadge from "./common/StatusBadge";
+import { apiRequest } from "../utils/apiClient";
 
 interface CampaignCardProps {
   campaign: Movie;
-  onRefresh: () => void;
+  onRefresh?: () => void;
 }
 
 export default function CampaignCard({ campaign, onRefresh }: CampaignCardProps) {
   const router = useRouter();
+  const { updateStatus, deleteCampaign, isDeleting, isUpdatingStatus } = useCampaigns();
   const [evidenceCount, setEvidenceCount] = useState<number | null>(null);
   const [showMenu, setShowMenu] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [isToggling, setIsToggling] = useState(false);
 
   useEffect(() => {
     async function loadEvidence() {
       try {
-        const res = await fetch(API_ENDPOINTS.COMMENTS(campaign.content_id));
-        if (res.ok) {
-          const data = (await res.json()) as Comment[];
-          setEvidenceCount(data.length);
-        }
-      } catch (err) {
-        console.error("Error loading evidence for card:", err);
+        const data = await apiRequest<Comment[]>(API_ENDPOINTS.COMMENTS(campaign.content_id), {
+          suppressErrorToast: true,
+        });
+        setEvidenceCount(data?.length || 0);
+      } catch {
+        setEvidenceCount(0);
       }
     }
     loadEvidence();
   }, [campaign.content_id]);
 
   const handleToggleStatus = async () => {
-    setIsToggling(true);
     const nextStatus = campaign.status === "stopped" ? "active" : "stopped";
-    try {
-      const res = await fetch(API_ENDPOINTS.CAMPAIGN_STATUS(campaign.content_id), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: nextStatus }),
-      });
-      if (res.ok) {
-        window.dispatchEvent(new Event("refresh-campaigns"));
-        onRefresh();
-        if (nextStatus === "active") {
-          toast.success(`"${campaign.title}" live tracking resumed.`);
-        } else {
-          toast.info(`"${campaign.title}" live tracking paused.`);
-        }
-      } else {
-        toast.error("Failed to update campaign tracking status.");
-      }
-    } catch (e) {
-      console.error("Error toggling campaign status:", e);
-      toast.error("Network error toggling campaign status.");
-    } finally {
-      setIsToggling(false);
+    const ok = await updateStatus(campaign.content_id, nextStatus, campaign.title);
+    if (ok) {
       setShowMenu(false);
+      if (onRefresh) onRefresh();
     }
   };
 
   const handleDelete = async () => {
-    setIsDeleting(true);
-    try {
-      const res = await fetch(API_ENDPOINTS.DELETE_CAMPAIGN(campaign.content_id), {
-        method: "DELETE",
-      });
-      if (res.ok) {
-        window.dispatchEvent(new Event("refresh-campaigns"));
-        toast.success(`"${campaign.title}" deleted and audience records purged.`);
-        onRefresh();
-      } else {
-        toast.error("Failed to delete campaign.");
-      }
-    } catch (e) {
-      console.error(e);
-      toast.error("Network error deleting campaign.");
-    } finally {
-      setIsDeleting(false);
+    const ok = await deleteCampaign(campaign.content_id, campaign.title);
+    if (ok) {
       setShowDeleteConfirm(false);
+      if (onRefresh) onRefresh();
     }
   };
 
@@ -97,13 +64,7 @@ export default function CampaignCard({ campaign, onRefresh }: CampaignCardProps)
             <div className="flex items-center gap-2 text-xs text-zinc-400 font-semibold uppercase">
               <span>{campaign.content_type}</span>
               <span className="text-zinc-600">·</span>
-              <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
-                campaign.status === "active"
-                  ? "bg-[#183424] text-[#4ade80] border border-[#234e35]"
-                  : "bg-zinc-800 text-zinc-400 border border-zinc-700"
-              }`}>
-                {campaign.status === "active" ? "Active" : "Paused"}
-              </span>
+              <StatusBadge status={campaign.status} label={campaign.status === "active" ? "Active" : "Paused"} />
             </div>
           </div>
 
@@ -118,7 +79,7 @@ export default function CampaignCard({ campaign, onRefresh }: CampaignCardProps)
             {showMenu && (
               <>
                 <div className="fixed inset-0 z-10" onClick={() => setShowMenu(false)} />
-                <div className="absolute right-0 mt-1 bg-[#1c1c1f] border border-[#28282b] rounded-xl py-2 w-48 shadow-2xl z-20 text-sm text-zinc-300">
+                <div className="absolute right-0 mt-1 bg-[#1c1c1f] border border-[#28282b] rounded-xl py-2 w-48 shadow-2xl z-20 text-sm text-zinc-300 font-sans">
                   <button
                     onClick={() => router.push(`/campaign/${campaign.content_id}?tab=overview`)}
                     className="w-full text-left px-4 py-2 hover:bg-[#242428] hover:text-zinc-100 transition font-medium cursor-pointer"
@@ -127,7 +88,7 @@ export default function CampaignCard({ campaign, onRefresh }: CampaignCardProps)
                   </button>
                   <button
                     onClick={handleToggleStatus}
-                    disabled={isToggling}
+                    disabled={isUpdatingStatus}
                     className="w-full text-left px-4 py-2 hover:bg-[#242428] hover:text-zinc-100 transition font-medium flex items-center gap-2 cursor-pointer"
                   >
                     {campaign.status === "stopped" ? (
@@ -176,34 +137,13 @@ export default function CampaignCard({ campaign, onRefresh }: CampaignCardProps)
         </button>
       </div>
 
-      {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-black/85 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-          <div className="bg-[#1c1c1f] border border-[#28282b] rounded-xl w-full max-w-sm overflow-hidden shadow-2xl p-5 space-y-4">
-            <h3 className="font-bold text-sm text-zinc-100 uppercase tracking-wider">
-              Delete Campaign?
-            </h3>
-            <p className="text-xs text-zinc-300 leading-relaxed font-sans">
-              Are you sure you want to delete <span className="font-bold text-[#e6fc4f]">"{campaign.title}"</span>? This will permanently purge the campaign metadata and all associated ClickHouse audience logs.
-            </p>
-            <div className="flex items-center justify-end gap-3 text-xs font-semibold pt-1">
-              <button
-                onClick={() => setShowDeleteConfirm(false)}
-                className="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 px-4 py-2 rounded-lg transition cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleDelete}
-                disabled={isDeleting}
-                className="bg-rose-600 hover:bg-rose-500 text-white px-4 py-2 rounded-lg transition flex items-center gap-1 cursor-pointer"
-              >
-                {isDeleting && <Loader2 className="h-3 w-3 animate-spin" />}
-                Delete Campaign
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <DeleteConfirmModal
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={handleDelete}
+        title={campaign.title}
+        isDeleting={isDeleting}
+      />
     </div>
   );
 }

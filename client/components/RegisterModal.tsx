@@ -1,47 +1,50 @@
 "use client";
 
-import React, { FormEvent } from "react";
+import React, { FormEvent, useState } from "react";
 import { Loader2, Plus, Sparkles, X, Video, Clock, Zap, Wand2 } from "lucide-react";
+import { useCampaigns } from "../hooks/useCampaigns";
 
 interface RegisterModalProps {
   onClose: () => void;
-  onSubmit: (e: FormEvent) => void;
-  newTitle: string;
-  setNewTitle: (t: string) => void;
-  newDesc: string;
-  setNewDesc: (d: string) => void;
-  newType: string;
-  setNewType: (ty: string) => void;
-  newReleaseDate: string;
-  setNewReleaseDate: (d: string) => void;
-  newTrailerQuery: string;
-  setNewTrailerQuery: (q: string) => void;
-  syncMode: string;
-  setSyncMode: (m: string) => void;
-  initialVolume: number;
-  setInitialVolume: (v: number) => void;
-  isRegistering: boolean;
+  onSuccess?: (contentId: string) => void;
 }
 
 export default function RegisterModal({
   onClose,
-  onSubmit,
-  newTitle,
-  setNewTitle,
-  newDesc,
-  setNewDesc,
-  newType,
-  setNewType,
-  newReleaseDate,
-  setNewReleaseDate,
-  newTrailerQuery,
-  setNewTrailerQuery,
-  syncMode,
-  setSyncMode,
-  initialVolume,
-  setInitialVolume,
-  isRegistering,
+  onSuccess,
 }: RegisterModalProps) {
+  const { createCampaign, isCreating } = useCampaigns();
+
+  const [newTitle, setNewTitle] = useState("");
+  const [newDesc, setNewDesc] = useState("");
+  const [newType, setNewType] = useState("movie");
+  const [newReleaseDate, setNewReleaseDate] = useState("");
+  const [newTrailerQuery, setNewTrailerQuery] = useState("");
+  const [syncMode, setSyncMode] = useState("1hr");
+  const [initialVolume, setInitialVolume] = useState(1000);
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!newTitle.trim() || !newTrailerQuery.trim()) return;
+
+    const contentId = await createCampaign({
+      title: newTitle.trim(),
+      content_type: newType,
+      description: newDesc.trim(),
+      release_date: newReleaseDate || null,
+      target_terms: [newTrailerQuery.trim()],
+      sync_mode: syncMode,
+      initial_volume: initialVolume,
+    });
+
+    if (contentId) {
+      onClose();
+      if (onSuccess) {
+        onSuccess(contentId);
+      }
+    }
+  };
+
   return (
     <div className="fixed inset-0 bg-black/85 backdrop-blur-xs flex items-center justify-center z-50 p-4 font-sans animate-fade-in">
       <div className="bg-[#1c1c1f] border border-[#28282b] rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl">
@@ -64,7 +67,7 @@ export default function RegisterModal({
         </div>
 
         {/* Form */}
-        <form onSubmit={onSubmit} className="p-6 space-y-4 text-sm font-sans">
+        <form onSubmit={handleSubmit} className="p-6 space-y-4 text-sm font-sans">
           {/* Campaign Title */}
           <div className="space-y-1.5">
             <label className="font-semibold text-zinc-300 uppercase tracking-wider text-xs block">
@@ -196,10 +199,10 @@ export default function RegisterModal({
           <div className="pt-3 border-t border-[#28282b]">
             <button
               type="submit"
-              disabled={isRegistering || !newTitle.trim() || !newTrailerQuery.trim()}
+              disabled={isCreating || !newTitle.trim() || !newTrailerQuery.trim()}
               className="w-full bg-[#e6fc4f] hover:bg-[#d8ed47] disabled:opacity-50 py-3 rounded-lg text-sm uppercase tracking-wider font-bold text-black transition flex items-center justify-center gap-2 shadow-xs cursor-pointer"
             >
-              {isRegistering ? (
+              {isCreating ? (
                 <>
                   <Loader2 className="h-4.5 w-4.5 animate-spin" />
                   <span>Initializing & Streaming Comments...</span>

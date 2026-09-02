@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
@@ -8,110 +8,31 @@ import {
   LayoutDashboard,
   Megaphone,
   Bot,
-  Database,
-  Radio,
   Plus,
   Star,
-  ExternalLink,
-  ChevronDown,
   Building2,
-  CheckCircle2,
-  Sparkles
 } from "lucide-react";
-import { API_ENDPOINTS } from "../utils/constants";
-import { Movie } from "../utils/types";
+import { useCampaigns } from "../hooks/useCampaigns";
 import RegisterModal from "./RegisterModal";
-import { toast } from "sonner";
 
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [campaigns, setCampaigns] = useState<Movie[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { campaigns } = useCampaigns();
   const [showModal, setShowModal] = useState(false);
-
-  const [newTitle, setNewTitle] = useState("");
-  const [newDesc, setNewDesc] = useState("");
-  const [newType, setNewType] = useState("movie");
-  const [newReleaseDate, setNewReleaseDate] = useState("");
-  const [newTrailerQuery, setNewTrailerQuery] = useState("");
-  const [syncMode, setSyncMode] = useState("1hr");
-  const [initialVolume, setInitialVolume] = useState(1000);
-  const [isRegistering, setIsRegistering] = useState(false);
-
-  const fetchCampaigns = async () => {
-    try {
-      const res = await fetch(API_ENDPOINTS.MOVIES);
-      if (res.ok) {
-        const data = await res.json();
-        setCampaigns(data);
-      }
-    } catch (e) {
-      console.error("Error fetching campaigns in sidebar:", e);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchCampaigns();
-    const handleRefresh = () => fetchCampaigns();
-    window.addEventListener("refresh-campaigns", handleRefresh);
-    return () => window.removeEventListener("refresh-campaigns", handleRefresh);
-  }, []);
-
-  const handleRegisterCampaign = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newTitle.trim() || !newTrailerQuery.trim()) return;
-
-    setIsRegistering(true);
-    try {
-      const response = await fetch(API_ENDPOINTS.CAMPAIGNS, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: newTitle,
-          content_type: newType,
-          description: newDesc,
-          release_date: newReleaseDate || null,
-          target_terms: [newTrailerQuery],
-        }),
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        setNewTitle("");
-        setNewDesc("");
-        setNewReleaseDate("");
-        setNewTrailerQuery("");
-        setShowModal(false);
-        
-        window.dispatchEvent(new Event("refresh-campaigns"));
-        toast.success(`"${result.title || newTitle}" launched! Initial comment ingestion started in background.`);
-        router.push(`/campaign/${result.content_id}?tab=overview`);
-      } else {
-        toast.error("Failed to register campaign. Please check required fields.");
-      }
-    } catch (err) {
-      console.error(err);
-      toast.error("Network error connecting to campaign server.");
-    } finally {
-      setIsRegistering(false);
-    }
-  };
 
   // Get current active campaign id if inside /campaign/[id]
   const currentCampaignId = pathname.startsWith("/campaign/")
     ? pathname.split("/")[2]
     : campaigns[0]?.content_id || "";
   
-  const currentCampaign = campaigns.find(c => c.content_id === currentCampaignId) || campaigns[0];
+  const currentCampaign = campaigns.find((c) => c.content_id === currentCampaignId) || campaigns[0];
   const currentTab = searchParams.get("tab") || "overview";
 
   return (
     <div className="w-64 bg-[#141416] border-r border-[#202023] flex flex-col h-screen shrink-0 text-sm font-sans select-none text-zinc-300">
-      {/* Top Header matching screenshot */}
+      {/* Top Header */}
       <div className="p-4 border-b border-[#202023]">
         <Link href="/" className="flex items-center gap-2 text-zinc-400 hover:text-zinc-100 transition group">
           <ChevronLeft className="h-4 w-4 text-zinc-400 group-hover:text-zinc-100" />
@@ -164,10 +85,10 @@ export default function Sidebar() {
             </span>
             <button
               onClick={() => setShowModal(true)}
-              className="text-zinc-400 hover:text-zinc-100 p-0.5 rounded hover:bg-zinc-800 transition cursor-pointer"
+              className="text-zinc-400 hover:text-zinc-100 p-1 rounded-md hover:bg-zinc-800 transition cursor-pointer"
               title="Add Campaign"
             >
-              <Plus className="h-3.5 w-3.5" />
+              <Plus className="h-4 w-4" />
             </button>
           </div>
 
@@ -178,7 +99,7 @@ export default function Sidebar() {
                 <Link
                   key={c.content_id}
                   href={`/campaign/${c.content_id}?tab=${currentTab}`}
-                  className={`flex items-center justify-between px-3 py-2 rounded-lg text-sm transition ${
+                  className={`flex items-center justify-between px-3.5 py-2.5 rounded-lg text-sm transition ${
                     isSelected
                       ? "bg-[#222227] text-white font-bold border border-[#323238] shadow-xs"
                       : "text-zinc-200 hover:text-white hover:bg-[#1a1a1d] font-medium"
@@ -194,7 +115,7 @@ export default function Sidebar() {
           </div>
         </div>
 
-        {/* Gold Callout Card matching screenshot */}
+        {/* Info Card */}
         <div className="mx-1 bg-[#1a1a16] border border-[#3b3a1a] rounded-xl p-3.5 space-y-1 text-xs">
           <div className="flex items-start gap-2">
             <Star className="h-3.5 w-3.5 text-[#e6fc4f] shrink-0 mt-0.5 fill-[#e6fc4f]" />
@@ -214,57 +135,22 @@ export default function Sidebar() {
           <span className="text-[11px] font-semibold text-zinc-500 px-3 uppercase tracking-wider block mb-1">
             Organization
           </span>
-          <div className="flex items-center justify-between px-3 py-2 text-xs text-zinc-300 bg-[#1a1a1d] rounded-lg border border-[#232326]">
+          <div className="flex items-center justify-between px-3.5 py-2.5 text-xs text-zinc-300 bg-[#1a1a1d] rounded-lg border border-[#232326]">
             <div className="flex items-center gap-2">
               <Building2 className="h-3.5 w-3.5 text-zinc-400" />
               <span className="font-semibold">StudioOracle</span>
             </div>
-            <ChevronDown className="h-3.5 w-3.5 text-zinc-500" />
+            <span className="text-[10px] text-[#e6fc4f] font-mono font-semibold">Pro Tier</span>
           </div>
         </div>
-      </div>
-
-      {/* Footer Links matching screenshot without all systems operational */}
-      <div className="p-3 border-t border-[#202023] space-y-1 text-xs text-zinc-400">
-        <a
-          href="https://clickhouse.com/cloud"
-          target="_blank"
-          rel="noreferrer"
-          className="flex items-center justify-between px-2 py-1 rounded hover:bg-[#1a1a1d] hover:text-zinc-200 transition"
-        >
-          <span>ClickHouse Cloud</span>
-          <ExternalLink className="h-3 w-3 text-zinc-500" />
-        </a>
-        <a
-          href="https://ai.google.dev"
-          target="_blank"
-          rel="noreferrer"
-          className="flex items-center justify-between px-2 py-1 rounded hover:bg-[#1a1a1d] hover:text-zinc-200 transition"
-        >
-          <span>Gemini 2.5 Flash</span>
-          <ExternalLink className="h-3 w-3 text-zinc-500" />
-        </a>
       </div>
 
       {showModal && (
         <RegisterModal
           onClose={() => setShowModal(false)}
-          onSubmit={handleRegisterCampaign}
-          newTitle={newTitle}
-          setNewTitle={setNewTitle}
-          newDesc={newDesc}
-          setNewDesc={setNewDesc}
-          newType={newType}
-          setNewType={setNewType}
-          newReleaseDate={newReleaseDate}
-          setNewReleaseDate={setNewReleaseDate}
-          newTrailerQuery={newTrailerQuery}
-          setNewTrailerQuery={setNewTrailerQuery}
-          syncMode={syncMode}
-          setSyncMode={setSyncMode}
-          initialVolume={initialVolume}
-          setInitialVolume={setInitialVolume}
-          isRegistering={isRegistering}
+          onSuccess={(contentId) => {
+            router.push(`/campaign/${contentId}?tab=overview`);
+          }}
         />
       )}
     </div>
