@@ -347,23 +347,35 @@ export default function MarketingDirectives({
                     </span>
                   </div>
 
-                  {/* Sample Quotes */}
-                  {decision.evidence.sample_evidence && decision.evidence.sample_evidence.length > 0 && (
-                    <div className="space-y-2">
-                      {decision.evidence.sample_evidence.map((sample) => (
-                        <div
-                          key={sample.comment_id}
-                          onClick={() => handleOpenEvidenceDetail(sample)}
-                          className="bg-[#1a1a1d] hover:bg-[#222226] border border-[#28282b] hover:border-zinc-600 rounded-lg p-3 text-xs text-zinc-300 flex items-center justify-between gap-3 cursor-pointer transition"
-                        >
-                          <p className="italic line-clamp-2">&ldquo;{sample.text}&rdquo;</p>
-                          <span className="font-mono text-[10px] text-indigo-400 bg-indigo-500/10 border border-indigo-500/30 px-2 py-0.5 rounded font-bold shrink-0">
-                            ref:{sample.comment_id.slice(0, 8)}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                  {/* Sample Quotes - Unique Deduplicated Verbatim Comments */}
+                  {(() => {
+                    const uniqueSamples = Array.from(
+                      new Map(
+                        (decision.evidence.sample_evidence || [])
+                          .filter((s) => s.text && s.text.trim().length > 0)
+                          .map((s) => [s.text.trim().toLowerCase(), s])
+                      ).values()
+                    ).slice(0, 3);
+
+                    if (uniqueSamples.length === 0) return null;
+
+                    return (
+                      <div className="space-y-2">
+                        {uniqueSamples.map((sample) => (
+                          <div
+                            key={sample.comment_id}
+                            onClick={() => handleOpenEvidenceDetail(sample)}
+                            className="bg-[#1a1a1d] hover:bg-[#222226] border border-[#28282b] hover:border-zinc-600 rounded-lg p-3 text-xs text-zinc-300 flex items-center justify-between gap-3 cursor-pointer transition"
+                          >
+                            <p className="italic line-clamp-2">&ldquo;{sample.text}&rdquo;</p>
+                            <span className="font-mono text-[10px] text-indigo-400 bg-indigo-500/10 border border-indigo-500/30 px-2 py-0.5 rounded font-bold shrink-0">
+                              ref:{sample.comment_id.slice(0, 8)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 {/* 5. TARGET CHANNELS & AUDIENCE */}

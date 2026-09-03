@@ -113,20 +113,37 @@ class DetectorService:
 
         sample_query = """
         SELECT 
-            comment_id, source, author, text, sentiment, topics, confidence, published_at
+            comment_id, 
+            any(source) as source, 
+            any(author) as author, 
+            text, 
+            any(sentiment) as sentiment, 
+            any(topics) as topics, 
+            max(confidence) as confidence, 
+            max(published_at) as max_pub,
+            max(like_count) as max_likes
         FROM studio_oracle.audience_comments
         WHERE content_id = {cid:UUID}
-        ORDER BY like_count DESC, published_at DESC
-        LIMIT 6
+        GROUP BY comment_id, text
+        ORDER BY max_likes DESC, max_pub DESC
+        LIMIT 25
         """
         try:
             sample_res = client.query(sample_query, parameters={"cid": cid_uuid}).result_rows
+            seen_texts = set()
+            seen_ids = set()
             for r in sample_res:
+                c_id = str(r[0])
+                c_text = str(r[3]).strip()
+                if c_id in seen_ids or c_text in seen_texts or not c_text:
+                    continue
+                seen_ids.add(c_id)
+                seen_texts.add(c_text)
                 signals["sample_evidence"].append({
-                    "comment_id": str(r[0]),
+                    "comment_id": c_id,
                     "platform": str(r[1]),
                     "author": str(r[2]) if r[2] else "Audience Member",
-                    "text": str(r[3]),
+                    "text": c_text,
                     "sentiment": str(r[4]),
                     "topics": list(r[5]) if r[5] else [],
                     "confidence": float(r[6]) if r[6] else 0.85,
