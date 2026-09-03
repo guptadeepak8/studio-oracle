@@ -53,3 +53,20 @@ CREATE TABLE IF NOT EXISTS studio_oracle.audience_comments
 )
 ENGINE = MergeTree
 ORDER BY (content_id, source, published_at);
+
+
+CREATE TABLE IF NOT EXISTS studio_oracle.campaign_analytics_summary
+(
+    content_id UUID,
+    total_comments UInt32,
+    positive_count UInt32,
+    negative_count UInt32,
+    neutral_count UInt32,
+    pos_percent UInt8,
+    neg_percent UInt8,
+    themes_json String,
+    conflicts_json String,
+    updated_at DateTime DEFAULT now()
+)
+ENGINE = ReplacingMergeTree(updated_at)
+ORDER BY content_id;

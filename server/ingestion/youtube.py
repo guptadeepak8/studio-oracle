@@ -383,6 +383,8 @@ def ingest_youtube_data(content_id: str, query: str, limit: int = 3, max_comment
             )
             try:
                 from core.cache import invalidate_cache
+                from services.campaign_service import CampaignService
+                CampaignService.recalculate_and_store_analytics(str(target_uuid))
                 invalidate_cache(str(target_uuid))
                 invalidate_cache("all_movies")
             except Exception:

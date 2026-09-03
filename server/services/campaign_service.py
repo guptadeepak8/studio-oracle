@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime
 from typing import List, Dict, Any, Optional
 from core.database import get_clickhouse_client, get_sqlite_connection, init_sqlite_db
 from core.cache import get_cached, set_cached, invalidate_cache
@@ -175,19 +176,17 @@ class CampaignService:
             return None
 
     @staticmethod
-    def get_analytics(content_id: str) -> Dict[str, Any]:
-        cache_key = f"analytics_{content_id}"
-        cached = get_cached(cache_key, ttl_seconds=10.0)
-        if cached is not None:
-            return cached
-
+    def recalculate_and_store_analytics(content_id: str) -> Dict[str, Any]:
+        """
+        Computes sentiment, themes, and conflicts from audience_comments and permanently
+        persists the pre-aggregated summary in studio_oracle.campaign_analytics_summary.
+        """
         try:
             cid_uuid = uuid.UUID(str(content_id))
         except (ValueError, TypeError, AttributeError):
-            return {"sentiment": {"positive": 0, "negative": 0, "neutral": 0, "posPercent": 0, "negPercent": 0}, "themes": [], "conflicts": []}
+            return {"sentiment": {"positive": 0, "negative": 0, "neutral": 0, "posPercent": 0, "negPercent": 0, "total": 0}, "themes": [], "conflicts": []}
 
         client = get_clickhouse_client()
-        
         sent_query = "SELECT sentiment, count() FROM studio_oracle.audience_comments WHERE content_id = {cid:UUID} GROUP BY sentiment"
         try:
             sent_rows = client.query(sent_query, parameters={"cid": cid_uuid}).result_rows
@@ -209,7 +208,8 @@ class CampaignService:
             "negative": sent_counts["negative"],
             "neutral": sent_counts["neutral"],
             "posPercent": pos_percent,
-            "negPercent": neg_percent
+            "negPercent": neg_percent,
+            "total": total_comments
         }
 
         theme_query = (
@@ -277,8 +277,79 @@ class CampaignService:
             "themes": themes,
             "conflicts": conflicts
         }
-        set_cached(cache_key, analytics_res)
+
+        # Permanently persist pre-aggregated summary in ClickHouse
+        if total_comments > 0:
+            try:
+                import json
+                client.insert(
+                    "studio_oracle.campaign_analytics_summary",
+                    [(
+                        cid_uuid,
+                        total_comments,
+                        sent_counts["positive"],
+                        sent_counts["negative"],
+                        sent_counts["neutral"],
+                        pos_percent,
+                        neg_percent,
+                        json.dumps(themes),
+                        json.dumps(conflicts),
+                        datetime.utcnow()
+                    )],
+                    column_names=[
+                        "content_id", "total_comments", "positive_count", "negative_count",
+                        "neutral_count", "pos_percent", "neg_percent", "themes_json",
+                        "conflicts_json", "updated_at"
+                    ]
+                )
+            except Exception as store_err:
+                print(f"Error persisting analytics summary: {store_err}")
+
+        set_cached(f"analytics_{content_id}", analytics_res)
         return analytics_res
+
+    @staticmethod
+    def get_analytics(content_id: str) -> Dict[str, Any]:
+        cache_key = f"analytics_{content_id}"
+        cached = get_cached(cache_key, ttl_seconds=30.0)
+        if cached is not None:
+            return cached
+
+        try:
+            cid_uuid = uuid.UUID(str(content_id))
+        except (ValueError, TypeError, AttributeError):
+            return {"sentiment": {"positive": 0, "negative": 0, "neutral": 0, "posPercent": 0, "negPercent": 0, "total": 0}, "themes": [], "conflicts": []}
+
+        client = get_clickhouse_client()
+
+        # Try to read pre-aggregated permanent summary from ClickHouse first (<1ms)
+        try:
+            summary_query = "SELECT total_comments, positive_count, negative_count, neutral_count, pos_percent, neg_percent, themes_json, conflicts_json FROM studio_oracle.campaign_analytics_summary WHERE content_id = {cid:UUID} ORDER BY updated_at DESC LIMIT 1"
+            s_rows = client.query(summary_query, parameters={"cid": cid_uuid}).result_rows
+            if s_rows:
+                r = s_rows[0]
+                import json
+                themes = json.loads(r[6]) if r[6] else []
+                conflicts = json.loads(r[7]) if r[7] else []
+                res = {
+                    "sentiment": {
+                        "total": int(r[0]),
+                        "positive": int(r[1]),
+                        "negative": int(r[2]),
+                        "neutral": int(r[3]),
+                        "posPercent": int(r[4]),
+                        "negPercent": int(r[5])
+                    },
+                    "themes": themes,
+                    "conflicts": conflicts
+                }
+                set_cached(cache_key, res)
+                return res
+        except Exception:
+            pass
+
+        # Fallback: compute and persist permanently
+        return CampaignService.recalculate_and_store_analytics(content_id)
 
     @staticmethod
     def get_platform_breakdown(content_id: str) -> Dict[str, Any]:
