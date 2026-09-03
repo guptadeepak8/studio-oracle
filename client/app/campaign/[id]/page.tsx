@@ -80,6 +80,14 @@ function CampaignWorkspaceInner() {
     }
   };
 
+  const handleSync1000Comments = async () => {
+    if (!campaign) return;
+    const query = (campaign.target_terms && campaign.target_terms.length > 0)
+      ? campaign.target_terms[0]
+      : campaign.title;
+    await triggerIngest(query, 3, 1000);
+  };
+
   const handleSendChat = async (messageText?: string) => {
     if (!campaign) return;
     const textToSend = messageText || inputMessage;
@@ -216,6 +224,8 @@ function CampaignWorkspaceInner() {
           onTabChange={(tab) => router.push(`/campaign/${campaignId}?tab=${tab}`)}
           evidenceCount={comments.length}
           onRefreshData={refreshAll}
+          onSync1000Comments={handleSync1000Comments}
+          isSyncing={isIngesting}
           agentStatus={decisionsData?.agent_status}
         />
 

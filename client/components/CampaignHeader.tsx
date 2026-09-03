@@ -16,6 +16,8 @@ interface CampaignHeaderProps {
   onTabChange: (tab: "overview" | "marketing" | "agent") => void;
   evidenceCount?: number;
   onRefreshData?: () => void;
+  onSync1000Comments?: () => void;
+  isSyncing?: boolean;
   agentStatus?: string;
 }
 
@@ -27,6 +29,8 @@ export default function CampaignHeader({
   onTabChange,
   evidenceCount = 0,
   onRefreshData,
+  onSync1000Comments,
+  isSyncing = false,
   agentStatus = "Live Tracking",
 }: CampaignHeaderProps) {
   const router = useRouter();
@@ -51,7 +55,7 @@ export default function CampaignHeader({
   return (
     <div className="shrink-0 flex flex-col bg-[#141416] border-b border-[#202023] shadow-xs font-sans">
       <div className="px-8 py-3.5 flex items-center justify-between flex-wrap gap-3">
-        {/* Left Page Title & Agent Identity */}
+        {/* Left Page Title */}
         <div className="flex items-center gap-3.5">
           <h1 className="font-bold text-lg text-zinc-100 tracking-tight">
             {getPageTitle()}
@@ -59,20 +63,22 @@ export default function CampaignHeader({
           <Badge variant={campaign.status === "active" ? "active" : "stopped"}>
             {campaign.status === "active" ? "Active" : "Paused"}
           </Badge>
-
-          {/* Dedicated Campaign Agent Identity Pill */}
-          <div className="hidden sm:flex items-center gap-1.5 text-xs text-zinc-400 bg-[#1c1c1f] border border-[#28282b] px-3 py-1 rounded-full font-mono">
-            <Bot className="h-3.5 w-3.5 text-indigo-400" />
-            <span>Tracking:</span>
-            <span className="text-[#4ade80] font-semibold flex items-center gap-1">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#4ade80] animate-pulse" />
-              Active
-            </span>
-          </div>
         </div>
 
-        {/* Right Actions Dropdown */}
+        {/* Right Actions & Sync Button */}
         <div className="flex items-center gap-3 relative">
+          {onSync1000Comments && (
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={onSync1000Comments}
+              disabled={isSyncing}
+              leftIcon={<RefreshCw className={`h-3.5 w-3.5 ${isSyncing ? "animate-spin" : ""}`} />}
+            >
+              {isSyncing ? "Syncing 1,000 Comments..." : "Sync 1,000 Comments"}
+            </Button>
+          )}
+
           <Button
             variant="secondary"
             size="sm"
