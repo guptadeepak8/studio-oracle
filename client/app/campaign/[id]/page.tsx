@@ -16,7 +16,6 @@ import TrailerComparison from "../../../components/TrailerComparison";
 import MarketingDirectives from "../../../components/MarketingDirectives";
 import AgentConsole from "../../../components/AgentConsole";
 import CampaignHeader from "../../../components/CampaignHeader";
-import IngestConfig from "../../../components/IngestConfig";
 import ExecutiveScorecardSkeleton from "../../../components/skeletons/ExecutiveScorecardSkeleton";
 import SectionCardSkeleton from "../../../components/skeletons/SectionCardSkeleton";
 import CinematicLoader from "../../../components/common/CinematicLoader";
@@ -53,9 +52,6 @@ function CampaignWorkspaceInner() {
 
   const { updateStatus, deleteCampaign, isUpdatingStatus, isDeleting } = useCampaigns();
 
-  const [ingestQuery, setIngestQuery] = useState("");
-  const [ingestLimit, setIngestLimit] = useState(3);
-  const [maxComments, setMaxComments] = useState(1000);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   // Chat State for Agent Console
@@ -280,22 +276,6 @@ function CampaignWorkspaceInner() {
               platforms={platforms}
               dominantTopic={themeStats.length > 0 ? themeStats[0].name : "General"}
             />
-
-            {/* 5. Audience Feedback Sync Section */}
-            <div id="ingest-section">
-              <IngestConfig
-                campaignId={campaign.content_id}
-                ingestQuery={ingestQuery || campaign.target_terms?.[0] || campaign.title}
-                setIngestQuery={setIngestQuery}
-                ingestLimit={ingestLimit}
-                setIngestLimit={setIngestLimit}
-                maxComments={maxComments}
-                setMaxComments={setMaxComments}
-                isIngesting={isIngesting}
-                onTriggerIngest={() => triggerIngest(ingestQuery || campaign.target_terms?.[0] || campaign.title, ingestLimit, maxComments)}
-                onRefreshAll={refreshAll}
-              />
-            </div>
           </div>
         )}
       </div>

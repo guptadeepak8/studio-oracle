@@ -85,6 +85,63 @@ export default function TrailerComparison({ campaign, drops = [] }: TrailerCompa
           <div className="p-8 text-center text-zinc-400 text-sm italic">
             No video drops or trailer feeds ingested for this campaign yet. Connect a YouTube trailer to populate drop comparisons.
           </div>
+        ) : drops.length === 1 ? (
+          /* Single Trailer Milestone View */
+          <div className="bg-[#161618] border border-[#28282b] rounded-xl p-6 space-y-5">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center gap-3">
+                <div className="h-8 w-8 rounded-lg bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400 shrink-0">
+                  <Film className="h-4 w-4" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-base text-zinc-100 tracking-tight" title={dropA.title}>
+                    {dropA.title}
+                  </h4>
+                  <span className="text-xs text-zinc-400">Published {dropA.published_at}</span>
+                </div>
+              </div>
+              <Badge variant="positive">
+                Primary Campaign Asset
+              </Badge>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+              <div className="bg-[#1c1c1f] border border-[#28282b] rounded-lg p-3 space-y-1">
+                <span className="text-xs text-zinc-400">Positive Score</span>
+                <div className="text-lg font-bold font-mono text-[#4ade80]">+{dropA.posPercent}%</div>
+              </div>
+              <div className="bg-[#1c1c1f] border border-[#28282b] rounded-lg p-3 space-y-1">
+                <span className="text-xs text-zinc-400">Comments Tracked</span>
+                <div className="text-lg font-bold font-mono text-zinc-100">{dropA.total_comments.toLocaleString()}</div>
+              </div>
+              <div className="bg-[#1c1c1f] border border-[#28282b] rounded-lg p-3 space-y-1">
+                <span className="text-xs text-zinc-400">Critical Drag</span>
+                <div className="text-lg font-bold font-mono text-rose-400">-{dropA.negPercent}%</div>
+              </div>
+            </div>
+
+            {dropA.topComment && (
+              <div className="pt-3 border-t border-[#28282b]/60">
+                <span className="text-xs text-zinc-400 font-semibold uppercase tracking-wider block mb-1">
+                  Top Fan Resonance
+                </span>
+                <p className="text-sm text-zinc-200 italic border-l-2 border-[#4ade80] pl-3 py-1">
+                  &ldquo;{dropA.topComment}&rdquo;
+                </p>
+              </div>
+            )}
+
+            <div className="pt-1">
+              <a
+                href={dropA.url}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs text-indigo-400 hover:text-indigo-300 hover:underline font-bold"
+              >
+                <Play className="h-3.5 w-3.5 fill-indigo-400" /> Watch Trailer Video on YouTube
+              </a>
+            </div>
+          </div>
         ) : (
           <>
             {/* 2-Card Drop Milestone Comparison Grid */}
@@ -127,7 +184,7 @@ export default function TrailerComparison({ campaign, drops = [] }: TrailerCompa
                         Top Fan Resonance
                       </span>
                       <p className="text-sm text-zinc-200 italic line-clamp-2">
-                        "{dropA.topComment}"
+                        &ldquo;{dropA.topComment}&rdquo;
                       </p>
                     </div>
                   )}

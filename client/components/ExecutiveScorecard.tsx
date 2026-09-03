@@ -66,38 +66,26 @@ export default function ExecutiveScorecard({
           </div>
         </Card>
 
-        {/* Card 4: Tracking Engine & Auto-Sync Status */}
-        <Card className="p-4.5 space-y-2 flex flex-col justify-between">
+        {/* Card 4: Dominant Topic */}
+        <Card className="p-4.5 space-y-2">
           <span className="text-xs text-zinc-300 font-semibold block uppercase tracking-wider">
-            Tracking Engine
+            Top Audience Theme
           </span>
-          <div className="flex items-center justify-between">
-            <Badge variant="active" pulsing>
-              Auto-Sync (1 hr)
-            </Badge>
-            <Button
-              variant="ghost"
-              size="xs"
-              onClick={onTriggerImport}
-              leftIcon={<Settings className="h-3 w-3" />}
-              title="Configure Sync Settings"
-              className="text-zinc-400 hover:text-indigo-400 px-2 py-0.5"
-            >
-              Settings
-            </Button>
+          <div className="text-base font-bold text-indigo-400 font-mono truncate" title={`#${dominantTopic}`}>
+            #{dominantTopic.replace(/_/g, " ")}
           </div>
         </Card>
 
-        {/* Card 5: Ingestion Feeds & ClickHouse Columnar Speed */}
+        {/* Card 5: Telemetry Engine */}
         <Card className="p-4.5 space-y-2">
           <span className="text-xs text-zinc-300 font-semibold block uppercase tracking-wider">
-            ClickHouse Engine
+            Telemetry Engine
           </span>
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5 text-xs text-indigo-400 font-mono font-bold">
-              <span>⚡ &lt; 20ms Query Speed</span>
+            <div className="flex items-center gap-1.5 text-xs text-[#4ade80] font-mono font-bold">
+              <span>⚡ ClickHouse Live</span>
             </div>
-            <span className="text-[11px] text-zinc-400 font-mono">100K Scale</span>
+            <span className="text-[11px] text-zinc-400 font-mono">&lt; 1ms Speed</span>
           </div>
         </Card>
       </div>
