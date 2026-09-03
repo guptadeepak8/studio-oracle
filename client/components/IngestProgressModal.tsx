@@ -18,32 +18,27 @@ export default function IngestProgressModal({
   source = "youtube",
 }: IngestProgressModalProps) {
   const [currentStep, setCurrentStep] = useState(1);
-  const [commentsCount, setCommentsCount] = useState(0);
 
   useEffect(() => {
     if (!isOpen) {
       setCurrentStep(1);
-      setCommentsCount(0);
       return;
     }
 
-    // Step 1: Connecting to API
+    // Step 1: Connecting to Feed
     const t1 = setTimeout(() => {
       setCurrentStep(2);
-      setCommentsCount(42);
-    }, 1200);
+    }, 1500);
 
-    // Step 2: Running Gemini Classification
+    // Step 2: Analyzing Comments
     const t2 = setTimeout(() => {
       setCurrentStep(3);
-      setCommentsCount(128);
-    }, 2800);
+    }, 3200);
 
-    // Step 3: Streaming to ClickHouse
+    // Step 3: Saving Intelligence
     const t3 = setTimeout(() => {
       setCurrentStep(4);
-      setCommentsCount(250);
-    }, 4200);
+    }, 4800);
 
     return () => {
       clearTimeout(t1);
@@ -67,7 +62,7 @@ export default function IngestProgressModal({
             </div>
             <div>
               <h3 className="font-bold text-sm text-zinc-100 uppercase tracking-wider">
-                {isYouTube ? "Live YouTube Telemetry Stream" : "Google Search Grounding Stream"}
+                {isYouTube ? "Syncing Audience Feedback" : "Syncing Press Grounding"}
               </h3>
               <p className="text-xs text-zinc-400 font-mono truncate max-w-[280px]">
                 Target: "{targetQuery}"
@@ -75,7 +70,7 @@ export default function IngestProgressModal({
             </div>
           </div>
           <Badge variant={currentStep === 4 ? "positive" : "active"} pulsing={currentStep < 4}>
-            {currentStep === 4 ? "Complete" : "Streaming Live"}
+            {currentStep === 4 ? "Complete" : "In Progress"}
           </Badge>
         </div>
 
@@ -87,13 +82,16 @@ export default function IngestProgressModal({
               <div className="h-2 w-2 rounded-full bg-indigo-500 animate-ping" />
               <div className="space-y-0.5">
                 <span className="text-xs font-semibold text-zinc-200 block">
-                  {currentStep === 1 && "Connecting to YouTube Data API v3..."}
-                  {currentStep === 2 && "Running Gemini Multi-Threaded Batch Classification..."}
-                  {currentStep === 3 && "Writing Columnar Records to ClickHouse Cloud..."}
-                  {currentStep === 4 && "Campaign Telemetry Synchronized"}
+                  {currentStep === 1 && "Connecting..."}
+                  {currentStep === 2 && "Analyzing Comments..."}
+                  {currentStep === 3 && "Saving Intelligence..."}
+                  {currentStep === 4 && "Intelligence Synchronized"}
                 </span>
-                <span className="text-[11px] text-zinc-400 font-mono">
-                  {commentsCount > 0 ? `${commentsCount} comments indexed` : "Extracting trailer comment threads..."}
+                <span className="text-[11px] text-zinc-400">
+                  {currentStep === 1 && "Establishing connection to audience commentary feed"}
+                  {currentStep === 2 && "Extracting sentiment polarity and key themes"}
+                  {currentStep === 3 && "Materializing analytics and strategic directives"}
+                  {currentStep === 4 && "Real-time updates published to dashboard"}
                 </span>
               </div>
             </div>
@@ -109,15 +107,15 @@ export default function IngestProgressModal({
           <div className="space-y-3">
             {/* Step 1 */}
             <div className={`flex items-start gap-3 p-3 rounded-lg transition-all ${currentStep === 1 ? "bg-[#242428] border border-indigo-500/30" : "opacity-75"}`}>
-              <div className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${currentStep > 1 ? "bg-[#4ade80] text-black" : currentStep === 1 ? "bg-red-500 text-white" : "bg-zinc-800 text-zinc-400"}`}>
+              <div className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${currentStep > 1 ? "bg-[#4ade80] text-black" : currentStep === 1 ? "bg-indigo-600 text-white" : "bg-zinc-800 text-zinc-400"}`}>
                 {currentStep > 1 ? <CheckCircle2 className="h-4 w-4" /> : "1"}
               </div>
               <div className="space-y-0.5">
                 <span className="text-xs font-bold text-zinc-200 block">
-                  YouTube Data API v3 Stream
+                  1. Connecting
                 </span>
                 <p className="text-[11px] text-zinc-400">
-                  Targeted official trailer comments, timestamps, author handles, and like counts.
+                  Retrieving audience comments and reactions for campaign milestone.
                 </p>
               </div>
             </div>
@@ -129,25 +127,25 @@ export default function IngestProgressModal({
               </div>
               <div className="space-y-0.5">
                 <span className="text-xs font-bold text-zinc-200 block">
-                  Gemini 2.5 Flash Batch Analysis
+                  2. Analyzing Comments
                 </span>
                 <p className="text-[11px] text-zinc-400">
-                  Extracting sentiment polarity, friction topics (#pacing, #vfx), and confidence scores.
+                  Extracting sentiment polarity and audience friction points.
                 </p>
               </div>
             </div>
 
             {/* Step 3 */}
-            <div className={`flex items-start gap-3 p-3 rounded-lg transition-all ${currentStep === 3 ? "bg-[#242428] border border-[#3b3a1a]" : "opacity-75"}`}>
-              <div className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${currentStep > 3 ? "bg-[#4ade80] text-black" : currentStep === 3 ? "bg-[#38bdf8] text-black" : "bg-zinc-800 text-zinc-400"}`}>
+            <div className={`flex items-start gap-3 p-3 rounded-lg transition-all ${currentStep === 3 ? "bg-[#242428] border border-indigo-500/30" : "opacity-75"}`}>
+              <div className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${currentStep > 3 ? "bg-[#4ade80] text-black" : currentStep === 3 ? "bg-indigo-600 text-white" : "bg-zinc-800 text-zinc-400"}`}>
                 {currentStep > 3 ? <CheckCircle2 className="h-4 w-4" /> : "3"}
               </div>
               <div className="space-y-0.5">
                 <span className="text-xs font-bold text-zinc-200 block">
-                  ClickHouse Cloud Columnar Ingestion
+                  3. Saving Intelligence
                 </span>
                 <p className="text-[11px] text-zinc-400">
-                  Indexing high-speed arrays for &lt;20ms multi-dimensional decision queries.
+                  Synthesizing executive takeaways and marketing directives.
                 </p>
               </div>
             </div>
@@ -162,7 +160,7 @@ export default function IngestProgressModal({
               className="w-full justify-center"
               rightIcon={<ArrowRight className="h-4 w-4" />}
             >
-              {currentStep === 4 ? "View Campaign Intelligence Dashboard" : "Syncing in Background..."}
+              {currentStep === 4 ? "View Dashboard" : "Syncing in Background..."}
             </Button>
           </div>
         </div>

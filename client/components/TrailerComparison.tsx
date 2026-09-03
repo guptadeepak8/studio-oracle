@@ -40,8 +40,8 @@ export default function TrailerComparison({ campaign, drops = [] }: TrailerCompa
 
   return (
     <CollapsibleSection
-      title="Campaign Drop & Milestone Comparison"
-      subtitle="Audience reaction comparison across distinct teaser and trailer video drops stored in ClickHouse."
+      title="What Changed"
+      subtitle="Audience response across trailer releases and creative milestone drops."
       headerAction={
         drops.length > 1 ? (
           <div className="flex items-center gap-2 text-xs">
@@ -83,7 +83,7 @@ export default function TrailerComparison({ campaign, drops = [] }: TrailerCompa
       <Card className="p-6 space-y-5">
         {drops.length === 0 ? (
           <div className="p-8 text-center text-zinc-400 text-sm italic">
-            No video drops or trailer feeds ingested for this campaign yet. Connect a YouTube trailer to populate drop comparisons.
+            No trailer drops or video milestones recorded yet.
           </div>
         ) : drops.length === 1 ? (
           /* Single Trailer Milestone View */
@@ -101,29 +101,36 @@ export default function TrailerComparison({ campaign, drops = [] }: TrailerCompa
                 </div>
               </div>
               <Badge variant="positive">
-                Primary Campaign Asset
+                Primary Campaign Drop
               </Badge>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
-              <div className="bg-[#1c1c1f] border border-[#28282b] rounded-lg p-3 space-y-1">
-                <span className="text-xs text-zinc-400">Positive Score</span>
-                <div className="text-lg font-bold font-mono text-[#4ade80]">+{dropA.posPercent}%</div>
+            <p className="text-sm font-semibold text-zinc-200 leading-relaxed bg-[#1b1b1e] p-3.5 rounded-lg border border-[#28282c]">
+              Following the release of <strong>"{dropA.title}"</strong>, positive audience excitement reached <strong>+{dropA.posPercent}%</strong> across {dropA.total_comments.toLocaleString()} tracked reactions.
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
+              <div className="bg-[#1c1c1f] border border-[#28282b] rounded-lg p-3.5 space-y-1">
+                <span className="text-xs text-zinc-400 font-semibold uppercase">Positive Excitement</span>
+                <div className="text-xl font-bold font-mono text-[#4ade80]">+{dropA.posPercent}%</div>
+                <span className="text-[11px] text-zinc-400">Strong resonance</span>
               </div>
-              <div className="bg-[#1c1c1f] border border-[#28282b] rounded-lg p-3 space-y-1">
-                <span className="text-xs text-zinc-400">Comments Tracked</span>
-                <div className="text-lg font-bold font-mono text-zinc-100">{dropA.total_comments.toLocaleString()}</div>
+              <div className="bg-[#1c1c1f] border border-[#28282b] rounded-lg p-3.5 space-y-1">
+                <span className="text-xs text-zinc-400 font-semibold uppercase">Audience Reactions</span>
+                <div className="text-xl font-bold font-mono text-zinc-100">{dropA.total_comments.toLocaleString()}</div>
+                <span className="text-[11px] text-zinc-400">Total verified comments</span>
               </div>
-              <div className="bg-[#1c1c1f] border border-[#28282b] rounded-lg p-3 space-y-1">
-                <span className="text-xs text-zinc-400">Critical Drag</span>
-                <div className="text-lg font-bold font-mono text-rose-400">-{dropA.negPercent}%</div>
+              <div className="bg-[#1c1c1f] border border-[#28282b] rounded-lg p-3.5 space-y-1">
+                <span className="text-xs text-zinc-400 font-semibold uppercase">Critical Drag</span>
+                <div className="text-xl font-bold font-mono text-rose-400">-{dropA.negPercent}%</div>
+                <span className="text-[11px] text-zinc-400">Friction topics</span>
               </div>
             </div>
 
             {dropA.topComment && (
               <div className="pt-3 border-t border-[#28282b]/60">
                 <span className="text-xs text-zinc-400 font-semibold uppercase tracking-wider block mb-1">
-                  Top Fan Resonance
+                  Top Audience Quote
                 </span>
                 <p className="text-sm text-zinc-200 italic border-l-2 border-[#4ade80] pl-3 py-1">
                   &ldquo;{dropA.topComment}&rdquo;
@@ -138,7 +145,7 @@ export default function TrailerComparison({ campaign, drops = [] }: TrailerCompa
                 rel="noreferrer"
                 className="inline-flex items-center gap-1.5 text-xs text-indigo-400 hover:text-indigo-300 hover:underline font-bold"
               >
-                <Play className="h-3.5 w-3.5 fill-indigo-400" /> Watch Trailer Video on YouTube
+                <Play className="h-3.5 w-3.5 fill-indigo-400" /> Watch Trailer on YouTube
               </a>
             </div>
           </div>

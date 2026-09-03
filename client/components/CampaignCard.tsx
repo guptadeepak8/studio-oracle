@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { MoreVertical, Database, Play, Square, ArrowRight } from "lucide-react";
+import { MoreVertical, Users, Play, Square, ArrowRight } from "lucide-react";
 import { API_ENDPOINTS } from "../utils/constants";
 import { Movie, Comment } from "../utils/types";
 import { useCampaigns } from "../hooks/useCampaigns";
@@ -130,9 +130,9 @@ export default function CampaignCard({ campaign, onRefresh }: CampaignCardProps)
 
       <CardFooter className="pt-3">
         <div className="flex items-center gap-2 text-sm text-zinc-300">
-          <Database className="h-4 w-4 text-indigo-400" />
+          <Users className="h-4 w-4 text-indigo-400" />
           <span className="font-semibold">{evidenceCount !== null ? evidenceCount.toLocaleString() : "..."}</span>
-          <span className="text-zinc-400 font-normal">comments</span>
+          <span className="text-zinc-400 font-normal">reactions</span>
         </div>
 
         <Button

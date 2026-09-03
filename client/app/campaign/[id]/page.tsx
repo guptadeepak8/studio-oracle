@@ -251,7 +251,7 @@ function CampaignWorkspaceInner() {
         ) : (
           /* Main Executive Dashboard */
           <div className="flex-1 overflow-y-auto p-8 space-y-8 max-w-7xl mx-auto w-full">
-            {/* 1. 5-Card Top Metrics Row */}
+            {/* 1. Section: Campaign Pulse */}
             <ExecutiveScorecard
               sentiment={sentiment}
               totalComments={comments.length}
@@ -259,10 +259,6 @@ function CampaignWorkspaceInner() {
               pulseSummary={pulseSummary}
               releaseDate={campaign.release_date}
               campaignTitle={campaign.title}
-              onTriggerImport={() => {
-                const element = document.getElementById("ingest-section");
-                if (element) element.scrollIntoView({ behavior: "smooth" });
-              }}
             />
 
             {/* 2. What Changed: Real Drops from ClickHouse */}

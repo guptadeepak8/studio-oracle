@@ -135,10 +135,10 @@ export default function Sidebar() {
             <Star className="h-3.5 w-3.5 text-indigo-400 shrink-0 mt-0.5 fill-indigo-400" />
             <div className="space-y-0.5 text-zinc-200">
               <span className="font-semibold text-zinc-100 block text-[11px]">
-                ClickHouse Ingestion
+                Decision Intelligence
               </span>
               <p className="text-[11px] text-zinc-400 leading-tight">
-                Live audience telemetry synced across YouTube & Google Search Grounding.
+                Audience sentiment and marketing directives synthesized in real-time.
               </p>
             </div>
           </div>

@@ -275,8 +275,8 @@ export default function RegisterModal({
               <h2 className="font-bold text-base tracking-wide uppercase text-zinc-100">
                 Track New Campaign Launch
               </h2>
-              <span className="text-[11px] text-zinc-400 font-mono">
-                Live YouTube Data API Search & Columnar Ingestion
+              <span className="text-xs text-zinc-400">
+                Track real-time audience buzz and trailer reactions
               </span>
             </div>
           </div>
@@ -516,7 +516,7 @@ export default function RegisterModal({
                 isLoading={isCreating}
                 leftIcon={<Plus className="h-4 w-4" />}
               >
-                {isCreating ? "Initializing Pipeline..." : "Register & Start Ingestion"}
+                {isCreating ? "Creating Campaign..." : "Create Campaign & Start Tracking"}
               </Button>
             </div>
           </div>

@@ -268,14 +268,14 @@ export default function MarketingDirectives({
             return (
               <Card
                 key={decision.id}
-                className={`p-6 space-y-5 border transition-all ${
+                className={`p-6 space-y-6 border transition-all ${
                   isInsufficient
                     ? "border-amber-900/40 bg-[#161614]"
                     : "border-[#28282b] bg-[#1a1a1d] hover:border-zinc-700"
                 }`}
               >
-                {/* Header: Topic, Status & Evidence Confidence */}
-                <div className="flex items-center justify-between flex-wrap gap-2 border-b border-[#28282b] pb-4">
+                {/* 1. Header: Topic Name & Confidence */}
+                <div className="flex items-center justify-between flex-wrap gap-2 border-b border-[#28282b] pb-3.5">
                   <div className="flex items-center gap-3">
                     <span className="font-mono text-xs font-bold text-indigo-400 bg-indigo-500/10 border border-indigo-500/30 px-2.5 py-1 rounded-md">
                       0{idx + 1}
@@ -286,193 +286,129 @@ export default function MarketingDirectives({
                   </div>
 
                   <div className="flex items-center gap-2.5">
-                    {/* Status Pill */}
                     <Badge variant={isInsufficient ? "warning" : "positive"}>
-                      {isInsufficient ? "INSUFFICIENT EVIDENCE" : "ACTIVE RECOMMENDATION"}
+                      {isInsufficient ? "Needs More Data" : "Active Recommendation"}
                     </Badge>
 
-                    {/* Evidence Confidence Pill */}
                     <div
                       className={`flex items-center gap-1.5 text-xs font-mono font-bold px-3 py-1 rounded-full border ${
                         isHighConfidence
                           ? "bg-[#183424] text-[#4ade80] border-[#234e35]"
                           : "bg-[#2e2614] text-[#fbbf24] border-[#4d3c1a]"
                       }`}
-                      title="Evidence confidence derived from sample size, cross-platform corroboration, and signal stability."
                     >
                       <ShieldCheck className="h-3.5 w-3.5" />
-                      <span>{decision.confidence_rating} CONFIDENCE: {(decision.confidence_score * 100).toFixed(0)}%</span>
+                      <span>Evidence Confidence: {(decision.confidence_score * 100).toFixed(0)}%</span>
                     </div>
                   </div>
                 </div>
 
-                {/* 1. TIER 1: INSIGHT */}
-                <div className="space-y-1.5">
-                  <span className="text-xs font-bold text-indigo-400 uppercase tracking-wider flex items-center gap-1.5">
-                    <TrendingUp className="h-3.5 w-3.5" />
-                    1. Key Audience Insight
+                {/* 2. HERO: WHAT SHOULD WE DO? */}
+                <div className="bg-[#141417] border-l-4 border-indigo-500 p-4.5 rounded-r-xl space-y-2">
+                  <span className="text-xs font-bold text-indigo-400 uppercase tracking-wider block flex items-center gap-1.5">
+                    <Sparkles className="h-3.5 w-3.5" />
+                    What Should We Do?
                   </span>
-                  <p className="text-base font-bold text-zinc-100 leading-snug">
-                    {decision.insight}
-                  </p>
-                </div>
-
-                {/* 2. TIER 2: EVIDENCE */}
-                <div className="bg-[#141416] border border-[#242428] rounded-xl p-4.5 space-y-4">
-                  <div className="flex items-center justify-between flex-wrap gap-2">
-                    <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
-                      <Database className="h-3.5 w-3.5 text-indigo-400" />
-                      2. Supporting Comments & Sentiment
-                    </span>
-                    <span className="font-mono text-xs text-zinc-400">
-                      {decision.evidence.total_comments_analyzed.toLocaleString()} Comments Analyzed
-                    </span>
-                  </div>
-
-                  {/* Platform Breakdown Progress Bars */}
-                  {decision.evidence.platforms && decision.evidence.platforms.length > 0 && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                      {decision.evidence.platforms.map((plat) => (
-                        <div
-                          key={plat.platform}
-                          className="bg-[#1a1a1d] border border-[#28282b] rounded-lg p-3 space-y-2 text-xs"
-                        >
-                          <div className="flex items-center justify-between font-semibold">
-                            <span className="capitalize flex items-center gap-1.5 text-zinc-200">
-                              {plat.platform.toLowerCase().includes("youtube") ? (
-                                <Video className="h-3.5 w-3.5 text-red-400" />
-                              ) : (
-                                <Sparkles className="h-3.5 w-3.5 text-sky-400" />
-                              )}
-                              {plat.platform.toLowerCase().includes("google") ? "Google Search Press" : plat.platform} ({plat.comment_count.toLocaleString()} {plat.platform.toLowerCase().includes("google") ? "reviews" : "comments"})
-                            </span>
-                            <span className="font-mono text-[#4ade80] font-bold">
-                              +{plat.positive_pct}% Pos / -{plat.negative_pct}% Neg
-                            </span>
-                          </div>
-
-                          <div className="w-full bg-zinc-800 h-2 rounded-full overflow-hidden flex">
-                            <div
-                              className="bg-[#4ade80] h-full"
-                              style={{ width: `${plat.positive_pct}%` }}
-                            />
-                            <div
-                              className="bg-[#f87171] h-full"
-                              style={{ width: `${plat.negative_pct}%` }}
-                            />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Sample Verbatim Comments with [ref:comment_id] */}
-                  {decision.evidence.sample_evidence && decision.evidence.sample_evidence.length > 0 && (
-                    <div className="space-y-2 pt-2 border-t border-[#28282b]">
-                      <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider block">
-                        Audience Quotes (Click to inspect):
-                      </span>
-                      <div className="space-y-1.5">
-                        {decision.evidence.sample_evidence.map((sample) => (
-                          <div
-                            key={sample.comment_id}
-                            onClick={() => handleOpenEvidenceDetail(sample)}
-                            className="bg-[#1a1a1d] hover:bg-[#222226] border border-[#28282b] hover:border-zinc-600 rounded-lg p-3 text-xs text-zinc-300 flex items-center justify-between gap-3 cursor-pointer transition"
-                          >
-                            <p className="italic line-clamp-1">"{sample.text}"</p>
-                            <span className="font-mono text-[10px] text-indigo-400 bg-indigo-500/10 border border-indigo-500/30 px-2 py-0.5 rounded font-bold shrink-0">
-                              ref:{sample.comment_id.slice(0, 8)}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* 3. TIER 3: INTERPRETATION */}
-                <div className="bg-[#161618] border border-[#28282b] rounded-xl p-4.5 space-y-2 text-xs leading-relaxed">
-                  <span className="font-bold text-zinc-400 uppercase tracking-wider block flex items-center gap-1.5">
-                    <AlertCircle className="h-3.5 w-3.5 text-indigo-400" />
-                    3. Analysis
-                  </span>
-                  <p className="text-zinc-200 font-sans text-sm">{decision.interpretation}</p>
-                </div>
-
-                {/* 4. TIER 4: ACTION & READY-TO-USE COPY */}
-                <div className="bg-[#161618] border border-[#28282b] rounded-xl p-4.5 space-y-3.5">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-indigo-400 uppercase tracking-wider block flex items-center gap-1.5">
-                      <Sparkles className="h-3.5 w-3.5" />
-                      4. Recommended Action
-                    </span>
-
-                    {decision.copy_draft && (
-                      <Button
-                        variant="primary"
-                        size="xs"
-                        onClick={() => handleCopyDraft(decision.copy_draft!, decision.id)}
-                        leftIcon={
-                          copiedIndex === decision.id ? (
-                            <Check className="h-3.5 w-3.5" />
-                          ) : (
-                            <Copy className="h-3.5 w-3.5" />
-                          )
-                        }
-                      >
-                        {copiedIndex === decision.id ? "Copied" : "Copy Promotional Copy"}
-                      </Button>
-                    )}
-                  </div>
-
-                  <p className="text-sm font-semibold text-zinc-100 leading-relaxed">
+                  <p className="text-base sm:text-lg font-bold text-zinc-100 leading-snug">
                     {decision.action}
                   </p>
-
-                  {decision.copy_draft && (
-                    <div className="bg-[#101012] border border-[#28282b] rounded-lg p-3.5 space-y-1.5">
-                      <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider block font-bold">
-                        Draft Copy for Marketing Team:
-                      </span>
-                      <p className="text-xs font-mono text-indigo-200 leading-relaxed bg-[#151518] p-2.5 rounded border border-[#25252a]">
-                        "{decision.copy_draft}"
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Channel & Audience Targeting Grid */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 text-xs border-t border-[#28282b]">
-                    {decision.target_channels && decision.target_channels.length > 0 && (
-                      <div className="flex items-center gap-1.5 text-zinc-400">
-                        <Layers className="h-3.5 w-3.5 text-indigo-400" />
-                        <span>Target Channels:</span>
-                        <strong className="text-zinc-200">{decision.target_channels.join(", ")}</strong>
-                      </div>
-                    )}
-                    {decision.target_audience && (
-                      <div className="flex items-center gap-1.5 text-zinc-400">
-                        <Users className="h-3.5 w-3.5 text-indigo-400" />
-                        <span>Target Audience:</span>
-                        <strong className="text-zinc-200">{decision.target_audience}</strong>
-                      </div>
-                    )}
-                  </div>
                 </div>
 
-                {/* 5. TIER 5 & 6: AUDIT TRAIL / WHY */}
-                {decision.why && decision.why.length > 0 && (
-                  <div className="space-y-2 pt-2 border-t border-[#28282b]">
-                    <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider block flex items-center gap-1.5">
-                      <ShieldCheck className="h-3.5 w-3.5 text-[#4ade80]" />
-                      5 & 6. Decision Audit Trail (Why this decision was made)
-                    </span>
-                    <ul className="space-y-1 pl-4 list-disc marker:text-[#4ade80] text-xs text-zinc-300">
+                {/* 3. WHY? (Executive Rationale & Insight) */}
+                <div className="space-y-2">
+                  <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider block flex items-center gap-1.5">
+                    <TrendingUp className="h-3.5 w-3.5 text-indigo-400" />
+                    Why? (Strategic Rationale)
+                  </span>
+                  <p className="text-sm text-zinc-200 leading-relaxed font-sans">
+                    {decision.insight} {decision.interpretation && `— ${decision.interpretation}`}
+                  </p>
+
+                  {decision.why && decision.why.length > 0 && (
+                    <ul className="space-y-1.5 pl-4 list-disc marker:text-indigo-400 text-xs text-zinc-300 pt-1">
                       {decision.why.map((reason, rIdx) => (
                         <li key={rIdx} className="leading-relaxed">
                           {reason}
                         </li>
                       ))}
                     </ul>
+                  )}
+                </div>
+
+                {/* 4. EVIDENCE (Supporting Quotes & Reactions) */}
+                <div className="bg-[#141416] border border-[#242428] rounded-xl p-4.5 space-y-3.5">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
+                      <Database className="h-3.5 w-3.5 text-indigo-400" />
+                      Supporting Evidence
+                    </span>
+                    <span className="font-mono text-xs text-zinc-400">
+                      {decision.evidence.total_comments_analyzed.toLocaleString()} Verified Reactions
+                    </span>
+                  </div>
+
+                  {/* Sample Quotes */}
+                  {decision.evidence.sample_evidence && decision.evidence.sample_evidence.length > 0 && (
+                    <div className="space-y-2">
+                      {decision.evidence.sample_evidence.map((sample) => (
+                        <div
+                          key={sample.comment_id}
+                          onClick={() => handleOpenEvidenceDetail(sample)}
+                          className="bg-[#1a1a1d] hover:bg-[#222226] border border-[#28282b] hover:border-zinc-600 rounded-lg p-3 text-xs text-zinc-300 flex items-center justify-between gap-3 cursor-pointer transition"
+                        >
+                          <p className="italic line-clamp-2">&ldquo;{sample.text}&rdquo;</p>
+                          <span className="font-mono text-[10px] text-indigo-400 bg-indigo-500/10 border border-indigo-500/30 px-2 py-0.5 rounded font-bold shrink-0">
+                            ref:{sample.comment_id.slice(0, 8)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* 5. TARGET CHANNELS & AUDIENCE */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 text-xs border-t border-[#28282b]">
+                  {decision.target_channels && decision.target_channels.length > 0 && (
+                    <div className="flex items-center gap-1.5 text-zinc-400">
+                      <Layers className="h-3.5 w-3.5 text-indigo-400" />
+                      <span>Target Channels:</span>
+                      <strong className="text-zinc-200">{decision.target_channels.join(", ")}</strong>
+                    </div>
+                  )}
+                  {decision.target_audience && (
+                    <div className="flex items-center gap-1.5 text-zinc-400">
+                      <Users className="h-3.5 w-3.5 text-indigo-400" />
+                      <span>Target Audience:</span>
+                      <strong className="text-zinc-200">{decision.target_audience}</strong>
+                    </div>
+                  )}
+                </div>
+
+                {/* 6. OPTIONAL COPY DRAFT */}
+                {decision.copy_draft && (
+                  <div className="bg-[#101012] border border-[#28282b] rounded-xl p-4 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">
+                        Ready-to-Use Copy Draft
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="xs"
+                        onClick={() => handleCopyDraft(decision.copy_draft!, decision.id)}
+                        leftIcon={
+                          copiedIndex === decision.id ? (
+                            <Check className="h-3.5 w-3.5 text-[#4ade80]" />
+                          ) : (
+                            <Copy className="h-3.5 w-3.5" />
+                          )
+                        }
+                      >
+                        {copiedIndex === decision.id ? "Copied" : "Copy Draft"}
+                      </Button>
+                    </div>
+                    <p className="text-xs font-mono text-indigo-200 leading-relaxed bg-[#151518] p-3 rounded-lg border border-[#25252a]">
+                      &ldquo;{decision.copy_draft}&rdquo;
+                    </p>
                   </div>
                 )}
               </Card>

@@ -163,13 +163,13 @@ export default function AgentConsole({
           </div>
           <div>
             <div className="font-bold text-sm text-zinc-100 flex items-center gap-2">
-              <span>Audience Ops Assistant</span>
+              <span>Executive Research Assistant</span>
               <Badge variant="active" pulsing>
-                Gemini 2.5 Flash Live
+                AI Active
               </Badge>
             </div>
             <p className="text-xs text-zinc-400">
-              Query ClickHouse comments, sentiment anomalies, and messaging strategies in natural language.
+              Ask strategic questions about audience reactions, market sentiment, or marketing pivots.
             </p>
           </div>
         </div>
@@ -200,14 +200,14 @@ export default function AgentConsole({
       <div className="flex-1 overflow-y-auto p-6 space-y-6">
         {chatMessages.length === 0 && (
           <div className="text-center py-16 space-y-3 max-w-md mx-auto">
-            <div className="h-12 w-12 rounded-2xl bg-[#1c1c1f] border border-[#28282b] flex items-center justify-center mx-auto text-[#e6fc4f]">
+            <div className="h-12 w-12 rounded-2xl bg-[#1c1c1f] border border-[#28282b] flex items-center justify-center mx-auto text-indigo-400">
               <Bot className="h-6 w-6" />
             </div>
             <h3 className="font-bold text-base text-zinc-100">
-              Studio Intelligence Console
+              Campaign Research Assistant
             </h3>
             <p className="text-sm text-zinc-400 leading-relaxed">
-              Ask deep questions about audience reception, sentiment shifts, or request marketing copy drafts backed by real comments.
+              Ask questions about audience reception, sentiment shifts, or request creative marketing directives backed by real audience commentary.
             </p>
           </div>
         )}

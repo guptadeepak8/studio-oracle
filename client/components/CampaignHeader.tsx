@@ -31,18 +31,12 @@ export default function CampaignHeader({
   onRefreshData,
   onSync1000Comments,
   isSyncing = false,
-  agentStatus = "Live Tracking",
+  agentStatus = "Active",
 }: CampaignHeaderProps) {
   const router = useRouter();
   const { deleteCampaign, isDeleting } = useCampaigns();
   const [showActionsMenu, setShowActionsMenu] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-
-  const getPageTitle = () => {
-    if (activeTab === "marketing") return `${campaign.title} / Recommendations`;
-    if (activeTab === "agent") return `${campaign.title} / AI Assistant`;
-    return `${campaign.title} / Overview`;
-  };
 
   const handleDeleteCampaign = async () => {
     const ok = await deleteCampaign(campaign.content_id, campaign.title);
@@ -54,43 +48,71 @@ export default function CampaignHeader({
 
   return (
     <div className="shrink-0 flex flex-col bg-[#141416] border-b border-[#202023] shadow-xs font-sans">
-      <div className="px-8 py-3.5 flex items-center justify-between flex-wrap gap-3">
-        {/* Left Page Title */}
-        <div className="flex items-center gap-3.5">
-          <h1 className="font-bold text-lg text-zinc-100 tracking-tight">
-            {getPageTitle()}
-          </h1>
-          <Badge variant={campaign.status === "active" ? "active" : "stopped"}>
-            {campaign.status === "active" ? "Active" : "Paused"}
-          </Badge>
+      <div className="px-8 py-3.5 flex items-center justify-between flex-wrap gap-4">
+        {/* Left: Campaign Title & Tab Navigation */}
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-3">
+            <h1 className="font-bold text-lg text-zinc-100 tracking-tight">
+              {campaign.title}
+            </h1>
+            <Badge variant={campaign.status === "active" ? "active" : "stopped"}>
+              {campaign.status === "active" ? "Active" : "Paused"}
+            </Badge>
+          </div>
+
+          {/* Simple Mental Model Tabs: Overview | Recommendations | Ask AI */}
+          <nav className="flex items-center bg-[#1b1b1e] border border-[#28282b] rounded-lg p-1 text-xs font-semibold">
+            <button
+              onClick={() => onTabChange("overview")}
+              className={`px-3 py-1.5 rounded-md transition ${
+                activeTab === "overview"
+                  ? "bg-[#28282d] text-zinc-100 shadow-xs"
+                  : "text-zinc-400 hover:text-zinc-200"
+              }`}
+            >
+              Overview
+            </button>
+            <button
+              onClick={() => onTabChange("marketing")}
+              className={`px-3 py-1.5 rounded-md transition ${
+                activeTab === "marketing"
+                  ? "bg-[#28282d] text-zinc-100 shadow-xs"
+                  : "text-zinc-400 hover:text-zinc-200"
+              }`}
+            >
+              Recommendations
+            </button>
+            <button
+              onClick={() => onTabChange("agent")}
+              className={`px-3 py-1.5 rounded-md transition flex items-center gap-1.5 ${
+                activeTab === "agent"
+                  ? "bg-[#28282d] text-indigo-300 shadow-xs"
+                  : "text-zinc-400 hover:text-zinc-200"
+              }`}
+            >
+              <Sparkles className="h-3 w-3 text-indigo-400" />
+              Ask AI
+            </button>
+          </nav>
         </div>
 
-        {/* Right Actions & Sync Button */}
-        <div className="flex items-center gap-3 relative">
+        {/* Right: Sync Button & Secondary Actions Menu */}
+        <div className="flex items-center gap-2.5 relative">
           {onSync1000Comments && (
             <Button
-              variant="primary"
+              variant="secondary"
               size="sm"
               onClick={onSync1000Comments}
               disabled={isSyncing}
               leftIcon={<RefreshCw className={`h-3.5 w-3.5 ${isSyncing ? "animate-spin" : ""}`} />}
             >
-              {isSyncing ? "Syncing 1,000 Comments..." : "Sync 1,000 Comments"}
+              {isSyncing ? "Syncing..." : "Sync 1,000 Reactions"}
             </Button>
           )}
 
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => onTabChange(activeTab === "agent" ? "overview" : "agent")}
-            leftIcon={<MessageSquare className="h-4 w-4 text-indigo-400" />}
-          >
-            {activeTab === "agent" ? "Back to Dashboard" : "Ask AI Assistant"}
-          </Button>
-
           <div className="relative">
             <Button
-              variant="secondary"
+              variant="ghost"
               size="sm"
               onClick={() => setShowActionsMenu(!showActionsMenu)}
               rightIcon={<ChevronDown className="h-4 w-4 text-zinc-400" />}

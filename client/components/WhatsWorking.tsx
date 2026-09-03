@@ -1,9 +1,8 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
+import { ThumbsUp, AlertTriangle, ChevronDown, ChevronUp } from "lucide-react";
 import { ThemeItem } from "../utils/analytics";
-import { useAppDispatch, useAppSelector } from "../store";
-import { setThemeFilter, ThemeFilterType } from "../store/slices/dashboardSlice";
 import { Card, Badge, Button } from "./ui";
 import CollapsibleSection from "./common/CollapsibleSection";
 
@@ -12,114 +11,118 @@ interface WhatsWorkingProps {
 }
 
 export default function WhatsWorking({ themeStats }: WhatsWorkingProps) {
-  const dispatch = useAppDispatch();
-  const { themeFilter } = useAppSelector((state) => state.dashboard);
+  const [showAll, setShowAll] = useState(false);
 
-  // Filter themes based on Redux selection
-  const filteredThemes = themeStats.filter((t) => {
-    if (t.count <= 0) return false;
-    const pos = t.posPercent || 0;
-    if (themeFilter === "positive") return pos >= 50;
-    if (themeFilter === "friction") return pos < 50;
-    return true;
-  });
+  const workingThemes = themeStats
+    .filter((t) => t.count > 0 && (t.posPercent || 0) >= 35)
+    .sort((a, b) => b.count - a.count);
 
-  const sortedThemes = [...filteredThemes]
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 8);
+  const hurtingThemes = themeStats
+    .filter((t) => t.count > 0 && (t.negPercent || 0) >= 20)
+    .sort((a, b) => (b.negPercent || 0) - (a.negPercent || 0));
 
-  const filterOptions: { id: ThemeFilterType; label: string }[] = [
-    { id: "all", label: "All Topics" },
-    { id: "positive", label: "Positive Drivers" },
-    { id: "friction", label: "Watch Friction" },
-  ];
+  const displayWorking = showAll ? workingThemes : workingThemes.slice(0, 4);
+  const displayHurting = showAll ? hurtingThemes : hurtingThemes.slice(0, 4);
 
   return (
     <CollapsibleSection
-      title="What Fans Love vs. What Fans Criticize"
-      headerAction={
-        <div className="flex items-center gap-1.5 bg-[#161618] border border-[#28282b] rounded-lg p-1 text-xs">
-          {filterOptions.map((opt) => (
-            <Button
-              key={opt.id}
-              variant={themeFilter === opt.id ? "chip-active" : "chip"}
-              size="xs"
-              onClick={() => dispatch(setThemeFilter(opt.id))}
-            >
-              {opt.label}
-            </Button>
-          ))}
-        </div>
-      }
+      title="What's Working / What's Hurting"
+      subtitle="Top positive drivers and audience friction points extracted from verified commentary."
     >
-      <div className="bg-[#1c1c1f] border border-[#28282b] rounded-xl overflow-hidden shadow-xs">
-        {/* Table Header with Clear Typography */}
-        <div className="grid grid-cols-12 px-6 py-3.5 border-b border-[#28282b] text-xs font-bold text-zinc-300 uppercase tracking-wider bg-[#17171a]">
-          <div className="col-span-3">Topic Aspect</div>
-          <div className="col-span-2">Status</div>
-          <div className="col-span-2">Category</div>
-          <div className="col-span-2">Positive Resonance</div>
-          <div className="col-span-2">Critical Drag</div>
-          <div className="col-span-1 text-right">Volume</div>
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Column 1: WHAT'S WORKING */}
+          <div className="space-y-3.5">
+            <div className="flex items-center gap-2 text-xs font-bold text-[#4ade80] uppercase tracking-wider">
+              <ThumbsUp className="h-4 w-4" />
+              <span>What's Working</span>
+            </div>
+
+            {displayWorking.length === 0 ? (
+              <Card className="p-6 text-center text-zinc-500 text-xs italic">
+                Awaiting positive audience themes...
+              </Card>
+            ) : (
+              <div className="space-y-3">
+                {displayWorking.map((theme) => {
+                  const pos = theme.posPercent || 0;
+                  const formattedName = theme.name.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+
+                  return (
+                    <Card key={theme.name} className="p-4 bg-[#161619] border-[#28282c] hover:border-zinc-700 transition">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="space-y-1">
+                          <h4 className="font-bold text-sm text-zinc-100">{formattedName}</h4>
+                          <span className="text-xs text-zinc-400 font-medium block">
+                            {theme.count.toLocaleString()} audience reactions
+                          </span>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-base font-bold font-mono text-[#4ade80] block">
+                            +{pos}%
+                          </span>
+                          <span className="text-[11px] text-zinc-400">Positive</span>
+                        </div>
+                      </div>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Column 2: WHAT'S HURTING */}
+          <div className="space-y-3.5">
+            <div className="flex items-center gap-2 text-xs font-bold text-rose-400 uppercase tracking-wider">
+              <AlertTriangle className="h-4 w-4" />
+              <span>What's Hurting</span>
+            </div>
+
+            {displayHurting.length === 0 ? (
+              <Card className="p-6 text-center text-zinc-500 text-xs italic">
+                No significant critical friction detected.
+              </Card>
+            ) : (
+              <div className="space-y-3">
+                {displayHurting.map((theme) => {
+                  const neg = theme.negPercent || 0;
+                  const formattedName = theme.name.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+
+                  return (
+                    <Card key={theme.name} className="p-4 bg-[#161619] border-[#28282c] hover:border-zinc-700 transition">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="space-y-1">
+                          <h4 className="font-bold text-sm text-zinc-100">{formattedName}</h4>
+                          <span className="text-xs text-zinc-400 font-medium block">
+                            {theme.count.toLocaleString()} audience reactions
+                          </span>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-base font-bold font-mono text-rose-400 block">
+                            -{neg}%
+                          </span>
+                          <span className="text-[11px] text-zinc-400">Critical</span>
+                        </div>
+                      </div>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Table Rows */}
-        {sortedThemes.length === 0 ? (
-          <div className="p-8 text-sm text-zinc-500 italic text-center">
-            No topic aspects matching the selected "{themeFilter}" filter.
-          </div>
-        ) : (
-          <div className="divide-y divide-[#28282b]/60 text-sm">
-            {sortedThemes.map((theme) => {
-              const pos = theme.posPercent || 0;
-              const neg = theme.negPercent || 0;
-              const isFavorable = pos >= 50;
-
-              return (
-                <div
-                  key={theme.name}
-                  className="grid grid-cols-12 px-6 py-4 items-center hover:bg-[#222226] transition font-medium text-zinc-200"
-                >
-                  <div className="col-span-3 font-bold text-zinc-100 capitalize text-sm">
-                    {theme.name}
-                  </div>
-
-                  <div className="col-span-2">
-                    <Badge variant={isFavorable ? "positive" : "negative"}>
-                      {isFavorable ? "Positive Driver" : "Watch Friction"}
-                    </Badge>
-                  </div>
-
-                  <div className="col-span-2 text-zinc-300 text-sm">
-                    {isFavorable ? "Audience Highlight" : "Community Concern"}
-                  </div>
-
-                  <div className="col-span-2 flex items-center gap-2.5">
-                    <span className="font-mono text-[#4ade80] font-bold text-sm w-10">+{pos}%</span>
-                    <div className="w-24 bg-zinc-800 h-2 rounded-full overflow-hidden">
-                      <div
-                        className="bg-[#4ade80] h-full rounded-full"
-                        style={{ width: `${pos}%` }}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="col-span-2 flex items-center gap-2.5">
-                    <span className="font-mono text-[#f87171] font-bold text-sm w-10">-{neg}%</span>
-                    <div className="w-24 bg-zinc-800 h-2 rounded-full overflow-hidden">
-                      <div
-                        className="bg-[#f87171] h-full rounded-full"
-                        style={{ width: `${neg}%` }}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="col-span-1 text-right font-mono text-zinc-100 font-bold text-sm">
-                    {theme.count.toLocaleString()}
-                  </div>
-                </div>
-              );
-            })}
+        {/* View All / Collapse Button */}
+        {(workingThemes.length > 4 || hurtingThemes.length > 4) && (
+          <div className="text-center pt-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowAll(!showAll)}
+              rightIcon={showAll ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            >
+              {showAll ? "Show Less" : "View All Topics"}
+            </Button>
           </div>
         )}
       </div>
