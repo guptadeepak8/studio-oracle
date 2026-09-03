@@ -27,8 +27,14 @@ def create_campaign(request: CampaignCreateRequest, background_tasks: Background
         )
         CampaignService.set_status(content_id, "active")
 
-        initial_query = request.target_terms[0] if (request.target_terms and len(request.target_terms) > 0) else request.title
-        background_tasks.add_task(ingest_youtube_data, content_id, initial_query, limit=3, max_comments_per_video=300)
+        # If user explicitly requested 100k benchmark scale:
+        if request.initial_volume and request.initial_volume >= 10000:
+            from benchmark_100k import seed_100k_for_campaign
+            background_tasks.add_task(seed_100k_for_campaign, content_id, request.initial_volume)
+        else:
+            initial_query = request.target_terms[0] if (request.target_terms and len(request.target_terms) > 0) else request.title
+            vol = min(max(request.initial_volume or 1000, 100), 2500)
+            background_tasks.add_task(ingest_youtube_data, content_id, initial_query, limit=3, max_comments_per_video=vol)
 
         return {
             "status": "success",

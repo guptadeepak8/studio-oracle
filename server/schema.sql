@@ -46,7 +46,10 @@ CREATE TABLE IF NOT EXISTS studio_oracle.audience_comments
     aspect LowCardinality(String) DEFAULT 'General',
     claim String DEFAULT '',
     evidence_type LowCardinality(String) DEFAULT 'neutral',
-    confidence Float32 DEFAULT 1.0
+    confidence Float32 DEFAULT 1.0,
+    topics Array(String),
+    topic_sentiments Map(String, String),
+    analysis_status LowCardinality(String) DEFAULT 'success'
 )
 ENGINE = MergeTree
 ORDER BY (content_id, source, published_at);

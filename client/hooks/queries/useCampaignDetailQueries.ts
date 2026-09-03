@@ -35,7 +35,9 @@ export function useCommentsQuery(campaignId: string) {
     queryKey: campaignDetailKeys.comments(campaignId),
     queryFn: () => apiRequest<Comment[]>(API_ENDPOINTS.COMMENTS(campaignId), { suppressErrorToast: true }),
     enabled: Boolean(campaignId),
-    staleTime: 1000 * 30, // 30s
+    staleTime: 1000 * 15,
+    refetchInterval: (query) =>
+      query.state.data && query.state.data.length > 0 ? false : 2000,
   });
 }
 
@@ -44,7 +46,9 @@ export function useAnalyticsQuery(campaignId: string) {
     queryKey: campaignDetailKeys.analytics(campaignId),
     queryFn: () => apiRequest(API_ENDPOINTS.ANALYTICS(campaignId), { suppressErrorToast: true }),
     enabled: Boolean(campaignId),
-    staleTime: 1000 * 30,
+    staleTime: 1000 * 15,
+    refetchInterval: (query) =>
+      query.state.data && (query.state.data as { sentiment?: { total?: number } })?.sentiment?.total && (query.state.data as { sentiment?: { total?: number } }).sentiment!.total! > 0 ? false : 2000,
   });
 }
 
@@ -74,7 +78,9 @@ export function useDecisionsQuery(campaignId: string) {
         suppressErrorToast: true,
       }),
     enabled: Boolean(campaignId),
-    staleTime: 1000 * 30, // 30s
+    staleTime: 1000 * 15,
+    refetchInterval: (query) =>
+      query.state.data && query.state.data.decisions?.length > 0 ? false : 3000,
   });
 }
 
@@ -89,7 +95,7 @@ export function useInvestigateDecisionsMutation(campaignId: string) {
       );
     },
     onSuccess: () => {
-      toast.success("Autonomous campaign investigation completed!");
+      toast.success("Marketing recommendations updated.");
       queryClient.invalidateQueries({ queryKey: campaignDetailKeys.decisions(campaignId) });
       queryClient.invalidateQueries({ queryKey: campaignDetailKeys.all(campaignId) });
     },
@@ -121,7 +127,7 @@ export function useIngestYouTubeMutation(campaignId: string) {
     },
     onSuccess: (data) => {
       if (data.status === "success") {
-        toast.success(`Successfully synced ${data.ingested_comments} comments from YouTube!`);
+        toast.success(`Successfully synced ${data.ingested_comments} comments.`);
         queryClient.invalidateQueries({ queryKey: campaignDetailKeys.all(campaignId) });
         queryClient.invalidateQueries({ queryKey: CAMPAIGNS_QUERY_KEY });
       } else {
@@ -145,11 +151,11 @@ export function useGroundGoogleSearchMutation(campaignId: string) {
       );
     },
     onSuccess: (data) => {
-      toast.success(data.message || "Successfully grounded Google Search pre-release intelligence!");
+      toast.success(data.message || "Press and review articles indexed.");
       queryClient.invalidateQueries({ queryKey: campaignDetailKeys.all(campaignId) });
       queryClient.invalidateQueries({ queryKey: CAMPAIGNS_QUERY_KEY });
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error(`Google Search Grounding error: ${error.message}`);
     },
   });

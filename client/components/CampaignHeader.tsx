@@ -27,7 +27,7 @@ export default function CampaignHeader({
   onTabChange,
   evidenceCount = 0,
   onRefreshData,
-  agentStatus = "Autonomous Telemetry Surveillance Active",
+  agentStatus = "Live Tracking",
 }: CampaignHeaderProps) {
   const router = useRouter();
   const { deleteCampaign, isDeleting } = useCampaigns();
@@ -35,9 +35,9 @@ export default function CampaignHeader({
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const getPageTitle = () => {
-    if (activeTab === "marketing") return `${campaign.title} / Marketing Decisions`;
-    if (activeTab === "agent") return `${campaign.title} / Assistant`;
-    return `${campaign.title} / Dashboard`;
+    if (activeTab === "marketing") return `${campaign.title} / Recommendations`;
+    if (activeTab === "agent") return `${campaign.title} / AI Assistant`;
+    return `${campaign.title} / Overview`;
   };
 
   const handleDeleteCampaign = async () => {
@@ -63,10 +63,10 @@ export default function CampaignHeader({
           {/* Dedicated Campaign Agent Identity Pill */}
           <div className="hidden sm:flex items-center gap-1.5 text-xs text-zinc-400 bg-[#1c1c1f] border border-[#28282b] px-3 py-1 rounded-full font-mono">
             <Bot className="h-3.5 w-3.5 text-indigo-400" />
-            <span>{campaign.title} Agent:</span>
+            <span>Tracking:</span>
             <span className="text-[#4ade80] font-semibold flex items-center gap-1">
               <span className="h-1.5 w-1.5 rounded-full bg-[#4ade80] animate-pulse" />
-              Surveillance Active
+              Active
             </span>
           </div>
         </div>

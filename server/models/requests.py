@@ -35,6 +35,8 @@ class CampaignCreateRequest(BaseModel):
     description: str = Field(..., min_length=5, max_length=2000)
     release_date: Optional[str] = None
     target_terms: Optional[List[str]] = None
+    initial_volume: Optional[int] = 1000
+    sync_mode: Optional[str] = "1hr"
 
     @field_validator("title", "description")
     @classmethod

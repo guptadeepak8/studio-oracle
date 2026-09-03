@@ -89,9 +89,15 @@ export default function RegisterModal({
 
   const [createdId, setCreatedId] = useState<string | null>(null);
   const [showProgress, setShowProgress] = useState(false);
+  const isSelectingRef = useRef(false);
 
   // Debounced live YouTube API search
   useEffect(() => {
+    if (isSelectingRef.current) {
+      isSelectingRef.current = false;
+      return;
+    }
+
     const query = newTitle.trim();
     if (query.length < 2) {
       setYoutubeResults([]);
@@ -106,7 +112,7 @@ export default function RegisterModal({
         if (res.ok) {
           const data: YouTubeTrailerResult[] = await res.json();
           setYoutubeResults(data);
-          if (data.length > 0) {
+          if (data.length > 0 && !isSelectingRef.current) {
             setShowDropdown(true);
           }
         }
@@ -135,6 +141,7 @@ export default function RegisterModal({
   };
 
   const handleSelectYouTubeTrailer = (trailer: YouTubeTrailerResult) => {
+    isSelectingRef.current = true;
     const extractedTitle = cleanFilmTitle(trailer.title) || newTitle.trim();
     setNewTitle(extractedTitle);
     setNewTrailerUrl(trailer.url);
@@ -145,17 +152,20 @@ export default function RegisterModal({
       setNewReleaseDate(trailer.published_at);
     }
     setShowDropdown(false);
+    setYoutubeResults([]);
     setSelectedIndex(-1);
     toast.success(`Selected "${trailer.title.slice(0, 40)}..." · Live trailer URL linked!`);
   };
 
   const handleSelectTemplate = (template: MovieCatalogItem) => {
+    isSelectingRef.current = true;
     setNewTitle(template.title);
     setNewTrailerUrl(template.trailerUrl);
     setNewDesc(template.desc);
     setNewType(template.type);
     setNewReleaseDate(template.releaseDate);
     setShowDropdown(false);
+    setYoutubeResults([]);
     toast.success(`Loaded "${template.title}" template!`);
   };
 
@@ -310,7 +320,10 @@ export default function RegisterModal({
                   required
                   placeholder="Type any movie title (e.g. Gladiator II, Oppenheimer, Avatar...)"
                   value={newTitle}
-                  onChange={(e) => setNewTitle(e.target.value)}
+                  onChange={(e) => {
+                    isSelectingRef.current = false;
+                    setNewTitle(e.target.value);
+                  }}
                   onFocus={() => {
                     if (youtubeResults.length > 0) setShowDropdown(true);
                   }}
@@ -328,7 +341,7 @@ export default function RegisterModal({
 
                 {/* Live YouTube API Search Results Dropdown */}
                 {showDropdown && youtubeResults.length > 0 && (
-                  <div className="absolute left-0 right-0 top-[68px] bg-[#1a1a1d] border border-indigo-500/40 rounded-xl shadow-2xl z-30 max-h-64 overflow-y-auto divide-y divide-[#28282b] font-sans animate-fade-in">
+                  <div className="absolute left-0 right-0 top-17 bg-[#1a1a1d] border border-indigo-500/40 rounded-xl shadow-2xl z-30 max-h-64 overflow-y-auto divide-y divide-[#28282b] font-sans animate-fade-in">
                     <div className="px-3 py-1.5 bg-[#141416] text-[10px] font-bold uppercase tracking-wider text-indigo-400 flex items-center justify-between">
                       <span className="flex items-center gap-1">
                         <Video className="h-3 w-3 text-red-500" /> Live YouTube API Trailer Results
@@ -443,11 +456,11 @@ export default function RegisterModal({
 
               <div className="grid grid-cols-2 gap-3">
                 <Select
-                  label="Surveillance Interval"
+                  label="Sync Frequency"
                   value={syncMode}
                   onChange={(e) => setSyncMode(e.target.value)}
                   options={[
-                    { value: "1hr", label: "Every 1 Hour (Active)" },
+                    { value: "1hr", label: "Every 1 Hour" },
                     { value: "6hr", label: "Every 6 Hours" },
                     { value: "24hr", label: "Every 24 Hours" },
                     { value: "manual", label: "Manual Sync Only" },
@@ -455,27 +468,26 @@ export default function RegisterModal({
                 />
 
                 <Select
-                  label="Initial Comment Volume"
+                  label="Initial Comments Target"
                   value={initialVolume}
                   onChange={(e) => setInitialVolume(parseInt(e.target.value))}
                   options={[
-                    { value: 100, label: "100 Comments (Fast)" },
-                    { value: 250, label: "250 Comments" },
                     { value: 500, label: "500 Comments" },
-                    { value: 1000, label: "1,000 Comments (Recommended)" },
-                    { value: 2500, label: "2,500 Comments (Deep Ingest)" },
+                    { value: 1000, label: "1,000 Comments (Default)" },
+                    { value: 2500, label: "2,500 Comments" },
+                    { value: 100000, label: "100,000 Comments (Benchmark Scale)" },
                   ]}
                 />
               </div>
 
-              {/* Security & Engine Spec Banner */}
+              {/* Data Ingestion Spec Banner */}
               <div className="bg-[#141416] border border-[#28282b] rounded-xl p-3.5 space-y-1.5 text-xs text-zinc-300">
                 <div className="flex items-center gap-1.5 font-bold text-zinc-100">
                   <Database className="h-3.5 w-3.5 text-indigo-400" />
-                  <span>ClickHouse Columnar Ingestion</span>
+                  <span>Real-Time Ingestion</span>
                 </div>
                 <p className="text-[11px] text-zinc-400 leading-relaxed">
-                  Comments are parsed into high-speed columnar arrays (`topics`, `sentiment`, `claim`) enabling sub-20ms multi-dimensional anomaly queries.
+                  Audience comments are indexed and analyzed for sentiment, topics, and audience response.
                 </p>
               </div>
             </div>

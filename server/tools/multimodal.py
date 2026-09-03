@@ -47,10 +47,13 @@ def analyze_visual_alignment(content_id: str, visual_concept_or_url: str = "Colo
             )
         )
         analysis_text = res.text.strip()
+        status = "success"
     except Exception as e:
-        analysis_text = f"Visual aligns with epic cinematic tone, but audience commentary suggests emphasizing narrative clarity and physical set sincerity over pure CGI spectacle."
+        analysis_text = "UNKNOWN - Multimodal visual alignment analysis could not be completed at this time."
+        status = "unavailable"
 
     return {
+        "status": status,
         "content_id": content_id,
         "visual_asset": visual_concept_or_url,
         "audience_context": top_topics_str,

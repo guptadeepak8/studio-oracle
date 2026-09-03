@@ -10,7 +10,10 @@ from models.decisions import (
     EvidenceReference,
     PlatformBreakdownMetric,
     EvidenceBreakdown,
+    HashtagGroup,
+    MarketingBlueprint,
     DecisionArtifact,
     CampaignDecisionsResponse
 )
+
 

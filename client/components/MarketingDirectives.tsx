@@ -18,6 +18,11 @@ import {
   Video,
   Clock,
   HelpCircle,
+  Hash,
+  Flame,
+  Trophy,
+  Target,
+  Share2,
 } from "lucide-react";
 import { Movie, CampaignDecisionsResponse, DecisionArtifact, EvidenceReference } from "../utils/types";
 import TrailerComparison, { DropItem } from "./TrailerComparison";
@@ -42,16 +47,31 @@ export default function MarketingDirectives({
   drops = [],
 }: MarketingDirectivesProps) {
   const [copiedIndex, setCopiedIndex] = useState<string | null>(null);
+  const [copiedGroup, setCopiedGroup] = useState<string | null>(null);
+  const [copiedTag, setCopiedTag] = useState<string | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedEvidenceItem, setSelectedEvidenceItem] = useState<EvidenceReference | null>(null);
   const [selectedCommentId, setSelectedCommentId] = useState<string | null>(null);
 
   const decisions: DecisionArtifact[] = decisionsResponse?.decisions || [];
+  const blueprint = decisionsResponse?.blueprint;
 
   const handleCopyDraft = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
     setCopiedIndex(id);
     setTimeout(() => setCopiedIndex(null), 2500);
+  };
+
+  const handleCopyGroupTags = (tags: string[], groupName: string) => {
+    navigator.clipboard.writeText(tags.join(" "));
+    setCopiedGroup(groupName);
+    setTimeout(() => setCopiedGroup(null), 2500);
+  };
+
+  const handleCopySingleTag = (tag: string) => {
+    navigator.clipboard.writeText(tag);
+    setCopiedTag(tag);
+    setTimeout(() => setCopiedTag(null), 2000);
   };
 
   const handleOpenEvidenceDetail = (evidence: EvidenceReference) => {
@@ -76,7 +96,7 @@ export default function MarketingDirectives({
         />
       )}
 
-      {/* 2. Autonomous Decision Intelligence Directives */}
+      {/* 2. Marketing Recommendations Directives */}
       <div className="space-y-5">
         <div className="flex items-center justify-between flex-wrap gap-4 border-b border-[#28282b] pb-4">
           <div>
@@ -84,19 +104,19 @@ export default function MarketingDirectives({
               <div className="h-7 w-7 rounded-lg bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
                 <Sparkles className="h-4 w-4" />
               </div>
-              <h2 className="font-bold text-lg text-zinc-100 tracking-tight uppercase">
-                Autonomous Decision Intelligence
+              <h2 className="font-bold text-lg text-zinc-100 tracking-tight">
+                Marketing Recommendations
               </h2>
             </div>
             <p className="text-sm text-zinc-400">
-              Evidence-grounded marketing directives synthesized by the dedicated{" "}
-              <strong className="text-zinc-200">{campaign.title} Intelligence Agent</strong>.
+              Actionable recommendations based on audience feedback for{" "}
+              <strong className="text-zinc-200">{campaign.title}</strong>.
             </p>
           </div>
 
           <div className="flex items-center gap-3">
             <Badge variant="active" pulsing>
-              {decisionsResponse?.agent_status || "Autonomous Surveillance Active"}
+              {decisionsResponse?.agent_status || "Live Tracking Active"}
             </Badge>
 
             {onTriggerInvestigation && (
@@ -108,7 +128,7 @@ export default function MarketingDirectives({
                 disabled={isInvestigating}
                 leftIcon={<RefreshCw className="h-3.5 w-3.5" />}
               >
-                {isInvestigating ? "Investigating Telemetry..." : "Re-investigate Now"}
+                {isInvestigating ? "Analyzing Comments..." : "Re-analyze Comments"}
               </Button>
             )}
           </div>
@@ -119,22 +139,22 @@ export default function MarketingDirectives({
           <div className="py-16 text-center space-y-3">
             <div className="h-8 w-8 rounded-full border-2 border-indigo-500 border-t-transparent animate-spin mx-auto" />
             <p className="text-sm text-zinc-400 font-mono">
-              Campaign Agent is analyzing ClickHouse telemetry and synthesizing decisions...
+              Analyzing comments and generating recommendations...
             </p>
           </div>
         )}
 
-        {/* 6-Tier Decision Intelligence Cards List */}
+        {/* Decisions List Empty State */}
         {!isLoadingDecisions && decisions.length === 0 && (
           <Card className="p-8 text-center space-y-3">
             <div className="h-10 w-10 rounded-full bg-zinc-800 flex items-center justify-center mx-auto text-zinc-400">
               <ShieldCheck className="h-5 w-5" />
             </div>
             <h3 className="font-bold text-base text-zinc-100">
-              No Decision Directives Synthesized Yet
+              No Recommendations Generated Yet
             </h3>
             <p className="text-sm text-zinc-400 max-w-md mx-auto">
-              The campaign agent requires telemetry data to extract statistically grounded decisions. Click "Re-investigate Now" or sync YouTube feedback.
+              Ingest trailer comments to analyze audience sentiment and generate recommendations.
             </p>
             {onTriggerInvestigation && (
               <Button
@@ -145,9 +165,98 @@ export default function MarketingDirectives({
                 disabled={isInvestigating}
                 leftIcon={<Sparkles className="h-4 w-4" />}
               >
-                Synthesize Decisions Now
+                Analyze Comments Now
               </Button>
             )}
+          </Card>
+        )}
+
+        {/* Target Hashtags & Keywords */}
+        {!isLoadingDecisions && blueprint && (
+          <Card className="p-5 space-y-4 border border-[#282830] bg-[#141418]">
+            <div className="flex items-center justify-between flex-wrap gap-3 border-b border-[#24242c] pb-3">
+              <div>
+                <div className="flex items-center gap-2 mb-0.5">
+                  <Hash className="h-4 w-4 text-indigo-400" />
+                  <h3 className="font-bold text-sm text-zinc-100 tracking-wide">
+                    Target Hashtags & Keywords
+                  </h3>
+                </div>
+                <p className="text-xs text-zinc-400">
+                  Recommended hashtag clusters based on audience response for <strong className="text-zinc-200">{campaign.title}</strong>.
+                </p>
+              </div>
+
+              {blueprint.genre_archetype && (
+                <span className="text-xs font-mono px-2.5 py-1 rounded-md bg-zinc-800 border border-zinc-700 text-zinc-300 font-medium">
+                  {blueprint.genre_archetype}
+                </span>
+              )}
+            </div>
+
+            {/* 3-Tier Hashtag Groups Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              {blueprint.hashtag_groups.map((group) => {
+                const isCopied = copiedGroup === group.category;
+                return (
+                  <div
+                    key={group.category}
+                    className="bg-[#18181d] border border-[#282830] rounded-lg p-3.5 space-y-2.5 flex flex-col justify-between"
+                  >
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-zinc-200">
+                          {group.category}
+                        </span>
+
+                        <Button
+                          variant="ghost"
+                          size="xs"
+                          onClick={() => handleCopyGroupTags(group.tags, group.category)}
+                          leftIcon={
+                            isCopied ? (
+                              <Check className="h-3 w-3 text-[#4ade80]" />
+                            ) : (
+                              <Copy className="h-3 w-3" />
+                            )
+                          }
+                          className="h-6 px-2 text-[11px]"
+                        >
+                          {isCopied ? "Copied" : "Copy All"}
+                        </Button>
+                      </div>
+
+                      <p className="text-[11px] text-zinc-400 leading-tight">
+                        {group.description}
+                      </p>
+                    </div>
+
+                    {/* Interactive Tag Chips */}
+                    <div className="flex flex-wrap gap-1.5 pt-1.5 border-t border-[#24242c]">
+                      {group.tags.map((tag) => {
+                        const isTagCopied = copiedTag === tag;
+                        return (
+                          <button
+                            key={tag}
+                            type="button"
+                            onClick={() => handleCopySingleTag(tag)}
+                            title="Click to copy hashtag"
+                            className={`text-[11px] font-mono px-2 py-0.5 rounded transition flex items-center gap-1 cursor-pointer ${
+                              isTagCopied
+                                ? "bg-[#4ade80]/20 text-[#4ade80] border border-[#4ade80]/40"
+                                : "bg-[#202026] hover:bg-indigo-500/20 text-indigo-300 hover:text-indigo-200 border border-[#2c2c36]"
+                            }`}
+                          >
+                            {tag}
+                            {isTagCopied && <Check className="h-2.5 w-2.5" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </Card>
         )}
 
@@ -165,7 +274,7 @@ export default function MarketingDirectives({
                     : "border-[#28282b] bg-[#1a1a1d] hover:border-zinc-700"
                 }`}
               >
-                {/* Header: Topic, Status & Statistical Confidence */}
+                {/* Header: Topic, Status & Evidence Confidence */}
                 <div className="flex items-center justify-between flex-wrap gap-2 border-b border-[#28282b] pb-4">
                   <div className="flex items-center gap-3">
                     <span className="font-mono text-xs font-bold text-indigo-400 bg-indigo-500/10 border border-indigo-500/30 px-2.5 py-1 rounded-md">
@@ -182,14 +291,14 @@ export default function MarketingDirectives({
                       {isInsufficient ? "INSUFFICIENT EVIDENCE" : "ACTIVE RECOMMENDATION"}
                     </Badge>
 
-                    {/* Confidence Score Pill */}
+                    {/* Evidence Confidence Pill */}
                     <div
                       className={`flex items-center gap-1.5 text-xs font-mono font-bold px-3 py-1 rounded-full border ${
                         isHighConfidence
                           ? "bg-[#183424] text-[#4ade80] border-[#234e35]"
                           : "bg-[#2e2614] text-[#fbbf24] border-[#4d3c1a]"
                       }`}
-                      title="Statistical confidence derived from sample size, cross-platform corroboration, and signal stability."
+                      title="Evidence confidence derived from sample size, cross-platform corroboration, and signal stability."
                     >
                       <ShieldCheck className="h-3.5 w-3.5" />
                       <span>{decision.confidence_rating} CONFIDENCE: {(decision.confidence_score * 100).toFixed(0)}%</span>
@@ -201,22 +310,22 @@ export default function MarketingDirectives({
                 <div className="space-y-1.5">
                   <span className="text-xs font-bold text-indigo-400 uppercase tracking-wider flex items-center gap-1.5">
                     <TrendingUp className="h-3.5 w-3.5" />
-                    1. Observed Inflection Signal (Insight)
+                    1. Key Audience Insight
                   </span>
                   <p className="text-base font-bold text-zinc-100 leading-snug">
                     {decision.insight}
                   </p>
                 </div>
 
-                {/* 2. TIER 2: EVIDENCE (ClickHouse Ground Truth) */}
+                {/* 2. TIER 2: EVIDENCE */}
                 <div className="bg-[#141416] border border-[#242428] rounded-xl p-4.5 space-y-4">
                   <div className="flex items-center justify-between flex-wrap gap-2">
                     <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
                       <Database className="h-3.5 w-3.5 text-indigo-400" />
-                      2. Measurable Ground-Truth Evidence
+                      2. Supporting Comments & Sentiment
                     </span>
                     <span className="font-mono text-xs text-zinc-400">
-                      {decision.evidence.total_comments_analyzed.toLocaleString()} Comments Analyzed · {decision.evidence.time_window}
+                      {decision.evidence.total_comments_analyzed.toLocaleString()} Comments Analyzed
                     </span>
                   </div>
 
@@ -261,7 +370,7 @@ export default function MarketingDirectives({
                   {decision.evidence.sample_evidence && decision.evidence.sample_evidence.length > 0 && (
                     <div className="space-y-2 pt-2 border-t border-[#28282b]">
                       <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider block">
-                        CITED AUDIENCE QUOTES (Click to inspect ClickHouse record):
+                        Audience Quotes (Click to inspect):
                       </span>
                       <div className="space-y-1.5">
                         {decision.evidence.sample_evidence.map((sample) => (
@@ -281,11 +390,11 @@ export default function MarketingDirectives({
                   )}
                 </div>
 
-                {/* 3. TIER 3: INTERPRETATION (Facts vs Inferences) */}
+                {/* 3. TIER 3: INTERPRETATION */}
                 <div className="bg-[#161618] border border-[#28282b] rounded-xl p-4.5 space-y-2 text-xs leading-relaxed">
                   <span className="font-bold text-zinc-400 uppercase tracking-wider block flex items-center gap-1.5">
                     <AlertCircle className="h-3.5 w-3.5 text-indigo-400" />
-                    3. Analytical Interpretation (Facts vs. Inferences)
+                    3. Analysis
                   </span>
                   <p className="text-zinc-200 font-sans text-sm">{decision.interpretation}</p>
                 </div>
@@ -295,7 +404,7 @@ export default function MarketingDirectives({
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-indigo-400 uppercase tracking-wider block flex items-center gap-1.5">
                       <Sparkles className="h-3.5 w-3.5" />
-                      4. Recommended Strategic Marketing Action
+                      4. Recommended Action
                     </span>
 
                     {decision.copy_draft && (
@@ -321,8 +430,13 @@ export default function MarketingDirectives({
                   </p>
 
                   {decision.copy_draft && (
-                    <div className="bg-[#121217] border border-indigo-500/30 rounded-lg p-3.5 font-mono text-xs text-indigo-300 leading-relaxed">
-                      {decision.copy_draft}
+                    <div className="bg-[#101012] border border-[#28282b] rounded-lg p-3.5 space-y-1.5">
+                      <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider block font-bold">
+                        Draft Copy for Marketing Team:
+                      </span>
+                      <p className="text-xs font-mono text-indigo-200 leading-relaxed bg-[#151518] p-2.5 rounded border border-[#25252a]">
+                        "{decision.copy_draft}"
+                      </p>
                     </div>
                   )}
 

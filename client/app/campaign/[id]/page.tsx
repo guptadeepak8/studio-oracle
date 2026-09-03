@@ -19,7 +19,9 @@ import CampaignHeader from "../../../components/CampaignHeader";
 import IngestConfig from "../../../components/IngestConfig";
 import ExecutiveScorecardSkeleton from "../../../components/skeletons/ExecutiveScorecardSkeleton";
 import SectionCardSkeleton from "../../../components/skeletons/SectionCardSkeleton";
+import CinematicLoader from "../../../components/common/CinematicLoader";
 import { Button } from "../../../components/ui";
+import { useCampaignSSE } from "../../../hooks/useCampaignSSE";
 
 function CampaignWorkspaceInner() {
   const params = useParams();
@@ -27,6 +29,9 @@ function CampaignWorkspaceInner() {
   const searchParams = useSearchParams();
   const campaignId = params.id as string;
   const activeTab = (searchParams.get("tab") as "overview" | "marketing" | "agent") || "overview";
+
+  // Real-time Server-Sent Events (SSE) listener for zero-reload live updates
+  useCampaignSSE(campaignId);
 
   const {
     campaign,
@@ -151,10 +156,11 @@ function CampaignWorkspaceInner() {
 
   if (isLoadingCampaign) {
     return (
-      <div className="flex-1 bg-[#0e0e10] p-8 space-y-8 max-w-7xl mx-auto w-full overflow-y-auto">
-        <ExecutiveScorecardSkeleton />
-        <SectionCardSkeleton type="cards" />
-        <SectionCardSkeleton type="table" />
+      <div className="flex-1 bg-[#0e0e10] p-8 flex items-center justify-center h-screen w-full overflow-hidden">
+        <CinematicLoader
+          title="Loading Campaign Telemetry"
+          subtitle="Querying ClickHouse Cloud records & synthesizing directives..."
+        />
       </div>
     );
   }

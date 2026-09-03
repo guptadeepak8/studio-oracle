@@ -15,32 +15,49 @@ def query_trailer_inflection(content_id: str, trailer_date: str) -> dict:
     """
     client = get_clickhouse_client()
     
-    # Query pre-trailer sentiment and topics
+    # Query pre-trailer sentiment (comment-level)
     pre_query = f"""
     SELECT 
         count() as total,
         countIf(sentiment = 'positive') as pos,
-        countIf(sentiment = 'negative') as neg,
-        groupArray(topic) as all_topics
+        countIf(sentiment = 'negative') as neg
     FROM studio_oracle.audience_comments
-    ARRAY JOIN topics AS topic
     WHERE content_id = '{content_id}' AND published_at < '{trailer_date} 00:00:00'
     """
     
-    # Query post-trailer sentiment and topics
+    # Query post-trailer sentiment (comment-level)
     post_query = f"""
     SELECT 
         count() as total,
         countIf(sentiment = 'positive') as pos,
-        countIf(sentiment = 'negative') as neg,
-        groupArray(topic) as all_topics
+        countIf(sentiment = 'negative') as neg
+    FROM studio_oracle.audience_comments
+    WHERE content_id = '{content_id}' AND published_at >= '{trailer_date} 00:00:00'
+    """
+    
+    # Query topics separately so comment counts are not inflated
+    pre_topics_query = f"""
+    SELECT topic, count() as cnt
+    FROM studio_oracle.audience_comments
+    ARRAY JOIN topics AS topic
+    WHERE content_id = '{content_id}' AND published_at < '{trailer_date} 00:00:00'
+    GROUP BY topic ORDER BY cnt DESC LIMIT 5
+    """
+    post_topics_query = f"""
+    SELECT topic, count() as cnt
     FROM studio_oracle.audience_comments
     ARRAY JOIN topics AS topic
     WHERE content_id = '{content_id}' AND published_at >= '{trailer_date} 00:00:00'
+    GROUP BY topic ORDER BY cnt DESC LIMIT 5
     """
     
     pre_res = client.query(pre_query).result_rows
     post_res = client.query(post_query).result_rows
+    try:
+        pre_topics = [r[0] for r in client.query(pre_topics_query).result_rows]
+        post_topics = [r[0] for r in client.query(post_topics_query).result_rows]
+    except Exception:
+        pre_topics, post_topics = [], []
     
     pre_total = pre_res[0][0] if pre_res else 0
     pre_pos = pre_res[0][1] if pre_res else 0

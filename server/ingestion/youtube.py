@@ -28,10 +28,65 @@ class CommentAnalysis(BaseModel):
 class IngestionAnalysisBatch(BaseModel):
     analyses: List[CommentAnalysis]
 
+import concurrent.futures
+import json
+
+def process_single_batch(batch, client):
+    # Prepare prompt
+    prompt = "Analyze the sentiment, topics, claim, evidence type, and confidence score for the following audience comments:\n\n"
+    for idx, c in enumerate(batch):
+        comment_id, _, _, _, text, _, _, _, _ = c
+        clean_text = str(text).replace("\n", " ")[:300]
+        prompt += f"ID: {comment_id}\nText: {clean_text}\n---\n"
+        
+    try:
+        res = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                response_mime_type="application/json",
+                response_schema=IngestionAnalysisBatch,
+                system_instruction=(
+                    "Perform structured analysis on audience comments. For each comment ID, discover dynamic, specific, "
+                    "concise topics (lowercase, normalized, e.g. 'casting', 'visual_effects', 'soundtrack', 'franchise_fatigue'). "
+                    "Associate topic-level sentiments. Determine overall sentiment (positive/negative/neutral/mixed/unknown), "
+                    "claim (opinion summary without stating opinions as facts), evidence type (praise/critique/question/hype/mixed/neutral), "
+                    "and confidence (lower if sarcastic/ambiguous)."
+                )
+            )
+        )
+        data = json.loads(res.text)
+        analyses_map = {item["comment_id"]: item for item in data.get("analyses", [])}
+        
+        batch_res = []
+        for c in batch:
+            c_id = c[0]
+            analysis = analyses_map.get(c_id, {})
+            sentiment = analysis.get("overall_sentiment", "neutral").lower()
+            claim = analysis.get("claim", "")
+            evidence_type = analysis.get("evidence_type", "neutral").lower()
+            confidence = float(analysis.get("confidence", 1.0))
+            topics = analysis.get("topics", [])
+            topic_sentiments = analysis.get("topic_sentiments", {})
+            
+            if sentiment not in ["positive", "negative", "neutral", "mixed", "unknown"]:
+                sentiment = "neutral"
+            if evidence_type not in ["praise", "critique", "question", "hype", "mixed", "neutral"]:
+                evidence_type = "neutral"
+            if not isinstance(topics, list):
+                topics = []
+            if not isinstance(topic_sentiments, dict):
+                topic_sentiments = {}
+                
+            batch_res.append(c + (sentiment, "General", claim, evidence_type, confidence, topics, topic_sentiments, "success"))
+        return batch_res
+    except Exception as batch_err:
+        print(f"Error analyzing batch: {batch_err}. Falling back to default values for this batch.")
+        return [c + ("neutral", "General", "", "neutral", 0.0, [], {}, "failed") for c in batch]
+
 def analyze_comments(comments: list) -> list:
     """
-    Given a list of comment tuples (comment_id, post_id, content_id, source, text, author, published_at, like_count, collected_at),
-    calls Gemini to classify them in batches of 25 and returns the expanded tuples containing analysis columns.
+    Given a list of comment tuples, calls Gemini in parallel batches of 25 using ThreadPoolExecutor.
     """
     if not comments:
         return []
@@ -42,69 +97,21 @@ def analyze_comments(comments: list) -> list:
         print(f"Failed to initialize GenAI Client: {e}. Falling back to default analysis values.")
         return [c + ("neutral", "General", "", "neutral", 0.0, [], {}, "failed") for c in comments]
 
-    analyzed = []
     batch_size = 25
+    batches = [comments[i:i+batch_size] for i in range(0, len(comments), batch_size)]
     
-    for i in range(0, len(comments), batch_size):
-        batch = comments[i:i+batch_size]
-        
-        # Prepare prompt
-        prompt = "Analyze the sentiment, topics, claim, evidence type, and confidence score for the following audience comments:\n\n"
-        for idx, c in enumerate(batch):
-            comment_id, _, _, _, text, _, _, _, _ = c
-            # Clean text to prevent prompt injection or broken formatting
-            clean_text = str(text).replace("\n", " ")[:300]
-            prompt += f"ID: {comment_id}\nText: {clean_text}\n---\n"
-            
-        try:
-            res = client.models.generate_content(
-                model='gemini-2.5-flash',
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    response_mime_type="application/json",
-                    response_schema=IngestionAnalysisBatch,
-                    system_instruction=(
-                        "Perform structured analysis on audience comments. For each comment ID, discover dynamic, specific, "
-                        "concise topics (lowercase, normalized, e.g. 'casting', 'visual_effects', 'soundtrack', 'franchise_fatigue'). "
-                        "Associate topic-level sentiments. Determine overall sentiment (positive/negative/neutral/mixed/unknown), "
-                        "claim (opinion summary without stating opinions as facts), evidence type (praise/critique/question/hype/mixed/neutral), "
-                        "and confidence (lower if sarcastic/ambiguous)."
-                    )
-                )
-            )
-            
-            import json
-            data = json.loads(res.text)
-            analyses_map = {item["comment_id"]: item for item in data.get("analyses", [])}
-            
-            for c in batch:
-                c_id = c[0]
-                analysis = analyses_map.get(c_id, {})
-                sentiment = analysis.get("overall_sentiment", "neutral").lower()
-                claim = analysis.get("claim", "")
-                evidence_type = analysis.get("evidence_type", "neutral").lower()
-                confidence = float(analysis.get("confidence", 1.0))
-                topics = analysis.get("topics", [])
-                topic_sentiments = analysis.get("topic_sentiments", {})
-                
-                # Check valid categories
-                if sentiment not in ["positive", "negative", "neutral", "mixed", "unknown"]:
-                    sentiment = "neutral"
-                if evidence_type not in ["praise", "critique", "question", "hype", "mixed", "neutral"]:
-                    evidence_type = "neutral"
-                if not isinstance(topics, list):
-                    topics = []
-                if not isinstance(topic_sentiments, dict):
-                    topic_sentiments = {}
-                    
-                analyzed.append(c + (sentiment, "General", claim, evidence_type, confidence, topics, topic_sentiments, "success"))
-                
-        except Exception as batch_err:
-            print(f"Error analyzing batch: {batch_err}. Falling back to default values for this batch.")
-            for c in batch:
-                analyzed.append(c + ("neutral", "General", "", "neutral", 0.0, [], {}, "failed"))
+    analyzed = []
+    with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
+        future_to_batch = {executor.submit(process_single_batch, b, client): idx for idx, b in enumerate(batches)}
+        for future in concurrent.futures.as_completed(future_to_batch):
+            try:
+                result = future.result()
+                analyzed.extend(result)
+            except Exception as e:
+                print(f"Batch thread error: {e}")
                 
     return analyzed
+
 
 from core.database import get_clickhouse_client
 
@@ -374,6 +381,21 @@ def ingest_youtube_data(content_id: str, query: str, limit: int = 3, max_comment
                     "topics", "topic_sentiments", "analysis_status"
                 ]
             )
+            try:
+                from core.cache import invalidate_cache
+                invalidate_cache(str(target_uuid))
+                invalidate_cache("all_movies")
+            except Exception:
+                pass
+            
+            try:
+                from core.pubsub import publish_campaign_event_sync
+                publish_campaign_event_sync(str(target_uuid), "INGESTION_COMPLETED", {
+                    "ingested_comments": len(analyzed_comments),
+                    "ingested_posts": len(posts_data)
+                })
+            except Exception as pe:
+                print(f"PubSub event error: {pe}")
         
     return {
         "status": "success",

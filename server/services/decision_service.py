@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from typing import List
+from typing import List, Dict, Any, Optional
 from models.decisions import (
     CampaignDecisionsResponse,
     DecisionArtifact,
@@ -8,17 +8,111 @@ from models.decisions import (
     ConfidenceRating,
     EvidenceBreakdown,
     PlatformBreakdownMetric,
-    EvidenceReference
+    EvidenceReference,
+    HashtagGroup,
+    MarketingBlueprint
 )
 from services.campaign_service import CampaignService
 from services.detector_service import DetectorService
 
 class DecisionService:
     @staticmethod
+    def generate_genre_marketing_blueprint(
+        title: str,
+        description: str,
+        target_terms: List[str],
+        signals: Dict[str, Any]
+    ) -> MarketingBlueprint:
+        combined_text = f"{title} {description} {' '.join(target_terms)}".lower()
+        
+        # Benchmark Knowledge Base for Entertainment Genres
+        if any(w in combined_text for w in ["gladiator", "rome", "roman", "empire", "warrior", "sword", "history", "ancient", "colosseum"]):
+            archetype = "Historical Action"
+            comparables = ["Gladiator", "Kingdom of Heaven", "300"]
+            bench_tags = ["#HistoricalEpic", "#GladiatorVibes", "#SwordAndSandals", "#Colosseum", "#IMAX"]
+            channels = ["YouTube", "Social Channels", "Display"]
+        elif any(w in combined_text for w in ["dune", "sci-fi", "scifi", "space", "cyberpunk", "future", "galaxy", "blade runner", "alien", "matrix"]):
+            archetype = "Sci-Fi & Cyberpunk"
+            comparables = ["Dune", "Blade Runner 2049", "Interstellar"]
+            bench_tags = ["#SciFiCinema", "#WorldBuilding", "#CyberpunkVibe", "#SciFiTwitter", "#IMAX"]
+            channels = ["YouTube", "Social Channels", "Shorts"]
+        elif any(w in combined_text for w in ["batman", "joker", "deadpool", "superhero", "marvel", "dc", "villain", "antihero", "gotham", "comic"]):
+            archetype = "Comic & Action"
+            comparables = ["The Batman", "Joker", "Deadpool"]
+            bench_tags = ["#ComicBookMovie", "#VillainArc", "#SuperheroCinema", "#AntiHero", "#CinemaHype"]
+            channels = ["YouTube Shorts", "Social Video", "Community"]
+        elif any(w in combined_text for w in ["horror", "terror", "quiet place", "alien", "conjuring", "monster", "thriller", "scary", "scream", "haunted"]):
+            archetype = "Thriller & Horror"
+            comparables = ["A Quiet Place", "Get Out", "Alien"]
+            bench_tags = ["#HorrorCommunity", "#PsychologicalThriller", "#HorrorCinema", "#SurvivalHorror", "#JumpScare"]
+            channels = ["YouTube Pre-roll", "Social Drops"]
+        elif any(w in combined_text for w in ["game", "gta", "elden", "witcher", "rpg", "quest", "zelda", "souls", "gaming", "playstation", "xbox"]):
+            archetype = "Gaming & RPG"
+            comparables = ["Elden Ring", "The Witcher", "Cyberpunk 2077"]
+            bench_tags = ["#GamingCommunity", "#NextGenGaming", "#OpenWorldRPG", "#LoreDeepDive", "#GamerLife"]
+            channels = ["YouTube Gaming", "Twitch", "Community"]
+        else:
+            archetype = "Theatrical Release"
+            comparables = ["Oppenheimer", "Top Gun", "Avatar"]
+            bench_tags = ["#CinematicExcellence", "#FilmCulture", "#MustWatchMovie", "#DirectorCut", "#BigScreen"]
+            channels = ["YouTube Pre-roll", "Social Channels", "Digital TV"]
+
+        # Universal Viral Discovery Tags
+        clean_title = "".join(c for c in title if c.isalnum())
+        viral_tags = [
+            f"#{clean_title}",
+            "#MovieTrailer",
+            "#Cinema2026",
+            "#FilmTwitter",
+            "#MustWatch"
+        ]
+
+        # Dynamic Resonance / Audience-Grounded Tags based on ClickHouse Sentiment
+        audience_tags = []
+        resonance_topics = signals.get("resonance_topics", [])
+        for topic_obj in resonance_topics[:3]:
+            t_clean = "".join(w.capitalize() for w in topic_obj.get("topic", "").split("_") if w)
+            if t_clean:
+                audience_tags.append(f"#{t_clean}Praise")
+        
+        if not audience_tags:
+            audience_tags = [f"#{clean_title}Premiere", "#AudienceScore", "#CinematicMasterpiece"]
+        else:
+            audience_tags.extend(["#ViewerApproved", "#BlockbusterSeason"])
+            audience_tags = audience_tags[:4]
+
+        return MarketingBlueprint(
+            genre_archetype=archetype,
+            historical_benchmark_comparables=comparables,
+            target_channels=channels,
+            hashtag_groups=[
+                HashtagGroup(
+                    category="Genre Tags",
+                    description="Standard tags commonly used for this genre.",
+                    tags=bench_tags
+                ),
+                HashtagGroup(
+                    category="Trending Tags",
+                    description="High-traffic entertainment and release discovery tags.",
+                    tags=viral_tags
+                ),
+                HashtagGroup(
+                    category="Audience Buzz",
+                    description="Tags matching top positive praise topics.",
+                    tags=audience_tags
+                )
+            ]
+        )
+
+    @staticmethod
     def get_or_investigate_decisions(content_id: str) -> CampaignDecisionsResponse:
         campaign = CampaignService.get_campaign_by_id(content_id)
         title = campaign.get("title", "Campaign") if campaign else "Campaign"
+        description = campaign.get("description", "") if campaign else ""
+        target_terms = campaign.get("target_terms", []) if campaign else []
         signals = DetectorService.detect_campaign_signals(content_id)
+        blueprint = DecisionService.generate_genre_marketing_blueprint(title, description, target_terms, signals)
+
 
         decisions: List[DecisionArtifact] = []
         total_comments = signals.get("total_comments", 0)
@@ -185,7 +279,7 @@ class DecisionService:
                             confidence_score=0.88,
                             confidence_rating=ConfidenceRating.HIGH,
                             why=[
-                                f"Statistically significant divergence ({gap}% gap) between audience comments and trade press reviews.",
+                                f"Observed divergence ({gap}% gap) between audience comments and trade press reviews.",
                                 "Clear segmentation between mainstream hype and critical commentary.",
                                 "Bifurcated creative allocation protects both ticket pre-sales and critical word-of-mouth."
                             ],
@@ -197,7 +291,8 @@ class DecisionService:
             campaign_id=content_id,
             campaign_title=title,
             agent_name=f"{title} Intelligence Agent",
-            agent_status="Autonomous Telemetry Surveillance Active",
+            agent_status="Live Tracking Active",
             last_investigation=datetime.utcnow().isoformat(),
-            decisions=decisions
+            decisions=decisions,
+            blueprint=blueprint
         )

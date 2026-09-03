@@ -67,41 +67,23 @@ class GoogleSearchService:
             data = json.loads(response.text)
             articles = data.get("articles", [])
         except Exception as e:
-            print(f"Notice during Google Search Grounding: {e}. Using calibrated industry press synthesis...")
-            articles = [
-                {
-                    "headline": f"{title} Early Box Office Projections Signal Strong Holiday Opening",
-                    "source_domain": "deadline.com",
-                    "url": "https://deadline.com",
-                    "sentiment": "positive",
-                    "key_takeaway": "Tracking models indicate high demographic appeal across male 18-34 and general audiences.",
-                    "topics": ["box_office", "demographics", "projections"]
-                },
-                {
-                    "headline": f"Critics Highlight Visual Spectacle in New {title} Footage",
-                    "source_domain": "variety.com",
-                    "url": "https://variety.com",
-                    "sentiment": "positive",
-                    "key_takeaway": "Trade praise focuses on large-format IMAX cinematography and practical stunt scale.",
-                    "topics": ["visuals", "cinematography", "imax"]
-                },
-                {
-                    "headline": f"{title} Trailer Analysis: Pacing and Sequel Continuity Examined",
-                    "source_domain": "hollywoodreporter.com",
-                    "url": "https://hollywoodreporter.com",
-                    "sentiment": "neutral",
-                    "key_takeaway": "Analysts note that heavy plot reveals in marketing cutdowns require careful balancing in upcoming teasers.",
-                    "topics": ["pacing", "lore", "marketing_strategy"]
-                },
-                {
-                    "headline": f"Rotten Tomatoes Anticipation Index Surges for {title}",
-                    "source_domain": "rottentomatoes.com",
-                    "url": "https://rottentomatoes.com",
-                    "sentiment": "positive",
-                    "key_takeaway": "Audience want-to-see score ranks among top 3 November theatrical releases.",
-                    "topics": ["anticipation", "scores", "reviews"]
-                }
-            ]
+            print(f"Notice during Google Search Grounding: {e}")
+            return {
+                "status": "unavailable",
+                "source": "google_search",
+                "ingested_insights": 0,
+                "search_query": search_term,
+                "message": f"UNKNOWN - Live Google Search Grounding was unavailable: {str(e)}"
+            }
+
+        if not articles:
+            return {
+                "status": "unavailable",
+                "source": "google_search",
+                "ingested_insights": 0,
+                "search_query": search_term,
+                "message": "UNKNOWN - No verified industry articles returned for query."
+            }
 
         # Convert grounded articles into ClickHouse audience_comments / press records
         now = datetime.now()

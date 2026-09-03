@@ -35,6 +35,17 @@ class EvidenceBreakdown(BaseModel):
     key_comment_refs: List[str] = []
     sample_evidence: List[EvidenceReference] = []
 
+class HashtagGroup(BaseModel):
+    category: str
+    description: str
+    tags: List[str]
+
+class MarketingBlueprint(BaseModel):
+    genre_archetype: str
+    historical_benchmark_comparables: List[str]
+    target_channels: List[str] = []
+    hashtag_groups: List[HashtagGroup] = []
+
 class DecisionArtifact(BaseModel):
     id: str
     campaign_id: str
@@ -50,6 +61,7 @@ class DecisionArtifact(BaseModel):
     confidence_score: float = Field(..., ge=0.0, le=1.0)
     confidence_rating: ConfidenceRating = ConfidenceRating.HIGH
     why: List[str] = []
+    blueprint: Optional[MarketingBlueprint] = None
     created_at: str
 
 class CampaignDecisionsResponse(BaseModel):
@@ -59,4 +71,6 @@ class CampaignDecisionsResponse(BaseModel):
     agent_status: str
     last_investigation: str
     decisions: List[DecisionArtifact]
+    blueprint: Optional[MarketingBlueprint] = None
+
 

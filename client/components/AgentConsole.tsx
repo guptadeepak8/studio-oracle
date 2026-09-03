@@ -165,7 +165,7 @@ export default function AgentConsole({
             <div className="font-bold text-sm text-zinc-100 flex items-center gap-2">
               <span>Audience Ops Assistant</span>
               <Badge variant="active" pulsing>
-                Gemini 2.5 Pro Live
+                Gemini 2.5 Flash Live
               </Badge>
             </div>
             <p className="text-xs text-zinc-400">

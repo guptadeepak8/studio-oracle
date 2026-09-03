@@ -127,5 +127,78 @@ def seed_100k_benchmark(target_count: int = 100000):
 
     return content_id
 
+def seed_100k_for_campaign(content_id: str, target_count: int = 100000):
+    client = get_clickhouse_client()
+    cnt_query = f"SELECT count() FROM studio_oracle.audience_comments WHERE content_id = '{content_id}'"
+    try:
+        existing_count = client.query(cnt_query).result_rows[0][0]
+    except Exception:
+        existing_count = 0
+
+    if existing_count < target_count:
+        needed = target_count - existing_count
+        batch_size = 10000
+        total_inserted = 0
+        base_time = datetime.now() - timedelta(days=14)
+        
+        while total_inserted < needed:
+            current_batch_size = min(batch_size, needed - total_inserted)
+            batch_rows = []
+            
+            for i in range(current_batch_size):
+                cid = f"bm_{uuid.uuid4().hex[:12]}"
+                pid = f"vid_{random.randint(1, 10)}"
+                source = "youtube" if random.random() < 0.65 else "google_search"
+                
+                rand_val = random.random()
+                if rand_val < 0.58:
+                    text, topics = random.choice(POS_COMMENTS)
+                    sentiment = "positive"
+                    evidence_type = "praise" if random.random() < 0.7 else "hype"
+                    aspect = "Highlight"
+                    claim = "Positive audience anticipation for visual spectacle and casting"
+                elif rand_val < 0.86:
+                    text, topics = random.choice(NEG_COMMENTS)
+                    sentiment = "negative"
+                    evidence_type = "critique"
+                    aspect = "Concern"
+                    claim = "Criticism regarding CGI visual effects and trailer pacing"
+                else:
+                    text, topics = random.choice(NEU_COMMENTS)
+                    sentiment = "neutral"
+                    evidence_type = "neutral"
+                    aspect = "General"
+                    claim = "General release date and format inquiries"
+
+                author = random.choice(AUTHORS) + str(random.randint(10, 999))
+                pub_time = base_time + timedelta(minutes=random.randint(1, 20160))
+                like_cnt = random.randint(0, 500) if random.random() < 0.3 else random.randint(0, 50)
+                conf = round(random.uniform(0.78, 0.98), 2)
+                
+                topic_sentiments = {t: sentiment for t in topics}
+
+                batch_rows.append((
+                    cid, pid, content_id, source, text, author,
+                    pub_time, like_cnt, datetime.now(),
+                    sentiment, aspect, claim, evidence_type, conf,
+                    topics, topic_sentiments, "success"
+                ))
+
+            client.insert(
+                "studio_oracle.audience_comments",
+                batch_rows,
+                column_names=[
+                    "comment_id", "post_id", "content_id", "source", "text",
+                    "author", "published_at", "like_count", "collected_at",
+                    "sentiment", "aspect", "claim", "evidence_type", "confidence",
+                    "topics", "topic_sentiments", "analysis_status"
+                ]
+            )
+            total_inserted += current_batch_size
+        
+        invalidate_cache(content_id)
+        invalidate_cache("all_movies")
+
 if __name__ == "__main__":
     seed_100k_benchmark(100000)
+

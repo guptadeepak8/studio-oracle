@@ -81,13 +81,18 @@ class CampaignService:
         if cached is not None:
             return cached
 
+        try:
+            cid_uuid = uuid.UUID(str(content_id))
+        except (ValueError, TypeError, AttributeError):
+            return None
+
         client = get_clickhouse_client()
         query = (
-            f"SELECT content_id, content_type, title, description, release_date, target_terms "
-            f"FROM studio_oracle.content WHERE content_id = '{content_id}' LIMIT 1"
+            "SELECT content_id, content_type, title, description, release_date, target_terms "
+            "FROM studio_oracle.content WHERE content_id = {cid:UUID} LIMIT 1"
         )
         try:
-            rows = client.query(query).result_rows
+            rows = client.query(query, parameters={"cid": cid_uuid}).result_rows
             if not rows:
                 return None
             r = rows[0]
@@ -107,14 +112,19 @@ class CampaignService:
 
     @staticmethod
     def get_comments(content_id: str) -> List[Dict[str, Any]]:
+        try:
+            cid_uuid = uuid.UUID(str(content_id))
+        except (ValueError, TypeError, AttributeError):
+            return []
+
         client = get_clickhouse_client()
         query = (
-            f"SELECT comment_id, post_id, source, text, author, published_at, like_count, sentiment, topics "
-            f"FROM studio_oracle.audience_comments "
-            f"WHERE content_id = '{content_id}' ORDER BY published_at DESC"
+            "SELECT comment_id, post_id, source, text, author, published_at, like_count, sentiment, topics "
+            "FROM studio_oracle.audience_comments "
+            "WHERE content_id = {cid:UUID} ORDER BY published_at DESC"
         )
         try:
-            rows = client.query(query).result_rows
+            rows = client.query(query, parameters={"cid": cid_uuid}).result_rows
             return [
                 {
                     "comment_id": r[0],
@@ -133,15 +143,18 @@ class CampaignService:
 
     @staticmethod
     def get_comment_detail(comment_id: str) -> Optional[Dict[str, Any]]:
+        if not comment_id or not isinstance(comment_id, str):
+            return None
+
         client = get_clickhouse_client()
-        query = f"""
+        query = """
         SELECT comment_id, post_id, content_id, source, text, author, published_at, like_count, sentiment, topics, confidence
         FROM studio_oracle.audience_comments
-        WHERE comment_id = '{comment_id}'
+        WHERE comment_id = {comm_id:String}
         LIMIT 1
         """
         try:
-            rows = client.query(query).result_rows
+            rows = client.query(query, parameters={"comm_id": comment_id}).result_rows
             if not rows:
                 return None
             r = rows[0]
@@ -168,11 +181,16 @@ class CampaignService:
         if cached is not None:
             return cached
 
+        try:
+            cid_uuid = uuid.UUID(str(content_id))
+        except (ValueError, TypeError, AttributeError):
+            return {"sentiment": {"positive": 0, "negative": 0, "neutral": 0, "posPercent": 0, "negPercent": 0}, "themes": [], "conflicts": []}
+
         client = get_clickhouse_client()
         
-        sent_query = f"SELECT sentiment, count() FROM studio_oracle.audience_comments WHERE content_id = '{content_id}' GROUP BY sentiment"
+        sent_query = "SELECT sentiment, count() FROM studio_oracle.audience_comments WHERE content_id = {cid:UUID} GROUP BY sentiment"
         try:
-            sent_rows = client.query(sent_query).result_rows
+            sent_rows = client.query(sent_query, parameters={"cid": cid_uuid}).result_rows
         except Exception:
             sent_rows = []
 
@@ -195,15 +213,15 @@ class CampaignService:
         }
 
         theme_query = (
-            f"SELECT topic, count() as total, "
-            f"       countIf(topic_sentiments[topic] = 'positive') as pos_c, "
-            f"       countIf(topic_sentiments[topic] = 'negative') as neg_c "
-            f"FROM studio_oracle.audience_comments "
-            f"ARRAY JOIN topics AS topic "
-            f"WHERE content_id = '{content_id}' GROUP BY topic ORDER BY total DESC"
+            "SELECT topic, count() as total, "
+            "       countIf(topic_sentiments[topic] = 'positive') as pos_c, "
+            "       countIf(topic_sentiments[topic] = 'negative') as neg_c "
+            "FROM studio_oracle.audience_comments "
+            "ARRAY JOIN topics AS topic "
+            "WHERE content_id = {cid:UUID} GROUP BY topic ORDER BY total DESC"
         )
         try:
-            theme_rows = client.query(theme_query).result_rows
+            theme_rows = client.query(theme_query, parameters={"cid": cid_uuid}).result_rows
         except Exception:
             theme_rows = []
 
@@ -221,22 +239,22 @@ class CampaignService:
             })
 
         conflict_query = (
-            f"SELECT topic, "
-            f"       argMax(text, like_count) FILTER (WHERE topic_sentiments[topic] = 'positive') as pos_text, "
-            f"       argMax(author, like_count) FILTER (WHERE topic_sentiments[topic] = 'positive') as pos_author, "
-            f"       argMax(text, like_count) FILTER (WHERE topic_sentiments[topic] = 'negative') as neg_text, "
-            f"       argMax(author, like_count) FILTER (WHERE topic_sentiments[topic] = 'negative') as neg_author "
-            f"FROM studio_oracle.audience_comments "
-            f"ARRAY JOIN topics AS topic "
-            f"WHERE content_id = '{content_id}' "
-            f"GROUP BY topic "
-            f"HAVING countIf(topic_sentiments[topic] = 'positive') > 0 "
-            f"   AND countIf(topic_sentiments[topic] = 'negative') > 0 "
-            f"ORDER BY count() DESC "
-            f"LIMIT 3"
+            "SELECT topic, "
+            "       argMax(text, like_count) FILTER (WHERE topic_sentiments[topic] = 'positive') as pos_text, "
+            "       argMax(author, like_count) FILTER (WHERE topic_sentiments[topic] = 'positive') as pos_author, "
+            "       argMax(text, like_count) FILTER (WHERE topic_sentiments[topic] = 'negative') as neg_text, "
+            "       argMax(author, like_count) FILTER (WHERE topic_sentiments[topic] = 'negative') as neg_author "
+            "FROM studio_oracle.audience_comments "
+            "ARRAY JOIN topics AS topic "
+            "WHERE content_id = {cid:UUID} "
+            "GROUP BY topic "
+            "HAVING countIf(topic_sentiments[topic] = 'positive') > 0 "
+            "   AND countIf(topic_sentiments[topic] = 'negative') > 0 "
+            "ORDER BY count() DESC "
+            "LIMIT 3"
         )
         try:
-            conflict_rows = client.query(conflict_query).result_rows
+            conflict_rows = client.query(conflict_query, parameters={"cid": cid_uuid}).result_rows
         except Exception:
             conflict_rows = []
 
@@ -264,19 +282,24 @@ class CampaignService:
 
     @staticmethod
     def get_platform_breakdown(content_id: str) -> Dict[str, Any]:
+        try:
+            cid_uuid = uuid.UUID(str(content_id))
+        except (ValueError, TypeError, AttributeError):
+            return {}
+
         client = get_clickhouse_client()
         query = (
-            f"SELECT source, count() as total, "
-            f"       countIf(sentiment = 'positive') as pos, "
-            f"       countIf(sentiment = 'negative') as neg, "
-            f"       argMax(text, like_count) FILTER (WHERE sentiment = 'positive') as top_pos, "
-            f"       argMax(text, like_count) FILTER (WHERE sentiment = 'negative') as top_neg "
-            f"FROM studio_oracle.audience_comments "
-            f"WHERE content_id = '{content_id}' "
-            f"GROUP BY source"
+            "SELECT source, count() as total, "
+            "       countIf(sentiment = 'positive') as pos, "
+            "       countIf(sentiment = 'negative') as neg, "
+            "       argMax(text, like_count) FILTER (WHERE sentiment = 'positive') as top_pos, "
+            "       argMax(text, like_count) FILTER (WHERE sentiment = 'negative') as top_neg "
+            "FROM studio_oracle.audience_comments "
+            "WHERE content_id = {cid:UUID} "
+            "GROUP BY source"
         )
         try:
-            rows = client.query(query).result_rows
+            rows = client.query(query, parameters={"cid": cid_uuid}).result_rows
         except Exception:
             rows = []
 
@@ -297,15 +320,20 @@ class CampaignService:
 
     @staticmethod
     def get_drops(content_id: str) -> List[Dict[str, Any]]:
+        try:
+            cid_uuid = uuid.UUID(str(content_id))
+        except (ValueError, TypeError, AttributeError):
+            return []
+
         client = get_clickhouse_client()
-        posts_query = f"""
+        posts_query = """
         SELECT post_id, title, url, published_at
         FROM studio_oracle.audience_posts
-        WHERE content_id = '{content_id}'
+        WHERE content_id = {cid:UUID}
         ORDER BY published_at ASC
         """
         try:
-            posts = client.query(posts_query).result_rows
+            posts = client.query(posts_query, parameters={"cid": cid_uuid}).result_rows
         except Exception:
             posts = []
 
@@ -319,17 +347,17 @@ class CampaignService:
             url = str(p[2])
             pub_date = str(p[3])[:10] if p[3] else "Drop"
 
-            comm_query = f"""
+            comm_query = """
             SELECT 
                 count() as total,
                 countIf(sentiment = 'positive') as pos,
                 countIf(sentiment = 'negative') as neg,
                 argMax(text, like_count) FILTER (WHERE sentiment = 'positive') as top_comment
             FROM studio_oracle.audience_comments
-            WHERE content_id = '{content_id}' AND post_id = '{post_id}'
+            WHERE content_id = {cid:UUID} AND post_id = {pid:String}
             """
             try:
-                c_res = client.query(comm_query).result_rows
+                c_res = client.query(comm_query, parameters={"cid": cid_uuid, "pid": post_id}).result_rows
                 if c_res and c_res[0][0] > 0:
                     tot = c_res[0][0]
                     pos = c_res[0][1]
@@ -351,30 +379,34 @@ class CampaignService:
 
     @staticmethod
     def get_timeline(content_id: str) -> List[Dict[str, Any]]:
-        client = get_clickhouse_client()
-        timeline_query = (
-            f"SELECT date_grp, topic, total, pos, neg, top_text FROM ("
-            f"    SELECT toStartOfDay(published_at) as date_grp, topic, count() as total, "
-            f"           countIf(topic_sentiments[topic] = 'positive') as pos, "
-            f"           countIf(topic_sentiments[topic] = 'negative') as neg, "
-            f"           argMax(text, like_count) as top_text "
-            f"    FROM studio_oracle.audience_comments "
-            f"    ARRAY JOIN topics AS topic "
-            f"    WHERE content_id = '{content_id}' "
-            f"    GROUP BY date_grp, topic "
-            f"    ORDER BY date_grp ASC, total DESC"
-            f") LIMIT 1 BY date_grp"
-        )
         try:
-            rows = client.query(timeline_query).result_rows
+            cid_uuid = uuid.UUID(str(content_id))
+        except (ValueError, TypeError, AttributeError):
+            return []
+
+        client = get_clickhouse_client()
+        timeline_query = """
+        SELECT 
+            toStartOfDay(published_at) as date_grp,
+            count() as total_comments,
+            countIf(sentiment = 'positive') as pos_comments,
+            countIf(sentiment = 'negative') as neg_comments,
+            argMax(text, like_count) as top_text
+        FROM studio_oracle.audience_comments
+        WHERE content_id = {cid:UUID}
+        GROUP BY date_grp
+        ORDER BY date_grp ASC
+        """
+        try:
+            rows = client.query(timeline_query, parameters={"cid": cid_uuid}).result_rows
             return [
                 {
                     "date": str(r[0])[:10],
-                    "dominantTopic": str(r[1]),
-                    "totalComments": int(r[2]),
-                    "posPercent": round((int(r[3]) / int(r[2])) * 100) if int(r[2]) > 0 else 0,
-                    "negPercent": round((int(r[4]) / int(r[2])) * 100) if int(r[2]) > 0 else 0,
-                    "topComment": str(r[5] or "")
+                    "dominantTopic": "general",
+                    "totalComments": int(r[1]),
+                    "posPercent": round((int(r[2]) / int(r[1])) * 100) if int(r[1]) > 0 else 0,
+                    "negPercent": round((int(r[3]) / int(r[1])) * 100) if int(r[1]) > 0 else 0,
+                    "topComment": str(r[4] or "")
                 } for r in rows
             ]
         except Exception:

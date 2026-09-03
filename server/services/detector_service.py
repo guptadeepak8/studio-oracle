@@ -1,10 +1,10 @@
+import uuid
 from typing import Dict, Any, List
 from core.database import get_clickhouse_client
 
 class DetectorService:
     @staticmethod
     def detect_campaign_signals(content_id: str) -> Dict[str, Any]:
-        client = get_clickhouse_client()
         signals = {
             "content_id": content_id,
             "total_comments": 0,
@@ -18,17 +18,24 @@ class DetectorService:
             "sample_evidence": []
         }
 
-        sent_query = f"""
+        try:
+            cid_uuid = uuid.UUID(str(content_id))
+        except (ValueError, TypeError, AttributeError):
+            return signals
+
+        client = get_clickhouse_client()
+
+        sent_query = """
         SELECT 
             count() as total,
             countIf(sentiment = 'positive') as pos,
             countIf(sentiment = 'negative') as neg,
             countIf(sentiment = 'neutral') as neu
         FROM studio_oracle.audience_comments
-        WHERE content_id = '{content_id}'
+        WHERE content_id = {cid:UUID}
         """
         try:
-            sent_res = client.query(sent_query).result_rows
+            sent_res = client.query(sent_query, parameters={"cid": cid_uuid}).result_rows
             if sent_res and sent_res[0][0] > 0:
                 tot, pos, neg, neu = sent_res[0]
                 signals["total_comments"] = tot
@@ -42,18 +49,18 @@ class DetectorService:
         if signals["total_comments"] == 0:
             return signals
 
-        plat_query = f"""
+        plat_query = """
         SELECT 
             source,
             count() as total,
             countIf(sentiment = 'positive') as pos,
             countIf(sentiment = 'negative') as neg
         FROM studio_oracle.audience_comments
-        WHERE content_id = '{content_id}'
+        WHERE content_id = {cid:UUID}
         GROUP BY source
         """
         try:
-            plat_res = client.query(plat_query).result_rows
+            plat_res = client.query(plat_query, parameters={"cid": cid_uuid}).result_rows
             for r in plat_res:
                 src, t, p, n = r[0], r[1], r[2], r[3]
                 signals["platform_split"][src] = {
@@ -64,7 +71,7 @@ class DetectorService:
         except Exception:
             pass
 
-        topic_query = f"""
+        topic_query = """
         SELECT 
             topic,
             count() as total,
@@ -72,14 +79,14 @@ class DetectorService:
             countIf(topic_sentiments[topic] = 'negative') as neg
         FROM studio_oracle.audience_comments
         ARRAY JOIN topics AS topic
-        WHERE content_id = '{content_id}'
+        WHERE content_id = {cid:UUID}
         GROUP BY topic
         HAVING total >= 3
         ORDER BY total DESC
         LIMIT 10
         """
         try:
-            topic_res = client.query(topic_query).result_rows
+            topic_res = client.query(topic_query, parameters={"cid": cid_uuid}).result_rows
             for r in topic_res:
                 top_name, t, p, n = str(r[0]), int(r[1]), int(r[2]), int(r[3])
                 p_pct = round((p / t) * 100) if t > 0 else 0
@@ -104,16 +111,16 @@ class DetectorService:
         except Exception:
             pass
 
-        sample_query = f"""
+        sample_query = """
         SELECT 
             comment_id, source, author, text, sentiment, topics, confidence, published_at
         FROM studio_oracle.audience_comments
-        WHERE content_id = '{content_id}'
+        WHERE content_id = {cid:UUID}
         ORDER BY like_count DESC, published_at DESC
         LIMIT 6
         """
         try:
-            sample_res = client.query(sample_query).result_rows
+            sample_res = client.query(sample_query, parameters={"cid": cid_uuid}).result_rows
             for r in sample_res:
                 signals["sample_evidence"].append({
                     "comment_id": str(r[0]),

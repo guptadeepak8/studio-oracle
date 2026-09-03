@@ -72,6 +72,19 @@ export interface EvidenceBreakdown {
   sample_evidence?: EvidenceReference[];
 }
 
+export interface HashtagGroup {
+  category: string;
+  description: string;
+  tags: string[];
+}
+
+export interface MarketingBlueprint {
+  genre_archetype: string;
+  historical_benchmark_comparables: string[];
+  target_channels: string[];
+  hashtag_groups: HashtagGroup[];
+}
+
 export interface DecisionArtifact {
   id: string;
   campaign_id: string;
@@ -87,6 +100,7 @@ export interface DecisionArtifact {
   confidence_score: number;
   confidence_rating: ConfidenceRating;
   why: string[];
+  blueprint?: MarketingBlueprint;
   created_at: string;
 }
 
@@ -97,4 +111,6 @@ export interface CampaignDecisionsResponse {
   agent_status: string;
   last_investigation: string;
   decisions: DecisionArtifact[];
+  blueprint?: MarketingBlueprint;
 }
+

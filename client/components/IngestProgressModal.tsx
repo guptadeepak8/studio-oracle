@@ -81,24 +81,19 @@ export default function IngestProgressModal({
 
         {/* Animation & Step Progress */}
         <div className="p-6 space-y-6">
-          {/* Animated Waveform Visualizer */}
+          {/* Progress Visualizer */}
           <div className="bg-[#121214] border border-[#232326] rounded-xl p-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="flex items-end gap-1 h-6">
-                <span className="w-1 bg-red-500 rounded-full animate-[bounce_0.8s_ease-in-out_infinite_0.1s] h-4" />
-                <span className="w-1 bg-indigo-500 rounded-full animate-[bounce_0.8s_ease-in-out_infinite_0.3s] h-6" />
-                <span className="w-1 bg-[#38bdf8] rounded-full animate-[bounce_0.8s_ease-in-out_infinite_0.2s] h-3" />
-                <span className="w-1 bg-[#4ade80] rounded-full animate-[bounce_0.8s_ease-in-out_infinite_0.4s] h-5" />
-              </div>
+              <div className="h-2 w-2 rounded-full bg-indigo-500 animate-ping" />
               <div className="space-y-0.5">
-                <span className="text-xs font-bold text-zinc-200 block">
+                <span className="text-xs font-semibold text-zinc-200 block">
                   {currentStep === 1 && "Connecting to YouTube Data API v3..."}
-                  {currentStep === 2 && "Gemini 2.5 Batch Classification Active..."}
-                  {currentStep === 3 && "Vectorizing Records into ClickHouse Cloud..."}
-                  {currentStep === 4 && "Telemetry Synchronized Successfully!"}
+                  {currentStep === 2 && "Running Gemini Multi-Threaded Batch Classification..."}
+                  {currentStep === 3 && "Writing Columnar Records to ClickHouse Cloud..."}
+                  {currentStep === 4 && "Campaign Telemetry Synchronized"}
                 </span>
-                <span className="text-[11px] text-zinc-500 font-mono">
-                  {commentsCount > 0 ? `${commentsCount} comments processed in real-time` : "Scanning trailer comment threads..."}
+                <span className="text-[11px] text-zinc-400 font-mono">
+                  {commentsCount > 0 ? `${commentsCount} comments indexed` : "Extracting trailer comment threads..."}
                 </span>
               </div>
             </div>
@@ -106,7 +101,7 @@ export default function IngestProgressModal({
             {currentStep < 4 ? (
               <Loader2 className="h-5 w-5 text-indigo-400 animate-spin shrink-0" />
             ) : (
-              <CheckCircle2 className="h-5 w-5 text-[#4ade80] shrink-0" />
+              <CheckCircle2 className="h-5 w-5 text-emerald-400 shrink-0" />
             )}
           </div>
 
@@ -134,7 +129,7 @@ export default function IngestProgressModal({
               </div>
               <div className="space-y-0.5">
                 <span className="text-xs font-bold text-zinc-200 block">
-                  Gemini 2.5 Structured Batch Analysis
+                  Gemini 2.5 Flash Batch Analysis
                 </span>
                 <p className="text-[11px] text-zinc-400">
                   Extracting sentiment polarity, friction topics (#pacing, #vfx), and confidence scores.
