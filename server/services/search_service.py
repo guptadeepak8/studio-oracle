@@ -40,13 +40,20 @@ class GoogleSearchService:
         client = get_clickhouse_client()
 
         try:
-            ai_client = genai.Client()
+            api_key = os.getenv("GEMINI_API_KEY")
+            ai_client = genai.Client(api_key=api_key) if api_key else genai.Client()
             prompt = (
-                f"Perform a live Google Search on: '{search_term}'. "
-                f"Extract 6 to 10 distinct critical reviews, industry press reactions, and box office tracking reports "
-                f"(from outlets like Variety, Deadline, The Hollywood Reporter, Rotten Tomatoes, BoxOfficePro, Entertainment Weekly). "
-                f"For each article, extract the headline, domain, url, sentiment (positive/negative/neutral), "
-                f"key takeaway summary, and 2-3 specific topics."
+                f"Search Google for: '{search_term}'. "
+                f"Extract 6 to 10 distinct critical reviews, trade press reactions, and box office tracking reports "
+                f"(e.g. from outlets like Variety, Deadline, The Hollywood Reporter, Rotten Tomatoes, BoxOfficePro, ScreenRant). "
+                f"Output ONLY a valid JSON array of objects with the following schema for each article:\n"
+                f"- headline (string): Article headline or news takeaway\n"
+                f"- source_domain (string): Domain name e.g. variety.com, deadline.com, rottentomatoes.com\n"
+                f"- url (string): URL or search link\n"
+                f"- sentiment (string): 'positive', 'negative', or 'neutral'\n"
+                f"- key_takeaway (string): One sentence summary of critical reception or trade consensus\n"
+                f"- topics (list of strings): 2-3 specific tags e.g. ['box_office', 'reviews', 'casting']\n"
+                f"Wrap the JSON in ```json and ```. Do not include any explanations outside the JSON."
             )
 
             response = ai_client.models.generate_content(
@@ -54,18 +61,21 @@ class GoogleSearchService:
                 contents=prompt,
                 config=types.GenerateContentConfig(
                     tools=[types.Tool(google_search=types.GoogleSearch())],
-                    response_mime_type="application/json",
-                    response_schema=GoogleSearchGroundingBatch,
                     system_instruction=(
                         "You are an entertainment market research analyst. Synthesize grounded Google Search results "
-                        "into structured press and industry intelligence records."
+                        "into structured press and industry intelligence records as a valid JSON array."
                     )
                 )
             )
 
             import json
-            data = json.loads(response.text)
-            articles = data.get("articles", [])
+            import re
+            text = response.text.strip() if response.text else ""
+            match = re.search(r'\[\s*\{.*\}\s*\]', text, re.DOTALL)
+            raw_json = match.group(0) if match else text
+            articles = json.loads(raw_json)
+            if not isinstance(articles, list):
+                articles = []
         except Exception as e:
             print(f"Notice during Google Search Grounding: {e}")
             return {
@@ -122,7 +132,17 @@ class GoogleSearchService:
                 ]
             )
 
+        CampaignService.recalculate_and_store_analytics(content_id)
         invalidate_cache(content_id)
+
+        try:
+            from core.pubsub import publish_campaign_event_sync
+            publish_campaign_event_sync(str(content_id), "INGESTION_COMPLETED", {
+                "source": "google_search",
+                "ingested_insights": len(comment_rows)
+            })
+        except Exception:
+            pass
 
         return {
             "status": "success",

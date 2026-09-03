@@ -36,6 +36,10 @@ def create_campaign(request: CampaignCreateRequest, background_tasks: Background
             vol = min(max(request.initial_volume or 1000, 100), 2500)
             background_tasks.add_task(ingest_youtube_data, content_id, initial_query, limit=3, max_comments_per_video=vol)
 
+        # Ingest live Google Search Press Grounding alongside YouTube
+        from services.search_service import GoogleSearchService
+        background_tasks.add_task(GoogleSearchService.search_and_ground_campaign, content_id)
+
         return {
             "status": "success",
             "content_id": content_id,
