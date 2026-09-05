@@ -31,7 +31,6 @@ export default function Sidebar() {
   
   const currentCampaign = campaigns.find((c) => c.content_id === currentCampaignId) || campaigns[0];
   const currentTab = searchParams.get("tab") || "overview";
-
   return (
     <div className="w-64 bg-[#141416] border-r border-[#202023] flex flex-col h-screen shrink-0 text-sm font-sans select-none text-zinc-300">
       {/* Top Header */}
@@ -47,8 +46,9 @@ export default function Sidebar() {
 
       {/* Main Nav Items */}
       <div className="flex-1 overflow-y-auto p-3 space-y-6">
-        {/* Section: Campaign Intelligence */}
-        <div className="space-y-1">
+        {
+          campaigns.length > 0 && 
+           <div className="space-y-1">
           <span className="text-[11px] font-semibold text-zinc-500 px-3 uppercase tracking-wider block mb-1">
             Intelligence
           </span>
@@ -78,6 +78,8 @@ export default function Sidebar() {
             );
           })}
         </div>
+        }
+       
 
         {/* Section: Campaigns List */}
         <div className="space-y-1.5">

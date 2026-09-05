@@ -6,7 +6,20 @@ from datetime import datetime
 
 # In-memory subscriber registry: campaign_id -> Set[asyncio.Queue]
 _subscribers: Dict[str, Set[asyncio.Queue]] = {}
-_lock = asyncio.Lock()
+_main_loop: asyncio.AbstractEventLoop | None = None
+
+def set_main_loop(loop: asyncio.AbstractEventLoop) -> None:
+    global _main_loop
+    _main_loop = loop
+
+def get_main_loop() -> asyncio.AbstractEventLoop | None:
+    global _main_loop
+    if _main_loop and _main_loop.is_running():
+        return _main_loop
+    try:
+        return asyncio.get_running_loop()
+    except RuntimeError:
+        return None
 
 async def publish_campaign_event(campaign_id: str, event_type: str, data: Dict[str, Any] | None = None) -> None:
     """
@@ -23,21 +36,22 @@ async def publish_campaign_event(campaign_id: str, event_type: str, data: Dict[s
         "data": data
     }
     
-    # 1. Deliver to in-memory SSE subscribers
     cid = str(campaign_id)
-    async with _lock:
-        queues = _subscribers.get(cid, set()).copy()
-        # Also broadcast to global subscribers (e.g. all-campaigns overview)
-        global_queues = _subscribers.get("*", set()).copy()
-        target_queues = queues.union(global_queues)
+    queues = _subscribers.get(cid, set()).copy()
+    global_queues = _subscribers.get("*", set()).copy()
+    target_queues = queues.union(global_queues)
 
+    loop = get_main_loop()
     for q in target_queues:
         try:
-            q.put_nowait(payload)
+            if loop and loop.is_running():
+                loop.call_soon_threadsafe(q.put_nowait, payload)
+            else:
+                q.put_nowait(payload)
         except Exception:
             pass
 
-    # 2. Publish to Redis if configured
+    # Publish to Redis if configured
     redis_url = os.getenv("REDIS_URL")
     if redis_url:
         try:
@@ -49,15 +63,11 @@ async def publish_campaign_event(campaign_id: str, event_type: str, data: Dict[s
             print(f"Redis publish warning: {e}")
 
 def publish_campaign_event_sync(campaign_id: str, event_type: str, data: Dict[str, Any] | None = None) -> None:
-    """Synchronous wrapper for publishing from background threads or workers."""
-    try:
-        loop = asyncio.get_event_loop()
-        if loop.is_running():
-            asyncio.run_coroutine_threadsafe(publish_campaign_event(campaign_id, event_type, data), loop)
-        else:
-            loop.run_until_complete(publish_campaign_event(campaign_id, event_type, data))
-    except RuntimeError:
-        # If called in a thread without a loop:
+    """Synchronous thread-safe wrapper for publishing from background threads or workers."""
+    loop = get_main_loop()
+    if loop and loop.is_running():
+        asyncio.run_coroutine_threadsafe(publish_campaign_event(campaign_id, event_type, data), loop)
+    else:
         try:
             new_loop = asyncio.new_event_loop()
             new_loop.run_until_complete(publish_campaign_event(campaign_id, event_type, data))
@@ -69,13 +79,18 @@ async def subscribe_campaign_events(campaign_id: str) -> AsyncGenerator[Dict[str
     """
     Subscribe to live events for a campaign. Yields event payloads as they arrive.
     """
+    global _main_loop
+    try:
+        _main_loop = asyncio.get_running_loop()
+    except RuntimeError:
+        pass
+
     cid = str(campaign_id)
     queue: asyncio.Queue = asyncio.Queue(maxsize=100)
     
-    async with _lock:
-        if cid not in _subscribers:
-            _subscribers[cid] = set()
-        _subscribers[cid].add(queue)
+    if cid not in _subscribers:
+        _subscribers[cid] = set()
+    _subscribers[cid].add(queue)
 
     try:
         while True:
@@ -92,9 +107,8 @@ async def subscribe_campaign_events(campaign_id: str) -> AsyncGenerator[Dict[str
                     "data": {"status": "alive"}
                 }
     finally:
-        async with _lock:
-            if cid in _subscribers:
-                _subscribers[cid].discard(queue)
-                if not _subscribers[cid]:
-                    _subscribers.pop(cid, None)
+        if cid in _subscribers:
+            _subscribers[cid].discard(queue)
+            if not _subscribers[cid]:
+                _subscribers.pop(cid, None)
 

@@ -14,7 +14,6 @@ export function useCampaignsQuery() {
     queryKey: CAMPAIGNS_QUERY_KEY,
     queryFn: () => apiRequest<Movie[]>(API_ENDPOINTS.MOVIES, { suppressErrorToast: true }),
     staleTime: 1000 * 60 * 2, // 2 minutes stale time
-    refetchOnWindowFocus: true,
   });
 }
 

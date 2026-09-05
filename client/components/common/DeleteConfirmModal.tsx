@@ -41,7 +41,7 @@ export default function DeleteConfirmModal({
         </div>
 
         <p className="text-sm text-zinc-300 leading-relaxed font-sans">
-          Are you sure you want to delete <strong className="text-white font-bold">{title}</strong>? This will permanently delete the campaign record and purge all collected audience comments and telemetry from ClickHouse.
+          Are you sure you want to delete <strong className="text-white font-bold">{title}</strong>?
         </p>
 
         <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#28282b]">
