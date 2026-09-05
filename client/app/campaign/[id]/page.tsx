@@ -264,7 +264,6 @@ function CampaignWorkspaceInner() {
 
             <MarketingDirectives
               campaign={campaign}
-              drops={drops}
               decisionsResponse={decisionsData}
               isLoadingDecisions={isLoadingDecisions}
               isInvestigating={isInvestigating}
