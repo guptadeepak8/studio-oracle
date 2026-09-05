@@ -11,8 +11,8 @@ interface Props {
 export default function ChannelBudgetAllocator({ budgetShifts }: Props) {
   if (!budgetShifts || budgetShifts.length === 0) {
     return (
-      <div className="bg-[#141416] border border-[#242428] rounded-xl p-6 text-center text-zinc-400 text-sm">
-        <DollarSign className="h-8 w-8 mx-auto mb-2 text-zinc-500 opacity-60" />
+      <div className="bg-zinc-900/40 border border-zinc-800/80 rounded-xl p-8 text-center text-zinc-500 text-xs">
+        <DollarSign className="h-6 w-6 mx-auto mb-2 text-zinc-600 opacity-60" />
         <p>No media budget guidance generated yet. Sync reactions to calculate channel spend shifts.</p>
       </div>
     );
@@ -21,7 +21,7 @@ export default function ChannelBudgetAllocator({ budgetShifts }: Props) {
   const getActionBadge = (action: string) => {
     if (action.includes("OVER-INDEX") || action.includes("+")) {
       return (
-        <span className="flex items-center gap-1 text-[11px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-1 rounded-md">
+        <span className="flex items-center gap-1 text-[10px] font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-md">
           <TrendingUp className="h-3 w-3" />
           {action}
         </span>
@@ -29,34 +29,41 @@ export default function ChannelBudgetAllocator({ budgetShifts }: Props) {
     }
     if (action.includes("REDUCE") || action.includes("-")) {
       return (
-        <span className="flex items-center gap-1 text-[11px] font-bold text-red-400 bg-red-500/10 border border-red-500/30 px-2.5 py-1 rounded-md">
+        <span className="flex items-center gap-1 text-[10px] font-semibold text-rose-400 bg-rose-500/10 border border-rose-500/20 px-2 py-0.5 rounded-md">
           <TrendingDown className="h-3 w-3" />
           {action}
         </span>
       );
     }
     return (
-      <span className="flex items-center gap-1 text-[11px] font-bold text-indigo-400 bg-indigo-500/10 border border-indigo-500/30 px-2.5 py-1 rounded-md">
+      <span className="flex items-center gap-1 text-[10px] font-semibold text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-2 py-0.5 rounded-md">
         <Minus className="h-3 w-3" />
         {action}
       </span>
     );
   };
 
+  const channelColors = [
+    "bg-indigo-500",
+    "bg-emerald-500",
+    "bg-purple-500",
+    "bg-zinc-500",
+  ];
+
   return (
-    <div className="bg-[#141416] border border-[#242428] rounded-2xl p-6 space-y-6">
+    <div className="bg-zinc-900/40 border border-zinc-800/80 rounded-xl p-5 space-y-5">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#242428] pb-4">
-        <div className="space-y-1">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-800/60 pb-3.5">
+        <div className="space-y-0.5">
           <div className="flex items-center gap-2">
-            <span className="p-1.5 rounded-lg bg-blue-500/10 border border-blue-500/30 text-blue-400">
-              <PieChart className="h-4 w-4" />
+            <span className="p-1 rounded-md bg-blue-500/10 border border-blue-500/20 text-blue-400">
+              <PieChart className="h-3.5 w-3.5" />
             </span>
-            <h3 className="text-base font-bold text-zinc-100">
-              Dynamic Paid Media Budget Allocator
+            <h3 className="text-sm font-semibold text-zinc-100">
+              Paid Media Budget Allocator
             </h3>
           </div>
-          <p className="text-xs text-zinc-400">
+          <p className="text-[11px] text-zinc-500">
             Channel re-allocation percentages derived from audience conversion velocity and platform sentiment.
           </p>
         </div>
@@ -65,62 +72,70 @@ export default function ChannelBudgetAllocator({ budgetShifts }: Props) {
       {/* Visual Allocation Stacked Bar */}
       <div className="space-y-2">
         <div className="flex items-center justify-between text-xs text-zinc-400">
-          <span className="font-bold text-[11px] uppercase tracking-wider text-zinc-400">
-            Recommended Media Spend Split
+          <span className="font-semibold text-[10px] uppercase tracking-wider text-zinc-500">
+            Recommended Spend Distribution
           </span>
-          <span className="font-mono text-[11px] text-zinc-400">100% Target Allocation</span>
+          <span className="font-mono text-[11px] text-zinc-500">100% Target Pool</span>
         </div>
 
-        <div className="h-4 w-full rounded-lg overflow-hidden flex bg-zinc-800 p-0.5 gap-0.5">
+        <div className="h-3 w-full rounded-full overflow-hidden flex bg-zinc-950 p-0.5 gap-0.5 border border-zinc-800/80">
           {budgetShifts.map((b, idx) => {
-            const colors = [
-              "bg-indigo-500",
-              "bg-emerald-500",
-              "bg-purple-500",
-              "bg-zinc-600",
-            ];
-            const color = colors[idx % colors.length];
+            const color = channelColors[idx % channelColors.length];
             return (
               <div
                 key={idx}
                 style={{ width: `${b.recommended_allocation_pct}%` }}
                 title={`${b.channel}: ${b.recommended_allocation_pct}%`}
-                className={`${color} h-full rounded transition-all hover:opacity-90`}
+                className={`${color} h-full rounded-full transition-all hover:opacity-90`}
               />
+            );
+          })}
+        </div>
+
+        {/* Legend */}
+        <div className="flex flex-wrap gap-3 pt-1">
+          {budgetShifts.map((b, idx) => {
+            const color = channelColors[idx % channelColors.length];
+            return (
+              <div key={idx} className="flex items-center gap-1.5 text-[11px] text-zinc-400">
+                <span className={`w-2 h-2 rounded-full ${color}`} />
+                <span>{b.channel}:</span>
+                <span className="font-mono font-medium text-zinc-200">{b.recommended_allocation_pct}%</span>
+              </div>
             );
           })}
         </div>
       </div>
 
       {/* Channel Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
         {budgetShifts.map((shift, idx) => (
           <div
             key={idx}
-            className="bg-[#18181b] border border-[#28282b] rounded-xl p-4.5 space-y-3"
+            className="bg-zinc-950/60 border border-zinc-800/80 rounded-xl p-4 space-y-3"
           >
             <div className="flex items-center justify-between">
-              <span className="font-bold text-sm text-zinc-100">{shift.channel}</span>
+              <span className="font-semibold text-xs text-zinc-200">{shift.channel}</span>
               {getActionBadge(shift.spend_action)}
             </div>
 
             {/* Percentage Comparison */}
-            <div className="flex items-center gap-4 bg-[#121214] p-3 rounded-lg border border-[#232326] text-xs">
+            <div className="flex items-center gap-3 bg-zinc-900/60 p-2.5 rounded-lg border border-zinc-800/60 text-xs">
               <div>
-                <span className="text-[10px] uppercase font-bold text-zinc-500 block">Current Allocation</span>
-                <span className="font-mono text-sm text-zinc-400 font-semibold">{shift.current_allocation_pct}%</span>
+                <span className="text-[10px] uppercase font-semibold text-zinc-500 block">Current</span>
+                <span className="font-mono text-xs text-zinc-400 font-medium">{shift.current_allocation_pct}%</span>
               </div>
               <span className="text-zinc-600 font-bold">→</span>
               <div>
-                <span className="text-[10px] uppercase font-bold text-indigo-400 block">Recommended</span>
-                <span className="font-mono text-sm text-indigo-300 font-bold">{shift.recommended_allocation_pct}%</span>
+                <span className="text-[10px] uppercase font-semibold text-indigo-400 block">Recommended</span>
+                <span className="font-mono text-xs text-indigo-300 font-semibold">{shift.recommended_allocation_pct}%</span>
               </div>
             </div>
 
             {/* Rationale */}
-            <div className="space-y-1 text-xs">
-              <span className="text-[10px] uppercase font-bold text-zinc-500 block">Media Buying Rationale</span>
-              <p className="text-zinc-300 leading-relaxed">
+            <div className="space-y-0.5 text-xs">
+              <span className="text-[10px] uppercase font-semibold text-zinc-500 block">Buying Rationale</span>
+              <p className="text-zinc-300 text-xs leading-relaxed">
                 {shift.rationale}
               </p>
             </div>
