@@ -20,6 +20,16 @@ interface PlatformComparisonProps {
   isSearching?: boolean;
 }
 
+function decodeHtml(html: string) {
+  if (!html) return "";
+  return html
+    .replace(/&#39;/g, "'")
+    .replace(/&quot;/g, '"')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>');
+}
+
 export default function PlatformComparison({
   platforms = {},
   dominantTopic,
@@ -57,6 +67,9 @@ export default function PlatformComparison({
     }
   }
 
+  const audienceQuote = decodeHtml(audience.topPositive || audience.topNegative);
+  const criticQuote = decodeHtml(critics.topPositive || critics.topNegative);
+
   return (
     <CollapsibleSection
       title="Audience vs. Critics"
@@ -80,9 +93,9 @@ export default function PlatformComparison({
               </Badge>
             </div>
 
-            {hasAudience && audience.topPositive ? (
+            {hasAudience && audienceQuote ? (
               <p className="text-sm text-zinc-200 leading-relaxed italic border-l-2 border-[#4ade80] pl-3 py-1 line-clamp-3">
-                &ldquo;{audience.topPositive}&rdquo;
+                &ldquo;{audienceQuote}&rdquo;
               </p>
             ) : (
               <p className="text-sm text-zinc-500 italic py-2">
@@ -114,9 +127,9 @@ export default function PlatformComparison({
               </Badge>
             </div>
 
-            {hasCritics && (critics.topPositive || critics.topNegative) ? (
+            {hasCritics && criticQuote ? (
               <p className="text-sm text-zinc-200 leading-relaxed italic border-l-2 border-[#38bdf8] pl-3 py-1 line-clamp-3">
-                &ldquo;{critics.topPositive || critics.topNegative}&rdquo;
+                &ldquo;{criticQuote}&rdquo;
               </p>
             ) : (
               <div className="py-1 space-y-2">
