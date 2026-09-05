@@ -46,6 +46,45 @@ class MarketingBlueprint(BaseModel):
     target_channels: List[str] = []
     hashtag_groups: List[HashtagGroup] = []
 
+class VideoScriptBeat(BaseModel):
+    timestamp_range: str
+    beat_type: str
+    visual_direction: str
+    on_screen_text: str
+    audio_voiceover: str
+
+class VideoCutdownScript(BaseModel):
+    id: str
+    format: str
+    target_channel: str
+    headline_objective: str
+    beats: List[VideoScriptBeat] = []
+    music_track_directive: str
+    call_to_action: str
+
+class AdCreativeVariant(BaseModel):
+    platform: str
+    placement: str
+    primary_headline: str
+    body_copy: str
+    target_demographics: str
+    recommended_hashtags: List[str] = []
+    call_to_action: str
+
+class CreatorBriefing(BaseModel):
+    campaign_phase: str
+    core_talking_points: List[str] = []
+    creative_angles: List[str] = []
+    critical_donts: List[str] = []
+    recommended_audio_track: Optional[str] = None
+
+class ChannelBudgetGuidance(BaseModel):
+    channel: str
+    current_allocation_pct: int
+    recommended_allocation_pct: int
+    spend_action: str
+    rationale: str
+
 class DecisionArtifact(BaseModel):
     id: str
     campaign_id: str
@@ -62,6 +101,10 @@ class DecisionArtifact(BaseModel):
     confidence_rating: ConfidenceRating = ConfidenceRating.HIGH
     why: List[str] = []
     blueprint: Optional[MarketingBlueprint] = None
+    video_scripts: List[VideoCutdownScript] = []
+    ad_variants: List[AdCreativeVariant] = []
+    creator_brief: Optional[CreatorBriefing] = None
+    budget_shifts: List[ChannelBudgetGuidance] = []
     created_at: str
 
 class CampaignDecisionsResponse(BaseModel):
@@ -72,5 +115,10 @@ class CampaignDecisionsResponse(BaseModel):
     last_investigation: str
     decisions: List[DecisionArtifact]
     blueprint: Optional[MarketingBlueprint] = None
+    video_scripts: List[VideoCutdownScript] = []
+    ad_variants: List[AdCreativeVariant] = []
+    creator_brief: Optional[CreatorBriefing] = None
+    budget_shifts: List[ChannelBudgetGuidance] = []
+
 
 

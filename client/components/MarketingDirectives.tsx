@@ -29,6 +29,11 @@ import TrailerComparison, { DropItem } from "./TrailerComparison";
 import EvidenceDrawer from "./EvidenceDrawer";
 import { Card, Badge, Button } from "./ui";
 
+import AutonomousVideoScripts from "./AutonomousVideoScripts";
+import AutonomousAdSuite from "./AutonomousAdSuite";
+import CreatorBriefingKit from "./CreatorBriefingKit";
+import ChannelBudgetAllocator from "./ChannelBudgetAllocator";
+
 interface MarketingDirectivesProps {
   campaign: Movie;
   decisionsResponse: CampaignDecisionsResponse | null;
@@ -46,6 +51,7 @@ export default function MarketingDirectives({
   isInvestigating = false,
   drops = [],
 }: MarketingDirectivesProps) {
+  const [activeTab, setActiveTab] = useState<"all" | "scripts" | "ads" | "creator" | "budget">("all");
   const [copiedIndex, setCopiedIndex] = useState<string | null>(null);
   const [copiedGroup, setCopiedGroup] = useState<string | null>(null);
   const [copiedTag, setCopiedTag] = useState<string | null>(null);
@@ -55,6 +61,10 @@ export default function MarketingDirectives({
 
   const decisions: DecisionArtifact[] = decisionsResponse?.decisions || [];
   const blueprint = decisionsResponse?.blueprint;
+  const videoScripts = decisionsResponse?.video_scripts || [];
+  const adVariants = decisionsResponse?.ad_variants || [];
+  const creatorBrief = decisionsResponse?.creator_brief;
+  const budgetShifts = decisionsResponse?.budget_shifts || [];
 
   const handleCopyDraft = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
@@ -96,8 +106,8 @@ export default function MarketingDirectives({
         />
       )}
 
-      {/* 2. Marketing Recommendations Directives */}
-      <div className="space-y-5">
+      {/* 2. Autonomous Deliverables Command Hub */}
+      <div className="space-y-6">
         <div className="flex items-center justify-between flex-wrap gap-4 border-b border-[#28282b] pb-4">
           <div>
             <div className="flex items-center gap-2.5 mb-1">
@@ -105,18 +115,18 @@ export default function MarketingDirectives({
                 <Sparkles className="h-4 w-4" />
               </div>
               <h2 className="font-bold text-lg text-zinc-100 tracking-tight">
-                Marketing Recommendations
+                Autonomous Marketing Deliverables
               </h2>
             </div>
             <p className="text-sm text-zinc-400">
-              Actionable recommendations based on audience feedback for{" "}
+              Autonomous production scripts, cross-platform ad suites, and media spend guidance for{" "}
               <strong className="text-zinc-200">{campaign.title}</strong>.
             </p>
           </div>
 
           <div className="flex items-center gap-3">
             <Badge variant="active" pulsing>
-              {decisionsResponse?.agent_status || "Live Tracking Active"}
+              {decisionsResponse?.agent_status || "Autonomous Engine Active"}
             </Badge>
 
             {onTriggerInvestigation && (
@@ -128,18 +138,63 @@ export default function MarketingDirectives({
                 disabled={isInvestigating}
                 leftIcon={<RefreshCw className="h-3.5 w-3.5" />}
               >
-                {isInvestigating ? "Analyzing Comments..." : "Re-analyze Comments"}
+                {isInvestigating ? "Synthesizing Directives..." : "Re-Synthesize Campaign"}
               </Button>
             )}
           </div>
         </div>
+
+        {/* Deliverable Sub-Navigation Tabs */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1">
+          {[
+            { id: "all", label: "All Directives & Assets", icon: Layers },
+            { id: "scripts", label: "Video Cutdown Scripts", icon: Video },
+            { id: "ads", label: "1-Click Ad Suite", icon: Target },
+            { id: "creator", label: "Creator & PR Brief", icon: Share2 },
+            { id: "budget", label: "Media Budget Split", icon: TrendingUp },
+          ].map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as any)}
+                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition cursor-pointer ${
+                  isActive
+                    ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/20"
+                    : "bg-[#18181b] hover:bg-[#222226] text-zinc-400 hover:text-zinc-200 border border-[#28282b]"
+                }`}
+              >
+                <Icon className="h-3.5 w-3.5" />
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Render Autonomous Components Based on Tab */}
+        {(activeTab === "all" || activeTab === "scripts") && videoScripts.length > 0 && (
+          <AutonomousVideoScripts scripts={videoScripts} movieTitle={campaign.title} />
+        )}
+
+        {(activeTab === "all" || activeTab === "ads") && adVariants.length > 0 && (
+          <AutonomousAdSuite adVariants={adVariants} movieTitle={campaign.title} />
+        )}
+
+        {(activeTab === "all" || activeTab === "creator") && creatorBrief && (
+          <CreatorBriefingKit brief={creatorBrief} movieTitle={campaign.title} />
+        )}
+
+        {(activeTab === "all" || activeTab === "budget") && budgetShifts.length > 0 && (
+          <ChannelBudgetAllocator budgetShifts={budgetShifts} />
+        )}
 
         {/* Loading State */}
         {isLoadingDecisions && (
           <div className="py-16 text-center space-y-3">
             <div className="h-8 w-8 rounded-full border-2 border-indigo-500 border-t-transparent animate-spin mx-auto" />
             <p className="text-sm text-zinc-400 font-mono">
-              Analyzing comments and generating recommendations...
+              Synthesizing autonomous campaign deliverables...
             </p>
           </div>
         )}

@@ -85,6 +85,50 @@ export interface MarketingBlueprint {
   hashtag_groups: HashtagGroup[];
 }
 
+export interface VideoScriptBeat {
+  timestamp_range: string;
+  beat_type: string;
+  visual_direction: string;
+  on_screen_text: string;
+  audio_voiceover: string;
+}
+
+export interface VideoCutdownScript {
+  id: string;
+  format: string;
+  target_channel: string;
+  headline_objective: string;
+  beats: VideoScriptBeat[];
+  music_track_directive: string;
+  call_to_action: string;
+}
+
+export interface AdCreativeVariant {
+  platform: string;
+  placement: string;
+  primary_headline: string;
+  body_copy: string;
+  target_demographics: string;
+  recommended_hashtags: string[];
+  call_to_action: string;
+}
+
+export interface CreatorBriefing {
+  campaign_phase: string;
+  core_talking_points: string[];
+  creative_angles: string[];
+  critical_donts: string[];
+  recommended_audio_track?: string;
+}
+
+export interface ChannelBudgetGuidance {
+  channel: string;
+  current_allocation_pct: number;
+  recommended_allocation_pct: number;
+  spend_action: string;
+  rationale: string;
+}
+
 export interface DecisionArtifact {
   id: string;
   campaign_id: string;
@@ -101,6 +145,10 @@ export interface DecisionArtifact {
   confidence_rating: ConfidenceRating;
   why: string[];
   blueprint?: MarketingBlueprint;
+  video_scripts?: VideoCutdownScript[];
+  ad_variants?: AdCreativeVariant[];
+  creator_brief?: CreatorBriefing;
+  budget_shifts?: ChannelBudgetGuidance[];
   created_at: string;
 }
 
@@ -112,5 +160,10 @@ export interface CampaignDecisionsResponse {
   last_investigation: string;
   decisions: DecisionArtifact[];
   blueprint?: MarketingBlueprint;
+  video_scripts?: VideoCutdownScript[];
+  ad_variants?: AdCreativeVariant[];
+  creator_brief?: CreatorBriefing;
+  budget_shifts?: ChannelBudgetGuidance[];
 }
+
 
