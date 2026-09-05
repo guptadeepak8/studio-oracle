@@ -264,6 +264,7 @@ function CampaignWorkspaceInner() {
 
             <MarketingDirectives
               campaign={campaign}
+              drops={drops}
               decisionsResponse={decisionsData}
               isLoadingDecisions={isLoadingDecisions}
               isInvestigating={isInvestigating}
@@ -306,16 +307,16 @@ function CampaignWorkspaceInner() {
             {/* 2. What Changed: Real Drops from ClickHouse */}
             <TrailerComparison campaign={campaign} drops={drops} />
 
-            {/* 3. Section: Key Feedback Topics */}
-            <WhatsWorking themeStats={themeStats} />
-
-            {/* 4. Section: Audience Voice vs Critic Reviews */}
+            {/* 3. Section: Audience Voice vs Critic Reviews */}
             <PlatformComparison
               platforms={platforms}
               dominantTopic={themeStats.length > 0 ? themeStats[0].name : "General"}
               onTriggerSearch={() => triggerGoogleSearch()}
               isSearching={isGroundingSearch}
             />
+
+            {/* 4. Section: Key Feedback Topics */}
+            <WhatsWorking themeStats={themeStats} />
           </div>
         )}
       </div>

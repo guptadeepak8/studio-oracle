@@ -272,10 +272,13 @@ class CampaignService:
                     "negative": {"text": neg_text, "author": neg_author, "source": "youtube", "likes": 0, "published": ""}
                 })
 
+        platforms = CampaignService.get_platform_breakdown(content_id)
+
         analytics_res = {
             "sentiment": sentiment_data,
             "themes": themes,
-            "conflicts": conflicts
+            "conflicts": conflicts,
+            "platforms": platforms
         }
 
         # Permanently persist pre-aggregated summary in ClickHouse
@@ -341,7 +344,8 @@ class CampaignService:
                         "negPercent": int(r[5])
                     },
                     "themes": themes,
-                    "conflicts": conflicts
+                    "conflicts": conflicts,
+                    "platforms": CampaignService.get_platform_breakdown(content_id)
                 }
                 set_cached(cache_key, res)
                 return res

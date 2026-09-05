@@ -114,9 +114,12 @@ def get_campaign_pulse(content_id: str):
         pos_pct = sentiment.get("posPercent", 0)
         neg_pct = sentiment.get("negPercent", 0)
         themes = analytics.get("themes", [])
-        top_theme = themes[0]["name"] if themes else "Overall tone"
-
-        summary = f"Audience engagement reflects {pos_pct}% positive vs {neg_pct}% critical polarity, driven primarily by discussions around {top_theme}."
+        
+        if pos_pct == 0 and neg_pct == 0:
+            return {"pulseSummary": "Awaiting audience reactions from video drops."}
+            
+        top_theme = themes[0]["name"] if themes else "General Reception"
+        summary = f"Audience reception is {pos_pct}% positive, with major discussion focused on #{top_theme}."
         return {"pulseSummary": summary}
     except Exception:
-        return {"pulseSummary": "Audience metrics show healthy engagement across key themes."}
+        return {"pulseSummary": "Awaiting audience reactions from video drops."}

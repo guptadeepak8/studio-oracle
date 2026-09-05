@@ -42,7 +42,9 @@ export default function ExecutiveScorecard({
             </span>
           </div>
           <p className="text-base sm:text-lg font-semibold text-zinc-100 leading-snug">
-            {pulseSummary || `Audience is responding actively to ${campaignTitle}, with strong buzz around #${dominantTopic}.`}
+            {totalComments === 0
+              ? "Awaiting audience reactions from video drops. Sync trailer reactions or add a video drop to populate metrics."
+              : pulseSummary || `Audience is responding actively to ${campaignTitle}, with discussion focused on #${dominantTopic}.`}
           </p>
         </div>
       </Card>
