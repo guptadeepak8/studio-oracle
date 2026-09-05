@@ -115,20 +115,16 @@ export default function MarketingDirectives({
                 <Sparkles className="h-4 w-4" />
               </div>
               <h2 className="font-bold text-lg text-zinc-100 tracking-tight">
-                Autonomous Marketing Deliverables
+                Marketing Directives & Deliverables
               </h2>
             </div>
             <p className="text-sm text-zinc-400">
-              Autonomous production scripts, cross-platform ad suites, and media spend guidance for{" "}
+              Video cutdown scripts, ad copy, and media spend recommendations for{" "}
               <strong className="text-zinc-200">{campaign.title}</strong>.
             </p>
           </div>
 
           <div className="flex items-center gap-3">
-            <Badge variant="active" pulsing>
-              {decisionsResponse?.agent_status || "Autonomous Engine Active"}
-            </Badge>
-
             {onTriggerInvestigation && (
               <Button
                 variant="primary"
@@ -138,7 +134,7 @@ export default function MarketingDirectives({
                 disabled={isInvestigating}
                 leftIcon={<RefreshCw className="h-3.5 w-3.5" />}
               >
-                {isInvestigating ? "Synthesizing Directives..." : "Re-Synthesize Campaign"}
+                {isInvestigating ? "Updating Deliverables..." : "Refresh Deliverables"}
               </Button>
             )}
           </div>
@@ -147,10 +143,10 @@ export default function MarketingDirectives({
         {/* Deliverable Sub-Navigation Tabs */}
         <div className="flex items-center gap-2 overflow-x-auto pb-1">
           {[
-            { id: "all", label: "All Directives & Assets", icon: Layers },
+            { id: "all", label: "All Deliverables", icon: Layers },
             { id: "scripts", label: "Video Cutdown Scripts", icon: Video },
-            { id: "ads", label: "1-Click Ad Suite", icon: Target },
-            { id: "creator", label: "Creator & PR Brief", icon: Share2 },
+            { id: "ads", label: "Ad Copy & Variants", icon: Target },
+            { id: "creator", label: "Creator & Influencer Brief", icon: Share2 },
             { id: "budget", label: "Media Budget Split", icon: TrendingUp },
           ].map((tab) => {
             const Icon = tab.icon;

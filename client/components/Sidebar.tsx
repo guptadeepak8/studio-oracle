@@ -54,7 +54,7 @@ export default function Sidebar() {
           </span>
 
           {[
-            { tabId: "overview", label: "Dashboard", icon: LayoutDashboard },
+            { tabId: "overview", label: "Overview", icon: LayoutDashboard },
             { tabId: "marketing", label: "Marketing", icon: Megaphone },
             { tabId: "agent", label: "Assistant", icon: Bot },
           ].map((item) => {
@@ -119,11 +119,11 @@ export default function Sidebar() {
                     }`}
                   >
                     <span className="truncate pr-2">{c.title}</span>
-                    <span
-                      className={`h-2 w-2 rounded-full shrink-0 ${
-                        c.status === "active" ? "bg-[#4ade80] shadow-[0_0_6px_#4ade80]" : "bg-zinc-600"
-                      }`}
-                    />
+                    {c.status === "stopped" && (
+                      <span className="text-[10px] text-amber-400 font-medium px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/20">
+                        Paused
+                      </span>
+                    )}
                   </Link>
                 );
               })

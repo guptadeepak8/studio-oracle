@@ -1,8 +1,8 @@
 "use client";
 
 import React from "react";
-import { Users, Newspaper, ArrowRight } from "lucide-react";
-import { Card, Badge } from "./ui";
+import { Users, Newspaper, Search, Loader2 } from "lucide-react";
+import { Card, Badge, Button } from "./ui";
 import CollapsibleSection from "./common/CollapsibleSection";
 
 export interface PlatformStats {
@@ -16,9 +16,16 @@ export interface PlatformStats {
 interface PlatformComparisonProps {
   platforms?: Record<string, PlatformStats>;
   dominantTopic: string;
+  onTriggerSearch?: () => void;
+  isSearching?: boolean;
 }
 
-export default function PlatformComparison({ platforms = {}, dominantTopic }: PlatformComparisonProps) {
+export default function PlatformComparison({
+  platforms = {},
+  dominantTopic,
+  onTriggerSearch,
+  isSearching = false,
+}: PlatformComparisonProps) {
   const audience = platforms["youtube"] || {
     total: 0,
     posPercent: 0,
@@ -42,18 +49,18 @@ export default function PlatformComparison({ platforms = {}, dominantTopic }: Pl
   let divergenceInsight = "";
   if (hasAudience && hasCritics) {
     if (diff >= 15) {
-      divergenceInsight = `Trade critics and press reception (+${critics.posPercent}% positive) lead mainstream audience sentiment (+${audience.posPercent}%), with industry praise focused on production scale while fans discuss #${dominantTopic}.`;
+      divergenceInsight = `Critics and press reception (+${critics.posPercent}% positive) are more favorable than audience sentiment (+${audience.posPercent}%).`;
     } else if (diff <= -15) {
-      divergenceInsight = `Mainstream fan buzz (+${audience.posPercent}% positive) is outperforming trade critics (+${critics.posPercent}%), driven by viral social resonance.`;
+      divergenceInsight = `Audience excitement (+${audience.posPercent}% positive) is outperforming critic reviews (+${critics.posPercent}%).`;
     } else {
-      divergenceInsight = `Audience enthusiasm (+${audience.posPercent}%) and trade reviews (+${critics.posPercent}%) are aligned with balanced reception across channels.`;
+      divergenceInsight = `Audience sentiment (+${audience.posPercent}%) and critic reviews (+${critics.posPercent}%) are broadly aligned.`;
     }
   }
 
   return (
     <CollapsibleSection
       title="Audience vs. Critics"
-      subtitle="Comparing social audience engagement against trade press and industry reviews."
+      subtitle="Comparing social comments against press reviews."
     >
       <div className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -65,11 +72,11 @@ export default function PlatformComparison({ platforms = {}, dominantTopic }: Pl
                   <Users className="h-4 w-4" />
                 </div>
                 <span className="font-bold text-sm text-zinc-100 uppercase tracking-wider">
-                  Audience Sentiment
+                  Audience Feedback
                 </span>
               </div>
               <Badge variant={hasAudience && audience.posPercent >= 50 ? "positive" : "default"}>
-                {hasAudience ? (audience.posPercent >= 50 ? "High Excitement" : "Mixed Reception") : "Awaiting Data"}
+                {hasAudience ? (audience.posPercent >= 50 ? "Positive" : "Mixed") : "No Data"}
               </Badge>
             </div>
 
@@ -79,12 +86,12 @@ export default function PlatformComparison({ platforms = {}, dominantTopic }: Pl
               </p>
             ) : (
               <p className="text-sm text-zinc-500 italic py-2">
-                Awaiting social audience comments...
+                No audience comments indexed yet.
               </p>
             )}
 
             <div className="pt-3 border-t border-[#28282b] flex items-center justify-between text-xs text-zinc-400">
-              <span>{audience.total.toLocaleString()} Comments Analyzed</span>
+              <span>{audience.total.toLocaleString()} Comments</span>
               <span className="text-[#4ade80] font-mono font-bold text-sm">
                 {hasAudience ? `+${audience.posPercent}% Positive` : "0%"}
               </span>
@@ -103,7 +110,7 @@ export default function PlatformComparison({ platforms = {}, dominantTopic }: Pl
                 </span>
               </div>
               <Badge variant={hasCritics ? "info" : "default"}>
-                {hasCritics ? "Press & Trade" : "Awaiting Search"}
+                {hasCritics ? "Reviews Found" : "Not Searched"}
               </Badge>
             </div>
 
@@ -112,15 +119,28 @@ export default function PlatformComparison({ platforms = {}, dominantTopic }: Pl
                 &ldquo;{critics.topPositive || critics.topNegative}&rdquo;
               </p>
             ) : (
-              <p className="text-sm text-zinc-500 italic py-2">
-                Awaiting press reviews...
-              </p>
+              <div className="py-1 space-y-2">
+                <p className="text-xs text-zinc-400">
+                  No critic reviews indexed yet for this campaign.
+                </p>
+                {onTriggerSearch && (
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={onTriggerSearch}
+                    isLoading={isSearching}
+                    leftIcon={<Search className="h-3.5 w-3.5 text-zinc-400" />}
+                  >
+                    {isSearching ? "Searching Web..." : "Search Critic Reviews"}
+                  </Button>
+                )}
+              </div>
             )}
 
             <div className="pt-3 border-t border-[#28282b] flex items-center justify-between text-xs text-zinc-400">
-              <span>{critics.total.toLocaleString()} Articles Grounded</span>
+              <span>{critics.total.toLocaleString()} Articles</span>
               <span className="text-[#38bdf8] font-mono font-bold text-sm">
-                {hasCritics ? `+${critics.posPercent}% Sentiment` : "0%"}
+                {hasCritics ? `+${critics.posPercent}% Positive` : "0%"}
               </span>
             </div>
           </Card>

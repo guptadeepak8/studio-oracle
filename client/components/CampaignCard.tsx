@@ -63,10 +63,12 @@ export default function CampaignCard({ campaign, onRefresh }: CampaignCardProps)
             </CardTitle>
             <div className="flex items-center gap-2 text-xs text-zinc-400 font-semibold uppercase">
               <span>{campaign.content_type}</span>
-              <span className="text-zinc-600">·</span>
-              <Badge variant={campaign.status === "active" ? "active" : "stopped"}>
-                {campaign.status === "active" ? "Active" : "Paused"}
-              </Badge>
+              {campaign.status === "stopped" && (
+                <>
+                  <span className="text-zinc-600">·</span>
+                  <span className="text-amber-400 font-normal normal-case">Paused</span>
+                </>
+              )}
             </div>
           </div>
 

@@ -57,12 +57,14 @@ export default function CampaignHeader({
             <h1 className="font-bold text-lg text-zinc-100 tracking-tight">
               {campaign.title}
             </h1>
-            <Badge variant={campaign.status === "active" ? "active" : "stopped"}>
-              {campaign.status === "active" ? "Active" : "Paused"}
-            </Badge>
+            {campaign.status === "stopped" && (
+              <Badge variant="stopped">
+                Paused
+              </Badge>
+            )}
           </div>
 
-          {/* Simple Mental Model Tabs: Overview | Recommendations | Ask AI */}
+          {/* Navigation Tabs: Overview | Marketing | Assistant */}
           <nav className="flex items-center bg-[#1b1b1e] border border-[#28282b] rounded-lg p-1 text-xs font-semibold">
             <button
               onClick={() => onTabChange("overview")}
@@ -82,7 +84,7 @@ export default function CampaignHeader({
                   : "text-zinc-400 hover:text-zinc-200"
               }`}
             >
-              Recommendations
+              Marketing
             </button>
             <button
               onClick={() => onTabChange("agent")}
@@ -92,8 +94,8 @@ export default function CampaignHeader({
                   : "text-zinc-400 hover:text-zinc-200"
               }`}
             >
-              <Sparkles className="h-3 w-3 text-indigo-400" />
-              Ask AI
+              <Bot className="h-3.5 w-3.5 text-indigo-400" />
+              Assistant
             </button>
           </nav>
         </div>

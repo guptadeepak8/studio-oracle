@@ -30,7 +30,7 @@ export default function ExecutiveScorecard({
 
   return (
     <div className="space-y-4 font-sans">
-      {/* 1. Hero Executive Insight Banner */}
+      {/* 1. Audience Summary Banner */}
       <Card className="p-6 bg-[#161619] border-[#28282c] flex items-start gap-4 shadow-sm">
         <div className="h-9 w-9 rounded-xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400 shrink-0 mt-0.5">
           <Sparkles className="h-5 w-5" />
@@ -38,11 +38,8 @@ export default function ExecutiveScorecard({
         <div className="space-y-1.5 flex-1">
           <div className="flex items-center justify-between flex-wrap gap-2">
             <span className="text-xs font-bold text-indigo-400 uppercase tracking-wider">
-              Campaign Pulse
+              Audience Overview
             </span>
-            <Badge variant="active">
-              Live Synthesis
-            </Badge>
           </div>
           <p className="text-base sm:text-lg font-semibold text-zinc-100 leading-snug">
             {pulseSummary || `Audience is responding actively to ${campaignTitle}, with strong buzz around #${dominantTopic}.`}

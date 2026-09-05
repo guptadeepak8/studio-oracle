@@ -2,7 +2,7 @@
 
 import React, { useState, Suspense } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { Loader2, AlertTriangle, PlayCircle, Trash2 } from "lucide-react";
+import { Loader2, AlertTriangle, PlayCircle, Trash2, RefreshCw } from "lucide-react";
 import { API_ENDPOINTS, SESSION_CONFIG } from "../../../utils/constants";
 import { ChatMessage } from "../../../utils/types";
 import { useCampaignDetail } from "../../../hooks/useCampaignDetail";
@@ -17,9 +17,7 @@ import MarketingDirectives from "../../../components/MarketingDirectives";
 import AgentConsole from "../../../components/AgentConsole";
 import CampaignHeader from "../../../components/CampaignHeader";
 import ExecutiveScorecardSkeleton from "../../../components/skeletons/ExecutiveScorecardSkeleton";
-import SectionCardSkeleton from "../../../components/skeletons/SectionCardSkeleton";
 import CinematicLoader from "../../../components/common/CinematicLoader";
-import CampaignAnalyzingState from "../../../components/CampaignAnalyzingState";
 import { Button } from "../../../components/ui";
 import { useCampaignSSE } from "../../../hooks/useCampaignSSE";
 
@@ -46,8 +44,10 @@ function CampaignWorkspaceInner() {
     isLoadingDecisions,
     isInvestigating,
     isIngesting,
+    isGroundingSearch,
     refreshAll,
     triggerIngest,
+    triggerGoogleSearch,
     triggerInvestigation,
   } = useCampaignDetail(campaignId);
 
@@ -239,19 +239,29 @@ function CampaignWorkspaceInner() {
               onSelectEvidence={() => {}}
             />
           </div>
-        ) : isAnalyzing ? (
-          /* Live Analyzing Screen when data is being indexed */
-          <div className="flex-1 overflow-y-auto flex items-center justify-center">
-            <CampaignAnalyzingState
-              campaignTitle={campaign.title}
-              isIngesting={isIngesting}
-              onRefresh={refreshAll}
-              onStartIngest={handleSync1000Comments}
-            />
-          </div>
         ) : activeTab === "marketing" ? (
           /* Dedicated Marketing Action Plan Tab */
           <div className="flex-1 overflow-y-auto p-8 max-w-7xl mx-auto w-full space-y-8">
+            {comments.length === 0 && (
+              <div className="bg-[#18181c] border border-indigo-500/30 rounded-xl p-4 flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <Loader2 className="h-4 w-4 text-indigo-400 animate-spin shrink-0" />
+                  <span className="text-xs text-zinc-300">
+                    Audience reactions are syncing in the background. Marketing deliverables will populate automatically once ready.
+                  </span>
+                </div>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleSync1000Comments}
+                  isLoading={isIngesting}
+                  leftIcon={<RefreshCw className="h-3 w-3" />}
+                >
+                  Sync Comments
+                </Button>
+              </div>
+            )}
+
             <MarketingDirectives
               campaign={campaign}
               drops={drops}
@@ -262,13 +272,33 @@ function CampaignWorkspaceInner() {
             />
           </div>
         ) : (
-          /* Main Executive Dashboard */
+          /* Main Overview Dashboard */
           <div className="flex-1 overflow-y-auto p-8 space-y-8 max-w-7xl mx-auto w-full">
-            {/* 1. Section: Campaign Pulse */}
+            {comments.length === 0 && (
+              <div className="bg-[#18181c] border border-indigo-500/30 rounded-xl p-4 flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <Loader2 className="h-4 w-4 text-indigo-400 animate-spin shrink-0" />
+                  <span className="text-xs text-zinc-300">
+                    Audience comments are syncing in the background for <strong className="text-zinc-100">{campaign.title}</strong>. Metrics will populate automatically once ready.
+                  </span>
+                </div>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleSync1000Comments}
+                  isLoading={isIngesting}
+                  leftIcon={<RefreshCw className="h-3 w-3" />}
+                >
+                  Sync Comments
+                </Button>
+              </div>
+            )}
+
+            {/* 1. Section: Audience Summary */}
             <ExecutiveScorecard
               sentiment={sentiment}
               totalComments={comments.length}
-              dominantTopic={themeStats.length > 0 ? themeStats[0].name : "General Tone"}
+              dominantTopic={themeStats.length > 0 ? themeStats[0].name : "General"}
               pulseSummary={pulseSummary}
               releaseDate={campaign.release_date}
               campaignTitle={campaign.title}
@@ -277,13 +307,15 @@ function CampaignWorkspaceInner() {
             {/* 2. What Changed: Real Drops from ClickHouse */}
             <TrailerComparison campaign={campaign} drops={drops} />
 
-            {/* 3. Expandable Section: What Fans Love vs What's Not (Table) */}
+            {/* 3. Section: Key Feedback Topics */}
             <WhatsWorking themeStats={themeStats} />
 
-            {/* 4. Expandable Section: YouTube Audience Voice vs Google Search Press Grounding */}
+            {/* 4. Section: Audience Voice vs Critic Reviews */}
             <PlatformComparison
               platforms={platforms}
               dominantTopic={themeStats.length > 0 ? themeStats[0].name : "General"}
+              onTriggerSearch={() => triggerGoogleSearch()}
+              isSearching={isGroundingSearch}
             />
           </div>
         )}
