@@ -37,7 +37,14 @@ export function useCommentsQuery(campaignId: string) {
     enabled: Boolean(campaignId),
     staleTime: 1000 * 60 * 5,
     refetchOnWindowFocus: false,
-    refetchInterval: false,
+    // Auto-poll only while analyzing (0 comments); turns off completely once comments are indexed
+    refetchInterval: (query) => {
+      const data = query.state.data;
+      if (!data || data.length === 0) {
+        return 2500;
+      }
+      return false;
+    },
   });
 }
 
@@ -48,7 +55,13 @@ export function useAnalyticsQuery(campaignId: string) {
     enabled: Boolean(campaignId),
     staleTime: 1000 * 60 * 5,
     refetchOnWindowFocus: false,
-    refetchInterval: false,
+    refetchInterval: (query) => {
+      const data = query.state.data;
+      if (!data || (!data.sentiment?.positive && !data.sentiment?.negative && !data.sentiment?.neutral)) {
+        return 3000;
+      }
+      return false;
+    },
   });
 }
 
@@ -59,7 +72,13 @@ export function useDropsQuery(campaignId: string) {
     enabled: Boolean(campaignId),
     staleTime: 1000 * 60 * 5,
     refetchOnWindowFocus: false,
-    refetchInterval: false,
+    refetchInterval: (query) => {
+      const data = query.state.data;
+      if (!data || data.length === 0) {
+        return 3000;
+      }
+      return false;
+    },
   });
 }
 
@@ -84,7 +103,13 @@ export function useDecisionsQuery(campaignId: string) {
     enabled: Boolean(campaignId),
     staleTime: 1000 * 60 * 5,
     refetchOnWindowFocus: false,
-    refetchInterval: false,
+    refetchInterval: (query) => {
+      const data = query.state.data;
+      if (!data || !data.video_scripts || data.video_scripts.length === 0) {
+        return 3000;
+      }
+      return false;
+    },
   });
 }
 

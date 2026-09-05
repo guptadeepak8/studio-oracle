@@ -19,6 +19,7 @@ import CampaignHeader from "../../../components/CampaignHeader";
 import ExecutiveScorecardSkeleton from "../../../components/skeletons/ExecutiveScorecardSkeleton";
 import SectionCardSkeleton from "../../../components/skeletons/SectionCardSkeleton";
 import CinematicLoader from "../../../components/common/CinematicLoader";
+import CampaignAnalyzingState from "../../../components/CampaignAnalyzingState";
 import { Button } from "../../../components/ui";
 import { useCampaignSSE } from "../../../hooks/useCampaignSSE";
 
@@ -162,14 +163,16 @@ function CampaignWorkspaceInner() {
     return (
       <div className="flex-1 bg-[#0e0e10] p-8 flex items-center justify-center h-screen w-full overflow-hidden">
         <CinematicLoader
-          title="Loading Campaign Telemetry"
-          subtitle="Querying ClickHouse Cloud records & synthesizing directives..."
+          title="Loading Campaign"
+          subtitle="Connecting to ClickHouse and loading audience feedback..."
         />
       </div>
     );
   }
 
   if (!campaign) return null;
+
+  const isAnalyzing = comments.length === 0;
 
   return (
     <div className="flex-1 flex bg-[#0e0e10] overflow-hidden h-screen relative text-zinc-100 font-sans">
@@ -234,6 +237,16 @@ function CampaignWorkspaceInner() {
               onSendChat={handleSendChat}
               onRefreshMovies={refreshAll}
               onSelectEvidence={() => {}}
+            />
+          </div>
+        ) : isAnalyzing ? (
+          /* Live Analyzing Screen when data is being indexed */
+          <div className="flex-1 overflow-y-auto flex items-center justify-center">
+            <CampaignAnalyzingState
+              campaignTitle={campaign.title}
+              isIngesting={isIngesting}
+              onRefresh={refreshAll}
+              onStartIngest={handleSync1000Comments}
             />
           </div>
         ) : activeTab === "marketing" ? (
