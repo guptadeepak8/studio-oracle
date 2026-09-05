@@ -241,27 +241,7 @@ function CampaignWorkspaceInner() {
           </div>
         ) : activeTab === "marketing" ? (
           /* Dedicated Marketing Action Plan Tab */
-          <div className="flex-1 overflow-y-auto p-8 max-w-7xl mx-auto w-full space-y-8">
-            {comments.length === 0 && (
-              <div className="bg-[#18181c] border border-indigo-500/30 rounded-xl p-4 flex items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <Loader2 className="h-4 w-4 text-indigo-400 animate-spin shrink-0" />
-                  <span className="text-xs text-zinc-300">
-                    Audience reactions are syncing in the background. Marketing deliverables will populate automatically once ready.
-                  </span>
-                </div>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={handleSync1000Comments}
-                  isLoading={isIngesting}
-                  leftIcon={<RefreshCw className="h-3 w-3" />}
-                >
-                  Sync Comments
-                </Button>
-              </div>
-            )}
-
+          <div className="flex-1 overflow-y-auto p-6 max-w-7xl mx-auto w-full space-y-6">
             <MarketingDirectives
               campaign={campaign}
               drops={drops}
@@ -273,27 +253,7 @@ function CampaignWorkspaceInner() {
           </div>
         ) : (
           /* Main Overview Dashboard */
-          <div className="flex-1 overflow-y-auto p-8 space-y-8 max-w-7xl mx-auto w-full">
-            {comments.length === 0 && (
-              <div className="bg-[#18181c] border border-indigo-500/30 rounded-xl p-4 flex items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <Loader2 className="h-4 w-4 text-indigo-400 animate-spin shrink-0" />
-                  <span className="text-xs text-zinc-300">
-                    Audience comments are syncing in the background for <strong className="text-zinc-100">{campaign.title}</strong>. Metrics will populate automatically once ready.
-                  </span>
-                </div>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={handleSync1000Comments}
-                  isLoading={isIngesting}
-                  leftIcon={<RefreshCw className="h-3 w-3" />}
-                >
-                  Sync Comments
-                </Button>
-              </div>
-            )}
-
+          <div className="flex-1 overflow-y-auto p-6 space-y-6 max-w-7xl mx-auto w-full">
             {/* 1. Section: Audience Summary */}
             <ExecutiveScorecard
               sentiment={sentiment}

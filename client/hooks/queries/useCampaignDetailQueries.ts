@@ -27,6 +27,7 @@ export function useCampaignQuery(campaignId: string) {
     },
     enabled: Boolean(campaignId),
     staleTime: 1000 * 60 * 2,
+    placeholderData: (previousData) => previousData,
   });
 }
 
@@ -37,6 +38,7 @@ export function useCommentsQuery(campaignId: string) {
     enabled: Boolean(campaignId),
     staleTime: 1000 * 60 * 5,
     refetchOnWindowFocus: false,
+    placeholderData: (previousData) => previousData,
     // Auto-poll only while analyzing (0 comments); turns off completely once comments are indexed
     refetchInterval: (query) => {
       const data = query.state.data;
@@ -55,6 +57,7 @@ export function useAnalyticsQuery(campaignId: string) {
     enabled: Boolean(campaignId),
     staleTime: 1000 * 60 * 5,
     refetchOnWindowFocus: false,
+    placeholderData: (previousData) => previousData,
     refetchInterval: (query) => {
       const data = query.state.data;
       if (!data || (!data.sentiment?.positive && !data.sentiment?.negative && !data.sentiment?.neutral)) {
@@ -72,6 +75,7 @@ export function useDropsQuery(campaignId: string) {
     enabled: Boolean(campaignId),
     staleTime: 1000 * 60 * 5,
     refetchOnWindowFocus: false,
+    placeholderData: (previousData) => previousData,
     refetchInterval: (query) => {
       const data = query.state.data;
       if (!data || data.length === 0) {
@@ -89,6 +93,7 @@ export function usePulseQuery(campaignId: string) {
     enabled: Boolean(campaignId),
     staleTime: 1000 * 60 * 5,
     refetchOnWindowFocus: false,
+    placeholderData: (previousData) => previousData,
     refetchInterval: false,
   });
 }
@@ -103,6 +108,7 @@ export function useDecisionsQuery(campaignId: string) {
     enabled: Boolean(campaignId),
     staleTime: 1000 * 60 * 5,
     refetchOnWindowFocus: false,
+    placeholderData: (previousData) => previousData,
     refetchInterval: (query) => {
       const data = query.state.data;
       if (!data || !data.video_scripts || data.video_scripts.length === 0) {
