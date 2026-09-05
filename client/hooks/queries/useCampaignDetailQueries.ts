@@ -35,9 +35,9 @@ export function useCommentsQuery(campaignId: string) {
     queryKey: campaignDetailKeys.comments(campaignId),
     queryFn: () => apiRequest<Comment[]>(API_ENDPOINTS.COMMENTS(campaignId), { suppressErrorToast: true }),
     enabled: Boolean(campaignId),
-    staleTime: 1000 * 15,
-    refetchInterval: (query) =>
-      query.state.data && query.state.data.length > 0 ? false : 2000,
+    staleTime: 1000 * 60 * 5,
+    refetchOnWindowFocus: false,
+    refetchInterval: false,
   });
 }
 
@@ -46,9 +46,9 @@ export function useAnalyticsQuery(campaignId: string) {
     queryKey: campaignDetailKeys.analytics(campaignId),
     queryFn: () => apiRequest(API_ENDPOINTS.ANALYTICS(campaignId), { suppressErrorToast: true }),
     enabled: Boolean(campaignId),
-    staleTime: 1000 * 15,
-    refetchInterval: (query) =>
-      query.state.data && (query.state.data as { sentiment?: { total?: number } })?.sentiment?.total && (query.state.data as { sentiment?: { total?: number } }).sentiment!.total! > 0 ? false : 2000,
+    staleTime: 1000 * 60 * 5,
+    refetchOnWindowFocus: false,
+    refetchInterval: false,
   });
 }
 
@@ -57,7 +57,9 @@ export function useDropsQuery(campaignId: string) {
     queryKey: campaignDetailKeys.drops(campaignId),
     queryFn: () => apiRequest<DropItem[]>(API_ENDPOINTS.DROPS(campaignId), { suppressErrorToast: true }),
     enabled: Boolean(campaignId),
-    staleTime: 1000 * 30,
+    staleTime: 1000 * 60 * 5,
+    refetchOnWindowFocus: false,
+    refetchInterval: false,
   });
 }
 
@@ -66,7 +68,9 @@ export function usePulseQuery(campaignId: string) {
     queryKey: campaignDetailKeys.pulse(campaignId),
     queryFn: () => apiRequest(API_ENDPOINTS.PULSE(campaignId), { suppressErrorToast: true }),
     enabled: Boolean(campaignId),
-    staleTime: 1000 * 60,
+    staleTime: 1000 * 60 * 5,
+    refetchOnWindowFocus: false,
+    refetchInterval: false,
   });
 }
 
@@ -78,9 +82,9 @@ export function useDecisionsQuery(campaignId: string) {
         suppressErrorToast: true,
       }),
     enabled: Boolean(campaignId),
-    staleTime: 1000 * 15,
-    refetchInterval: (query) =>
-      query.state.data && query.state.data.decisions?.length > 0 ? false : 3000,
+    staleTime: 1000 * 60 * 5,
+    refetchOnWindowFocus: false,
+    refetchInterval: false,
   });
 }
 
