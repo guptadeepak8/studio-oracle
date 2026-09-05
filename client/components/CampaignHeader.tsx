@@ -2,10 +2,11 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronDown, Play, Square, MessageSquare, RefreshCw, Trash2, Sparkles, Bot, ShieldCheck } from "lucide-react";
+import { ChevronDown, Play, Square, MessageSquare, RefreshCw, Trash2, Sparkles, Bot, ShieldCheck, Plus, Video } from "lucide-react";
 import { Movie } from "../utils/types";
 import { useCampaigns } from "../hooks/useCampaigns";
 import DeleteConfirmModal from "./common/DeleteConfirmModal";
+import AddVideoDropModal from "./AddVideoDropModal";
 import { Badge, Button } from "./ui";
 
 interface CampaignHeaderProps {
@@ -37,6 +38,7 @@ export default function CampaignHeader({
   const { deleteCampaign, isDeleting } = useCampaigns();
   const [showActionsMenu, setShowActionsMenu] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showAddDropModal, setShowAddDropModal] = useState(false);
 
   const handleDeleteCampaign = async () => {
     const ok = await deleteCampaign(campaign.content_id, campaign.title);
@@ -96,8 +98,17 @@ export default function CampaignHeader({
           </nav>
         </div>
 
-        {/* Right: Sync Button & Secondary Actions Menu */}
+        {/* Right: Add Drop & Sync Button & Secondary Actions Menu */}
         <div className="flex items-center gap-2.5 relative">
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => setShowAddDropModal(true)}
+            leftIcon={<Plus className="h-3.5 w-3.5" />}
+          >
+            Add Video Drop
+          </Button>
+
           {onSync1000Comments && (
             <Button
               variant="secondary"
@@ -106,7 +117,7 @@ export default function CampaignHeader({
               disabled={isSyncing}
               leftIcon={<RefreshCw className={`h-3.5 w-3.5 ${isSyncing ? "animate-spin" : ""}`} />}
             >
-              {isSyncing ? "Syncing..." : "Sync 1,000 Reactions"}
+              {isSyncing ? "Syncing..." : "Sync Reactions"}
             </Button>
           )}
 
@@ -194,6 +205,14 @@ export default function CampaignHeader({
         title={campaign.title}
         isDeleting={isDeleting}
       />
+
+      {showAddDropModal && (
+        <AddVideoDropModal
+          contentId={campaign.content_id}
+          campaignTitle={campaign.title}
+          onClose={() => setShowAddDropModal(false)}
+        />
+      )}
     </div>
   );
 }

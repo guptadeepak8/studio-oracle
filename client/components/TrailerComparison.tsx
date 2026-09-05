@@ -1,12 +1,11 @@
-"use client";
-
-import React from "react";
-import { TrendingUp, TrendingDown, Film, Play, Sparkles } from "lucide-react";
+import React, { useState } from "react";
+import { TrendingUp, TrendingDown, Film, Play, Sparkles, Plus } from "lucide-react";
 import { Movie } from "../utils/types";
 import { useAppDispatch, useAppSelector } from "../store";
 import { setSelectedDropA, setSelectedDropB } from "../store/slices/dashboardSlice";
 import { Card, Badge, Button } from "./ui";
 import CollapsibleSection from "./common/CollapsibleSection";
+import AddVideoDropModal from "./AddVideoDropModal";
 
 export interface DropItem {
   id: string;
@@ -27,6 +26,7 @@ interface TrailerComparisonProps {
 export default function TrailerComparison({ campaign, drops = [] }: TrailerComparisonProps) {
   const dispatch = useAppDispatch();
   const { selectedDropAId, selectedDropBId } = useAppSelector((state) => state.dashboard);
+  const [showAddModal, setShowAddModal] = useState(false);
 
   // Auto select first two drops if available
   const activeAId = selectedDropAId && drops.some((d) => d.id === selectedDropAId) ? selectedDropAId : drops[0]?.id || "";
@@ -39,47 +39,59 @@ export default function TrailerComparison({ campaign, drops = [] }: TrailerCompa
   const isSurge = deltaSentiment >= 0;
 
   return (
-    <CollapsibleSection
-      title="What Changed"
-      subtitle="Audience response across trailer releases and creative milestone drops."
-      headerAction={
-        drops.length > 1 ? (
-          <div className="flex items-center gap-2 text-xs">
-            <div className="flex items-center gap-2 bg-[#1c1c1f] border border-[#28282b] rounded-lg px-3 py-1.5 text-zinc-200 max-w-[220px]">
-              <span className="text-xs text-zinc-400 font-bold uppercase shrink-0">Drop A:</span>
-              <select
-                value={activeAId}
-                onChange={(e) => dispatch(setSelectedDropA(e.target.value))}
-                className="bg-transparent text-zinc-100 text-xs font-semibold focus:outline-none cursor-pointer truncate"
-              >
-                {drops.map((d) => (
-                  <option key={d.id} value={d.id} className="bg-[#1c1c1f] text-zinc-100">
-                    {d.title}
-                  </option>
-                ))}
-              </select>
-            </div>
+    <>
+      <CollapsibleSection
+        title="What Changed"
+        subtitle="Audience response across video releases and milestone trailer drops."
+        headerAction={
+          <div className="flex items-center gap-2.5">
+            {drops.length > 1 && (
+              <div className="flex items-center gap-2 text-xs">
+                <div className="flex items-center gap-2 bg-[#1c1c1f] border border-[#28282b] rounded-lg px-3 py-1.5 text-zinc-200 max-w-[200px]">
+                  <span className="text-xs text-zinc-400 font-bold uppercase shrink-0">Drop A:</span>
+                  <select
+                    value={activeAId}
+                    onChange={(e) => dispatch(setSelectedDropA(e.target.value))}
+                    className="bg-transparent text-zinc-100 text-xs font-semibold focus:outline-none cursor-pointer truncate"
+                  >
+                    {drops.map((d) => (
+                      <option key={d.id} value={d.id} className="bg-[#1c1c1f] text-zinc-100">
+                        {d.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-            <span className="text-zinc-400 font-bold text-xs">vs</span>
+                <span className="text-zinc-400 font-bold text-xs">vs</span>
 
-            <div className="flex items-center gap-2 bg-[#1c1c1f] border border-[#28282b] rounded-lg px-3 py-1.5 text-zinc-200 max-w-[220px]">
-              <span className="text-xs text-zinc-400 font-bold uppercase shrink-0">Drop B:</span>
-              <select
-                value={activeBId}
-                onChange={(e) => dispatch(setSelectedDropB(e.target.value))}
-                className="bg-transparent text-zinc-100 text-xs font-semibold focus:outline-none cursor-pointer truncate"
-              >
-                {drops.map((d) => (
-                  <option key={d.id} value={d.id} className="bg-[#1c1c1f] text-zinc-100">
-                    {d.title}
-                  </option>
-                ))}
-              </select>
-            </div>
+                <div className="flex items-center gap-2 bg-[#1c1c1f] border border-[#28282b] rounded-lg px-3 py-1.5 text-zinc-200 max-w-[200px]">
+                  <span className="text-xs text-zinc-400 font-bold uppercase shrink-0">Drop B:</span>
+                  <select
+                    value={activeBId}
+                    onChange={(e) => dispatch(setSelectedDropB(e.target.value))}
+                    className="bg-transparent text-zinc-100 text-xs font-semibold focus:outline-none cursor-pointer truncate"
+                  >
+                    {drops.map((d) => (
+                      <option key={d.id} value={d.id} className="bg-[#1c1c1f] text-zinc-100">
+                        {d.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            )}
+
+            <Button
+              variant="secondary"
+              size="xs"
+              onClick={() => setShowAddModal(true)}
+              leftIcon={<Plus className="h-3.5 w-3.5" />}
+            >
+              Add Video Drop
+            </Button>
           </div>
-        ) : undefined
-      }
-    >
+        }
+      >
       <Card className="p-6 space-y-5">
         {drops.length === 0 ? (
           <div className="p-8 text-center text-zinc-400 text-sm italic">
@@ -138,15 +150,24 @@ export default function TrailerComparison({ campaign, drops = [] }: TrailerCompa
               </div>
             )}
 
-            <div className="pt-1">
-              <a
-                href={dropA.url}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-1.5 text-xs text-indigo-400 hover:text-indigo-300 hover:underline font-bold"
+            {/* Prompt to add second drop */}
+            <div className="flex items-center justify-between flex-wrap gap-3 bg-indigo-500/5 border border-indigo-500/20 rounded-xl p-4 mt-2">
+              <div className="space-y-0.5">
+                <span className="text-xs font-bold text-indigo-300 block">
+                  Unlock Milestone Comparison
+                </span>
+                <p className="text-xs text-zinc-400">
+                  Add Teaser #2, Official Trailer #2, or a TV Spot to compare sentiment shifts side-by-side.
+                </p>
+              </div>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => setShowAddModal(true)}
+                leftIcon={<Plus className="h-4 w-4" />}
               >
-                <Play className="h-3.5 w-3.5 fill-indigo-400" /> Watch Trailer on YouTube
-              </a>
+                Add 2nd Video Drop
+              </Button>
             </div>
           </div>
         ) : (
@@ -180,30 +201,32 @@ export default function TrailerComparison({ campaign, drops = [] }: TrailerCompa
                       <span className="font-mono text-zinc-100 font-semibold">{dropA.total_comments.toLocaleString()}</span>
                     </div>
                     <div className="flex items-center justify-between text-zinc-300">
-                      <span>Critical Drag:</span>
-                      <span className="text-rose-400 font-mono font-semibold">-{dropA.negPercent}%</span>
+                      <span>Critical Friction:</span>
+                      <span className="font-mono text-[#f87171] font-bold text-sm">-{dropA.negPercent}%</span>
                     </div>
                   </div>
 
                   {dropA.topComment && (
                     <div className="pt-3 border-t border-[#28282b]/60">
                       <span className="text-xs text-zinc-400 font-semibold uppercase tracking-wider block mb-1">
-                        Top Fan Resonance
+                        Top Audience Reaction
                       </span>
-                      <p className="text-sm text-zinc-200 italic line-clamp-2">
+                      <p className="text-xs text-zinc-300 italic border-l-2 border-[#4ade80] pl-2.5 py-0.5 line-clamp-3">
                         &ldquo;{dropA.topComment}&rdquo;
                       </p>
                     </div>
                   )}
 
-                  <a
-                    href={dropA.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-1.5 text-xs text-indigo-400 hover:text-indigo-300 hover:underline font-bold pt-1"
-                  >
-                    <Play className="h-3.5 w-3.5 fill-indigo-400" /> Watch Trailer Video
-                  </a>
+                  <div className="pt-1">
+                    <a
+                      href={dropA.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1.5 text-xs text-indigo-400 hover:text-indigo-300 hover:underline font-bold"
+                    >
+                      <Play className="h-3.5 w-3.5 fill-indigo-400" /> Watch Video
+                    </a>
+                  </div>
                 </div>
               )}
 
@@ -234,30 +257,32 @@ export default function TrailerComparison({ campaign, drops = [] }: TrailerCompa
                       <span className="font-mono text-zinc-100 font-semibold">{dropB.total_comments.toLocaleString()}</span>
                     </div>
                     <div className="flex items-center justify-between text-zinc-300">
-                      <span>Critical Drag:</span>
-                      <span className="text-rose-400 font-mono font-semibold">-{dropB.negPercent}%</span>
+                      <span>Critical Friction:</span>
+                      <span className="font-mono text-[#f87171] font-bold text-sm">-{dropB.negPercent}%</span>
                     </div>
                   </div>
 
                   {dropB.topComment && (
                     <div className="pt-3 border-t border-[#28282b]/60">
                       <span className="text-xs text-zinc-400 font-semibold uppercase tracking-wider block mb-1">
-                        Top Fan Resonance
+                        Top Audience Reaction
                       </span>
-                      <p className="text-sm text-zinc-200 italic line-clamp-2">
-                        "{dropB.topComment}"
+                      <p className="text-xs text-zinc-300 italic border-l-2 border-[#4ade80] pl-2.5 py-0.5 line-clamp-3">
+                        &ldquo;{dropB.topComment}&rdquo;
                       </p>
                     </div>
                   )}
 
-                  <a
-                    href={dropB.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-1.5 text-xs text-indigo-400 hover:text-indigo-300 hover:underline font-bold pt-1"
-                  >
-                    <Play className="h-3.5 w-3.5 fill-indigo-400" /> Watch Trailer Video
-                  </a>
+                  <div className="pt-1">
+                    <a
+                      href={dropB.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1.5 text-xs text-indigo-400 hover:text-indigo-300 hover:underline font-bold"
+                    >
+                      <Play className="h-3.5 w-3.5 fill-indigo-400" /> Watch Video
+                    </a>
+                  </div>
                 </div>
               )}
             </div>
@@ -292,5 +317,14 @@ export default function TrailerComparison({ campaign, drops = [] }: TrailerCompa
         )}
       </Card>
     </CollapsibleSection>
+
+    {showAddModal && (
+      <AddVideoDropModal
+        contentId={campaign.content_id}
+        campaignTitle={campaign.title}
+        onClose={() => setShowAddModal(false)}
+      />
+    )}
+  </>
   );
 }

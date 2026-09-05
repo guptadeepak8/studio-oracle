@@ -188,3 +188,4 @@ export default function AutonomousAdSuite({ adVariants, movieTitle = "Movie Camp
     </div>
   );
 }
+

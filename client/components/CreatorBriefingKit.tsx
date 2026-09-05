@@ -146,3 +146,4 @@ export default function CreatorBriefingKit({ brief, movieTitle = "Movie Campaign
     </div>
   );
 }
+

@@ -196,3 +196,4 @@ export default function AutonomousVideoScripts({ scripts, movieTitle = "Movie Ca
     </div>
   );
 }
+
