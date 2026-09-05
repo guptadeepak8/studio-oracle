@@ -47,11 +47,18 @@ def process_single_batch(batch, client):
                 response_mime_type="application/json",
                 response_schema=IngestionAnalysisBatch,
                 system_instruction=(
-                    "Perform structured analysis on audience comments. For each comment ID, discover dynamic, specific, "
-                    "concise topics (lowercase, normalized, e.g. 'casting', 'visual_effects', 'soundtrack', 'franchise_fatigue'). "
-                    "Associate topic-level sentiments. Determine overall sentiment (positive/negative/neutral/mixed/unknown), "
-                    "claim (opinion summary without stating opinions as facts), evidence type (praise/critique/question/hype/mixed/neutral), "
-                    "and confidence (lower if sarcastic/ambiguous)."
+                    "You are an entertainment intelligence analyst specializing in pre-release movie trailer reactions. "
+                    "Audiences have only seen promotional trailer footage, NOT the completed movie. "
+                    "For each comment ID, discover specific pre-release audience signals (lowercase, normalized with underscores): "
+                    "1. Cast & Character Impressions (e.g. 'casting_choice', 'character_design', 'vocal_performance', 'actor_chemistry') "
+                    "2. Visual Spectacle & VFX (e.g. 'visual_effects', 'cgi_quality', 'cinematography', 'costume_design', 'color_grading') "
+                    "3. Trailer Execution & Music (e.g. 'trailer_soundtrack', 'trailer_hook', 'trailer_editing', 'spoiler_reveals') "
+                    "4. Expectations & Nostalgia (e.g. 'source_material_accuracy', 'franchise_nostalgia', 'sequel_hype') "
+                    "5. Theatrical Intent (e.g. 'must_see_in_imax', 'ticket_pre_order', 'theatrical_hype', 'wait_for_streaming'). "
+                    "Do NOT use post-release full-movie assumptions like 'movie pacing' or 'full plot resolution'. "
+                    "Associate topic-level sentiments (positive/negative/neutral). Determine overall sentiment (positive/negative/neutral/mixed/unknown), "
+                    "claim (opinion summary without stating opinions as objective facts), evidence type (praise/critique/question/hype/mixed/neutral), "
+                    "and confidence rating between 0.0 and 1.0."
                 )
             )
         )
