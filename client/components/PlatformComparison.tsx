@@ -123,7 +123,7 @@ export default function PlatformComparison({
                 </span>
               </div>
               <Badge variant={hasCritics ? "info" : "default"}>
-                {hasCritics ? "Reviews Found" : "Not Searched"}
+                {hasCritics ? "Reviews Found" : "Searching..."}
               </Badge>
             </div>
 
@@ -132,28 +132,16 @@ export default function PlatformComparison({
                 &ldquo;{criticQuote}&rdquo;
               </p>
             ) : (
-              <div className="py-1 space-y-2">
-                <p className="text-xs text-zinc-400">
-                  No critic reviews indexed yet for this campaign.
-                </p>
-                {onTriggerSearch && (
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={onTriggerSearch}
-                    isLoading={isSearching}
-                    leftIcon={<Search className="h-3.5 w-3.5 text-zinc-400" />}
-                  >
-                    {isSearching ? "Searching Web..." : "Search Critic Reviews"}
-                  </Button>
-                )}
+              <div className="py-2 flex items-center gap-2.5 text-xs text-zinc-400">
+                <Loader2 className="h-4 w-4 text-sky-400 animate-spin shrink-0" />
+                <span>Fetching verified critic reviews and trade press in the background...</span>
               </div>
             )}
 
             <div className="pt-3 border-t border-[#28282b] flex items-center justify-between text-xs text-zinc-400">
               <span>{critics.total.toLocaleString()} Articles</span>
               <span className="text-[#38bdf8] font-mono font-bold text-sm">
-                {hasCritics ? `+${critics.posPercent}% Positive` : "0%"}
+                {hasCritics ? `+${critics.posPercent}% Positive` : "..."}
               </span>
             </div>
           </Card>

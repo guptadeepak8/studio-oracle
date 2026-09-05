@@ -79,9 +79,15 @@ def update_campaign_status(content_id: str, request: CampaignStatusRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/api/campaigns/{content_id}/analytics")
-def get_campaign_analytics(content_id: str):
+def get_campaign_analytics(content_id: str, background_tasks: BackgroundTasks):
     try:
-        return CampaignService.get_analytics(content_id)
+        analytics = CampaignService.get_analytics(content_id)
+        platforms = analytics.get("platforms", {})
+        # If press & critic reviews are not yet indexed, automatically fetch in background
+        if platforms.get("google_search", {}).get("total", 0) == 0:
+            from services.search_service import GoogleSearchService
+            background_tasks.add_task(GoogleSearchService.search_and_ground_campaign, content_id)
+        return analytics
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Analytics query error: {str(e)}")
 
