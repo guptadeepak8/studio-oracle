@@ -34,21 +34,5 @@ async def stream_campaign_events(campaign_id: str, request: Request):
         }
     )
 
-@router.post("/{campaign_id}/test-event")
-async def publish_test_event(campaign_id: str, request: Request):
-    """
-    HTTP endpoint to publish a test event to all SSE subscribers of a campaign.
-    """
-    from core.pubsub import publish_campaign_event
-    body = {}
-    try:
-        body = await request.json()
-    except Exception:
-        pass
-    
-    event_type = body.get("event", "INGESTION_COMPLETED")
-    event_data = body.get("data", {"status": "test_delivered"})
-    await publish_campaign_event(campaign_id, event_type, event_data)
-    return {"status": "published", "event": event_type, "campaign_id": campaign_id}
 
 
